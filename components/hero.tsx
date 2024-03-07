@@ -4,8 +4,33 @@ import MagicButton from './ui/magic-button';
 import { Spotlight } from './ui/spotlight';
 import { TextGenerateEffect } from './ui/text-generate-effect';
 import Image from 'next/image';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/utils/supabase/server';
 
 const Hero = () => {
+  const signInWithAzure = async () => {
+    'use server';
+
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'azure',
+      options: {
+        scopes: 'email',
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      return redirect("/login?message=Errore durante l'accesso con Microsoft");
+    }
+
+    // Redirect to the OAuth URL provided by Supabase
+    if (data.url) {
+      return redirect(data.url);
+    }
+
+    return redirect("/login?message=Errore durante l'accesso con Microsoft");
+  };
   return (
     <div className='pb-20 pt-20'>
       <div>
@@ -60,13 +85,13 @@ const Hero = () => {
                 position='right'
               />
             </a>
-            <a href='/sign-in'>
+            <form action={signInWithAzure}>
               <MagicButton
                 title='Comincia'
                 icon={<FaGlobe />}
                 position='right'
               />
-            </a>
+            </form>
           </div>
         </div>
       </div>
