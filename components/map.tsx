@@ -28,8 +28,8 @@ const Map = () => {
     return `data:image/svg+xml;base64,${btoa(svgString)}`;
   };
 
-  // Generate the SVG string for Navigation2 icon
-  const navigationSvgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-navigation-2"><polygon points="12 2 19 21 12 17 5 21 12 2"></polygon></svg>`;
+  // Generate the SVG string for Navigation2 icon with a light blue fill
+  const navigationSvgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="lightblue" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-navigation-2"><polygon points="12 2 19 21 12 17 5 21 12 2"></polygon></svg>`;
 
   // Convert the SVG string to a data URL
   const navigationIconUrl = svgToDataUrl(navigationSvgString);
