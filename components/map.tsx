@@ -10,7 +10,7 @@ import 'leaflet/dist/leaflet.css';
 
 const Map = () => {
   const [coord, setCoord] = useState<LatLngExpression>([
-    47.90446927076292, 12.48775435635493,
+    41.90446927076292, 12.48775435635493,
   ]);
 
   const SearchLocation = () => {
