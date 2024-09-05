@@ -9,7 +9,7 @@ import MarkerShadow from '../node_modules/leaflet/dist/images/marker-shadow.png'
 import 'leaflet/dist/leaflet.css';
 
 const Map = () => {
-  const [coord, setCoord] = useState<LatLngExpression | undefined>([
+  const [coord, setCoord] = useState<LatLngExpression>([
     41.90446927076292, 12.48775435635493,
   ]);
 
@@ -50,7 +50,7 @@ const Map = () => {
           width: '100vw',
         }}
         center={coord}
-        zoom={13}
+        zoom={15}
         scrollWheelZoom={true}
       >
         <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
@@ -66,7 +66,7 @@ const Map = () => {
               shadowSize: [41, 41],
             })
           }
-          position={[51.505, -0.09]}
+          position={coord}
         >
           <Popup>
             A pretty CSS3 popup. <br /> Easily customizable.
