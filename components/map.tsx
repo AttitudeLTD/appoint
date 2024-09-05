@@ -50,7 +50,7 @@ const Map = () => {
           width: '100vw',
         }}
         center={coord}
-        zoom={15}
+        zoom={16}
         scrollWheelZoom={true}
       >
         <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
