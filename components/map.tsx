@@ -1,11 +1,13 @@
 'use client';
 
-import { MapContainer } from 'react-leaflet';
+import { MapContainer, TileLayer } from 'react-leaflet';
 
 const Map = () => {
   return (
     <div>
-      <MapContainer></MapContainer>
+      <MapContainer>
+        <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
+      </MapContainer>
     </div>
   );
 };
