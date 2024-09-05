@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import L, { LatLngExpression } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
@@ -21,7 +21,7 @@ const Map = () => {
     );
   };
 
-  const GetMyLocation = () => {
+  useEffect(() => {
     const getMyLocation = () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
@@ -32,17 +32,12 @@ const Map = () => {
       }
     };
 
-    return (
-      <div className='get-my-location'>
-        <button onClick={getMyLocation}>Get My Location</button>
-      </div>
-    );
-  };
+    getMyLocation();
+  }, []);
 
   return (
     <>
       {/* <SearchLocation /> */}
-      <GetMyLocation />
 
       <MapContainer
         style={{
