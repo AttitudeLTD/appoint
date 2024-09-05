@@ -1,7 +1,7 @@
-import FetchDataSteps from '@/components/tutorial/fetch-data-steps';
 import { createClient } from '@/utils/supabase/server';
-import { InfoIcon } from 'lucide-react';
 import { redirect } from 'next/navigation';
+
+import Map from '@/components/map';
 
 export default async function ProtectedPage() {
   const supabase = createClient();
@@ -14,5 +14,9 @@ export default async function ProtectedPage() {
     return redirect('/sign-in');
   }
 
-  return <main></main>;
+  return (
+    <main>
+      <Map />
+    </main>
+  );
 }
