@@ -9,9 +9,7 @@ import MarkerShadow from '../node_modules/leaflet/dist/images/marker-shadow.png'
 import 'leaflet/dist/leaflet.css';
 
 const Map = () => {
-  const [coord, setCoord] = useState<LatLngExpression>([
-    41.90446927076292, 12.48775435635493,
-  ]);
+  const [coord, setCoord] = useState<LatLngExpression | null>(null);
 
   const SearchLocation = () => {
     return (
@@ -39,35 +37,39 @@ const Map = () => {
     <>
       {/* <SearchLocation /> */}
 
-      <MapContainer
-        style={{
-          height: '80vh',
-          width: '100vw',
-        }}
-        center={coord}
-        zoom={16}
-        scrollWheelZoom={true}
-      >
-        <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
-        <Marker
-          icon={
-            new L.Icon({
-              iconUrl: MarkerIcon.src,
-              iconRetinaUrl: MarkerIcon.src,
-              iconSize: [25, 41],
-              iconAnchor: [12.5, 41],
-              popupAnchor: [0, -41],
-              shadowUrl: MarkerShadow.src,
-              shadowSize: [41, 41],
-            })
-          }
-          position={coord}
+      {coord ? ( // Only render the map when coord is set
+        <MapContainer
+          style={{
+            height: '80vh',
+            width: '100vw',
+          }}
+          center={coord} // Now the map will center on the user's position
+          zoom={16}
+          scrollWheelZoom={true}
         >
-          <Popup>
-            A pretty CSS3 popup. <br /> Easily customizable.
-          </Popup>
-        </Marker>
-      </MapContainer>
+          <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
+          <Marker
+            icon={
+              new L.Icon({
+                iconUrl: MarkerIcon.src,
+                iconRetinaUrl: MarkerIcon.src,
+                iconSize: [25, 41],
+                iconAnchor: [12.5, 41],
+                popupAnchor: [0, -41],
+                shadowUrl: MarkerShadow.src,
+                shadowSize: [41, 41],
+              })
+            }
+            position={coord}
+          >
+            <Popup>
+              A pretty CSS3 popup. <br /> Easily customizable.
+            </Popup>
+          </Marker>
+        </MapContainer>
+      ) : (
+        <p>Loading map...</p>
+      )}
     </>
   );
 };
