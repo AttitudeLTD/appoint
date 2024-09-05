@@ -10,7 +10,7 @@ const Map = () => {
   return (
     <MapContainer
       style={{
-        height: '100vh',
+        height: '80vh',
         width: '100vw',
       }}
       center={[51.505, -0.09]}
