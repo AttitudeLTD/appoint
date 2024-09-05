@@ -4,20 +4,10 @@ import { useEffect, useState } from 'react';
 
 import L, { LatLngExpression } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
-import MarkerIcon from '../node_modules/leaflet/dist/images/marker-icon.png';
-import MarkerShadow from '../node_modules/leaflet/dist/images/marker-shadow.png';
 import 'leaflet/dist/leaflet.css';
 
 const Map = () => {
   const [coord, setCoord] = useState<LatLngExpression | null>(null);
-
-  const SearchLocation = () => {
-    return (
-      <div className='search-location'>
-        <input type='text' placeholder='Search Location' />
-      </div>
-    );
-  };
 
   useEffect(() => {
     const getMyLocation = () => {
@@ -33,35 +23,40 @@ const Map = () => {
     getMyLocation();
   }, []);
 
+  // Function to convert an SVG element to a data URL
+  const svgToDataUrl = (svgString: string) => {
+    return `data:image/svg+xml;base64,${btoa(svgString)}`;
+  };
+
+  // Generate the SVG string for Navigation2 icon
+  const navigationSvgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-navigation-2"><polygon points="12 2 19 21 12 17 5 21 12 2"></polygon></svg>`;
+
+  // Convert the SVG string to a data URL
+  const navigationIconUrl = svgToDataUrl(navigationSvgString);
+
+  // Define your custom Leaflet icon using the SVG data URL
+  const customNavigationIcon = new L.Icon({
+    iconUrl: navigationIconUrl,
+    iconRetinaUrl: navigationIconUrl,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12],
+  });
+
   return (
     <>
-      {/* <SearchLocation /> */}
-
-      {coord ? ( // Only render the map when coord is set
+      {coord ? (
         <MapContainer
           style={{
             height: '80vh',
             width: '100vw',
           }}
-          center={coord} // Now the map will center on the user's position
+          center={coord}
           zoom={16}
           scrollWheelZoom={true}
         >
           <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
-          <Marker
-            icon={
-              new L.Icon({
-                iconUrl: MarkerIcon.src,
-                iconRetinaUrl: MarkerIcon.src,
-                iconSize: [25, 41],
-                iconAnchor: [12.5, 41],
-                popupAnchor: [0, -41],
-                shadowUrl: MarkerShadow.src,
-                shadowSize: [41, 41],
-              })
-            }
-            position={coord}
-          >
+          <Marker icon={customNavigationIcon} position={coord}>
             <Popup>
               A pretty CSS3 popup. <br /> Easily customizable.
             </Popup>
