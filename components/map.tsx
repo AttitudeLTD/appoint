@@ -1,7 +1,7 @@
 'use client';
 
 import L from 'leaflet';
-import { MapContainer, Marker, TileLayer } from 'react-leaflet';
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import MarkerIcon from '../node_modules/leaflet/dist/images/marker-icon.png';
 import MarkerShadow from '../node_modules/leaflet/dist/images/marker-shadow.png';
 import 'leaflet/dist/leaflet.css';
@@ -34,7 +34,11 @@ const Map = () => {
           })
         }
         position={[51.505, -0.09]}
-      ></Marker>
+      >
+        <Popup>
+          A pretty CSS3 popup. <br /> Easily customizable.
+        </Popup>
+      </Marker>
     </MapContainer>
   );
 };
