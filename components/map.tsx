@@ -1,7 +1,13 @@
 'use client';
 
+import { MapContainer } from 'react-leaflet';
+
 const Map = () => {
-  return <div>Map</div>;
+  return (
+    <div>
+      <MapContainer></MapContainer>
+    </div>
+  );
 };
 
 export default Map;
