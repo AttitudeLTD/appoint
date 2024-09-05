@@ -2,14 +2,16 @@
 
 import { useState } from 'react';
 
-import L from 'leaflet';
+import L, { LatLngExpression } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import MarkerIcon from '../node_modules/leaflet/dist/images/marker-icon.png';
 import MarkerShadow from '../node_modules/leaflet/dist/images/marker-shadow.png';
 import 'leaflet/dist/leaflet.css';
 
 const Map = () => {
-  const [coord, setCoord] = useState([41.90446927076292, 12.48775435635493]);
+  const [coord, setCoord] = useState<LatLngExpression | undefined>([
+    41.90446927076292, 12.48775435635493,
+  ]);
 
   const SearchLocation = () => {
     return (
@@ -47,7 +49,7 @@ const Map = () => {
           height: '80vh',
           width: '100vw',
         }}
-        center={[51.505, -0.09]}
+        center={coord}
         zoom={13}
         scrollWheelZoom={true}
       >
