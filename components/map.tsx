@@ -72,7 +72,7 @@ const Map = ({ user }: any) => {
             </Popup>
           </Marker>
 
-          {/* Markers for each store
+          {/* Markers for each store */}
           {stores.map((store) => (
             <Marker
               key={store.id}
@@ -81,7 +81,7 @@ const Map = ({ user }: any) => {
             >
               <Popup>{store.name}</Popup>
             </Marker>
-          ))} */}
+          ))}
         </MapContainer>
       ) : (
         <p>Loading map...</p>
