@@ -1,4 +1,6 @@
 import L, { LatLngExpression } from 'leaflet';
+import MarkerIcon from '../node_modules/leaflet/dist/images/marker-icon.png';
+import MarkerShadow from '../node_modules/leaflet/dist/images/marker-shadow.png';
 
 // Function to convert an SVG element to a data URL
 export const svgToDataUrl = (svgString: string) => {
@@ -12,12 +14,22 @@ export const navigationSvgString = `<svg xmlns="http://www.w3.org/2000/svg" view
 export const navigationIconUrl = svgToDataUrl(navigationSvgString);
 
 // Define your custom Leaflet icon using the SVG data URL
-export const customNavIcon = new L.Icon({
+export const navIcon = new L.Icon({
   iconUrl: navigationIconUrl,
   iconRetinaUrl: navigationIconUrl,
   iconSize: [24, 24],
   iconAnchor: [12, 12],
   popupAnchor: [0, -12],
+});
+
+export const storeIcon = new L.Icon({
+  iconUrl: MarkerIcon.src,
+  iconRetinaUrl: MarkerIcon.src,
+  iconSize: [20, 36],
+  iconAnchor: [12.5, 41],
+  popupAnchor: [0, -41],
+  shadowUrl: MarkerShadow.src,
+  shadowSize: [41, 41],
 });
 
 // Define and export the getMyLocation function

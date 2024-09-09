@@ -4,12 +4,15 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 
 import L, { LatLngExpression } from 'leaflet';
-import MarkerIcon from '../node_modules/leaflet/dist/images/marker-icon.png';
-import MarkerShadow from '../node_modules/leaflet/dist/images/marker-shadow.png';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import { customNavIcon, getMyLocation, parseCoords } from '@/utils/navigation';
+import {
+  navIcon,
+  getMyLocation,
+  parseCoords,
+  storeIcon,
+} from '@/utils/navigation';
 
 interface Store {
   id: number;
@@ -70,7 +73,7 @@ const Map = ({ user }: any) => {
           <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
 
           {/* Marker for the user's current location */}
-          <Marker icon={customNavIcon} position={coord}>
+          <Marker icon={navIcon} position={coord}>
             <Popup>
               Ciao {userName}, oggi ti mancano 3 attività per raggiungere il tuo
               obiettivo.
@@ -86,17 +89,7 @@ const Map = ({ user }: any) => {
                 <Marker
                   key={store.id}
                   position={storeCoordinates}
-                  icon={
-                    new L.Icon({
-                      iconUrl: MarkerIcon.src,
-                      iconRetinaUrl: MarkerIcon.src,
-                      iconSize: [20, 36],
-                      iconAnchor: [12.5, 41],
-                      popupAnchor: [0, -41],
-                      shadowUrl: MarkerShadow.src,
-                      shadowSize: [41, 41],
-                    })
-                  }
+                  icon={storeIcon}
                 >
                   <Popup>{store.name}</Popup>
                 </Marker>
