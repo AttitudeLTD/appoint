@@ -51,6 +51,7 @@ const Map = ({ user }: any) => {
   }, [user.id, supabase]);
 
   console.log(coord);
+  console.log(stores);
   return (
     <>
       {coord ? (
