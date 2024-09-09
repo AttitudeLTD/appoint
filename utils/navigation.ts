@@ -12,7 +12,7 @@ export const navigationSvgString = `<svg xmlns="http://www.w3.org/2000/svg" view
 export const navigationIconUrl = svgToDataUrl(navigationSvgString);
 
 // Define your custom Leaflet icon using the SVG data URL
-export const customNaviIcon = new L.Icon({
+export const customNavIcon = new L.Icon({
   iconUrl: navigationIconUrl,
   iconRetinaUrl: navigationIconUrl,
   iconSize: [24, 24],
@@ -43,7 +43,7 @@ export const getMyLocation = (
 };
 
 // Function to parse and validate coordinates from string to array
-export const parseCoors = (coordinates: string): LatLngExpression | null => {
+export const parseCoords = (coordinates: string): LatLngExpression | null => {
   try {
     const parsed = JSON.parse(coordinates); // Convert string to array
     if (Array.isArray(parsed) && parsed.length === 2) {

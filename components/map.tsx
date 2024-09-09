@@ -6,7 +6,7 @@ import { LatLngExpression } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import { customNaviIcon, getMyLocation, parseCoors } from '@/utils/navigation';
+import { customNavIcon, getMyLocation, parseCoords } from '@/utils/navigation';
 
 interface Store {
   id: number;
@@ -67,7 +67,7 @@ const Map = ({ user }: any) => {
           <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
 
           {/* Marker for the user's current location */}
-          <Marker icon={customNavigationIcon} position={coord}>
+          <Marker icon={customNavIcon} position={coord}>
             <Popup>
               Ciao {userName}, oggi ti mancano 3 attività per raggiungere il tuo
               obiettivo.
@@ -76,14 +76,14 @@ const Map = ({ user }: any) => {
 
           {/* Markers for each store */}
           {stores.map((store) => {
-            const storeCoordinates = parseCoordinates(store.coordinates); // Parse coordinates from string to array
+            const storeCoordinates = parseCoords(store.coordinates); // Parse coordinates from string to array
 
             if (storeCoordinates) {
               return (
                 <Marker
                   key={store.id}
                   position={storeCoordinates}
-                  icon={customNavigationIcon} // You can use a different icon if needed
+                  icon={customNavIcon} // You can use a different icon if needed
                 >
                   <Popup>{store.name}</Popup>
                 </Marker>
