@@ -20,7 +20,7 @@ export default async function ProtectedPage() {
 
   return (
     <main>
-      <DynamicMap user={user} />
+      <DynamicMap />
     </main>
   );
 }

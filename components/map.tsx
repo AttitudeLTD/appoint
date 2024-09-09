@@ -1,34 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
 
 import { LatLngExpression } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import { customNavigationIcon, getMyLocation } from '@/utils/navigation';
+import { getUserName } from '@/utils/user';
 
-const Map = ({ user }: any) => {
-  const supabase = createClient();
-
+const Map = () => {
   const [userName, setUserName] = useState<string | null>(null);
   const [coord, setCoord] = useState<LatLngExpression | null>(null);
 
   useEffect(() => {
-    const getUserName = async () => {
-      const { data: userName } = await supabase
-        .from('users')
-        .select('name')
-        .eq('id', user.id)
-        .single();
-
-      setUserName(userName?.name || null);
+    const fetchUserName = async () => {
+      const name = await getUserName();
+      setUserName(name);
     };
 
-    getUserName();
+    fetchUserName();
     getMyLocation(setCoord);
-  }, [user.id, supabase]);
+  }, []);
 
   return (
     <>
