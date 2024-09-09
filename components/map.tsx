@@ -27,16 +27,45 @@ const Map = ({ user }: any) => {
   const [coord, setCoord] = useState<LatLngExpression | null>(null);
   const [stores, setStores] = useState<Store[]>([]);
 
+  const haversineDistance = (
+    coords1: LatLngExpression,
+    coords2: LatLngExpression
+  ): number => {
+    const toRad = (x: number) => (x * Math.PI) / 180;
+    const R = 6371; // Radius of the Earth in km
+
+    const [lat1, lon1] = coords1 as [number, number];
+    const [lat2, lon2] = coords2 as [number, number];
+
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Distance in km
+  };
+
   useEffect(() => {
     // Function to get the username of the current user
     const getUserName = async () => {
-      const { data: userName } = await supabase
+      const { data: userName, error } = await supabase
         .from('users')
         .select('name')
         .eq('id', user.id)
         .single();
 
-      setUserName(userName?.name || null);
+      if (error) {
+        console.error('Error fetching user name:', error);
+      } else {
+        setUserName(userName?.name || null);
+      }
     };
 
     // Function to get the stores from the database
@@ -52,11 +81,23 @@ const Map = ({ user }: any) => {
       }
     };
 
-    // Fetch username and stores data
     getUserName();
     getStores();
     getMyLocation(setCoord);
   }, [user.id, supabase]);
+
+  // Filter stores within 3km radius
+  const filteredStores = stores.filter((store) => {
+    const storeCoordinates = parseCoords(store.coordinates);
+    if (storeCoordinates && coord) {
+      const distance = haversineDistance(
+        coord as [number, number],
+        storeCoordinates as [number, number]
+      );
+      return distance <= 3; // Only include stores within 3km
+    }
+    return false;
+  });
 
   return (
     <>
@@ -80,10 +121,9 @@ const Map = ({ user }: any) => {
             </Popup>
           </Marker>
 
-          {/* Markers for each store */}
-          {stores.map((store) => {
-            const storeCoordinates = parseCoords(store.coordinates); // Parse coordinates from string to array
-
+          {/* Markers for each store within 3km */}
+          {filteredStores.map((store) => {
+            const storeCoordinates = parseCoords(store.coordinates);
             if (storeCoordinates) {
               return (
                 <Marker
@@ -95,7 +135,7 @@ const Map = ({ user }: any) => {
                 </Marker>
               );
             }
-            return null; // If the coordinates are invalid, skip rendering
+            return null; // If coordinates are invalid, skip rendering
           })}
         </MapContainer>
       ) : (
