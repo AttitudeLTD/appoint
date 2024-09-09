@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 
-import L, { LatLngExpression } from 'leaflet';
+import { LatLngExpression } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -17,7 +17,7 @@ import {
 interface Store {
   id: number;
   name: string;
-  coordinates: string; // stored as string like "[45.4642, 9.1916]"
+  coordinates: string;
 }
 
 const Map = ({ user }: any) => {
