@@ -50,6 +50,7 @@ const Map = ({ user }: any) => {
     getMyLocation(setCoord);
   }, [user.id, supabase]);
 
+  console.log(coord);
   return (
     <>
       {coord ? (
