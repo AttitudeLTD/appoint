@@ -7,14 +7,15 @@ import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import { customNavigationIcon, getMyLocation } from '@/utils/navigation';
+import { createClient } from '@/utils/supabase/client';
 
-const Map = (user: any) => {
+const Map = ({ user }: any) => {
+  const supabase = createClient();
   const [coord, setCoord] = useState<LatLngExpression | null>(null);
 
   useEffect(() => {
     getMyLocation(setCoord);
-    console.log(user.user);
-  }, []);
+  }, [supabase]);
 
   return (
     <>
