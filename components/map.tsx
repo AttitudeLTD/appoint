@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { LatLngExpression } from 'leaflet';
+
+import L, { LatLngExpression } from 'leaflet';
+import MarkerIcon from '../node_modules/leaflet/dist/images/marker-icon.png';
+import MarkerShadow from '../node_modules/leaflet/dist/images/marker-shadow.png';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -83,7 +86,17 @@ const Map = ({ user }: any) => {
                 <Marker
                   key={store.id}
                   position={storeCoordinates}
-                  icon={customNavIcon} // You can use a different icon if needed
+                  icon={
+                    new L.Icon({
+                      iconUrl: MarkerIcon.src,
+                      iconRetinaUrl: MarkerIcon.src,
+                      iconSize: [20, 36],
+                      iconAnchor: [12.5, 41],
+                      popupAnchor: [0, -41],
+                      shadowUrl: MarkerShadow.src,
+                      shadowSize: [41, 41],
+                    })
+                  }
                 >
                   <Popup>{store.name}</Popup>
                 </Marker>
