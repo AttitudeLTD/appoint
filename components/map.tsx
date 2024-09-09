@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
-
 import { LatLngExpression } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import { customNavigationIcon, getMyLocation } from '@/utils/navigation';
+import { customNaviIcon, getMyLocation, parseCoors } from '@/utils/navigation';
 
 interface Store {
   id: number;
@@ -52,22 +51,6 @@ const Map = ({ user }: any) => {
     getStores();
     getMyLocation(setCoord);
   }, [user.id, supabase]);
-
-  // Helper function to validate and convert string coordinates to array
-  const parseCoordinates = (coordinates: string): LatLngExpression | null => {
-    try {
-      const parsed = JSON.parse(coordinates); // Convert string to array
-      if (Array.isArray(parsed) && parsed.length === 2) {
-        const [lat, lng] = parsed;
-        if (typeof lat === 'number' && typeof lng === 'number') {
-          return [lat, lng] as LatLngExpression; // Return as valid LatLngExpression
-        }
-      }
-    } catch (error) {
-      console.error('Invalid coordinates:', coordinates);
-    }
-    return null; // Return null if the conversion fails
-  };
 
   return (
     <>
