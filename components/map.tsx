@@ -8,11 +8,12 @@ import 'leaflet/dist/leaflet.css';
 
 import { customNavigationIcon, getMyLocation } from '@/utils/navigation';
 
-const Map = () => {
+const Map = (user: any) => {
   const [coord, setCoord] = useState<LatLngExpression | null>(null);
 
   useEffect(() => {
     getMyLocation(setCoord);
+    console.log(user.user);
   }, []);
 
   return (
@@ -30,7 +31,7 @@ const Map = () => {
           <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
           <Marker icon={customNavigationIcon} position={coord}>
             <Popup>
-              Ciao NOME, oggi ti mancano 3 attività per raggiungere il tuo
+              Ciao {user.id}, oggi ti mancano 3 attività per raggiungere il tuo
               obiettivo.
             </Popup>
           </Marker>
