@@ -41,3 +41,21 @@ export const getMyLocation = (
     callback(null);
   }
 };
+
+// Function to parse and validate coordinates from string to array
+export const parseCoordinates = (
+  coordinates: string
+): LatLngExpression | null => {
+  try {
+    const parsed = JSON.parse(coordinates); // Convert string to array
+    if (Array.isArray(parsed) && parsed.length === 2) {
+      const [lat, lng] = parsed;
+      if (typeof lat === 'number' && typeof lng === 'number') {
+        return [lat, lng] as LatLngExpression; // Return as valid LatLngExpression
+      }
+    }
+  } catch (error) {
+    console.error('Invalid coordinates:', coordinates);
+  }
+  return null; // Return null if the conversion fails
+};
