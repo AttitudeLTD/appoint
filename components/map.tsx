@@ -30,7 +30,8 @@ const Map = () => {
           <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
           <Marker icon={customNavigationIcon} position={coord}>
             <Popup>
-              A pretty CSS3 popup! <br /> Easily customizable.
+              Ciao NOME, oggi ti mancano 3 attività per raggiungere il tuo
+              obiettivo.
             </Popup>
           </Marker>
         </MapContainer>
