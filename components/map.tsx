@@ -12,7 +12,7 @@ import { customNavigationIcon, getMyLocation } from '@/utils/navigation';
 interface Store {
   id: number;
   name: string;
-  coordinates: LatLngExpression;
+  coordinates: string; // stored as string like "[45.4642, 9.1916]"
 }
 
 const Map = ({ user }: any) => {
@@ -23,6 +23,7 @@ const Map = ({ user }: any) => {
   const [stores, setStores] = useState<Store[]>([]);
 
   useEffect(() => {
+    // Function to get the username of the current user
     const getUserName = async () => {
       const { data: userName } = await supabase
         .from('users')
@@ -33,6 +34,7 @@ const Map = ({ user }: any) => {
       setUserName(userName?.name || null);
     };
 
+    // Function to get the stores from the database
     const getStores = async () => {
       const { data: storeData, error } = await supabase
         .from('stores')
@@ -45,10 +47,27 @@ const Map = ({ user }: any) => {
       }
     };
 
+    // Fetch username and stores data
     getUserName();
     getStores();
     getMyLocation(setCoord);
   }, [user.id, supabase]);
+
+  // Helper function to validate and convert string coordinates to array
+  const parseCoordinates = (coordinates: string): LatLngExpression | null => {
+    try {
+      const parsed = JSON.parse(coordinates); // Convert string to array
+      if (Array.isArray(parsed) && parsed.length === 2) {
+        const [lat, lng] = parsed;
+        if (typeof lat === 'number' && typeof lng === 'number') {
+          return [lat, lng] as LatLngExpression; // Return as valid LatLngExpression
+        }
+      }
+    } catch (error) {
+      console.error('Invalid coordinates:', coordinates);
+    }
+    return null; // Return null if the conversion fails
+  };
 
   return (
     <>
@@ -73,15 +92,22 @@ const Map = ({ user }: any) => {
           </Marker>
 
           {/* Markers for each store */}
-          {stores.map((store) => (
-            <Marker
-              key={store.id}
-              position={store.coordinates}
-              icon={customNavigationIcon}
-            >
-              <Popup>{store.name}</Popup>
-            </Marker>
-          ))}
+          {stores.map((store) => {
+            const storeCoordinates = parseCoordinates(store.coordinates); // Parse coordinates from string to array
+
+            if (storeCoordinates) {
+              return (
+                <Marker
+                  key={store.id}
+                  position={storeCoordinates}
+                  icon={customNavigationIcon} // You can use a different icon if needed
+                >
+                  <Popup>{store.name}</Popup>
+                </Marker>
+              );
+            }
+            return null; // If the coordinates are invalid, skip rendering
+          })}
         </MapContainer>
       ) : (
         <p>Loading map...</p>
