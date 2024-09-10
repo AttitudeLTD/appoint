@@ -114,9 +114,9 @@ const Map = ({ user }: any) => {
                   icon={storeIcon}
                 >
                   <Popup>
-                    <div className='flex items-center pr-3'>
+                    <div className='flex pr-3 items-start'>
                       <Image
-                        className='mr-1 -ml-1 rounded-full'
+                        className='mr-2 -ml-2 rounded-full'
                         src='/store.jpg'
                         alt='Store'
                         width={50}
