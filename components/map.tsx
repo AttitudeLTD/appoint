@@ -116,7 +116,7 @@ const Map = ({ user }: any) => {
                   <Popup>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       <Image
-                        src='https://your-image-url-here.jpg' // Replace with your actual image URL
+                        src='https://unsplash.com/it/foto/rendering-3d-del-negozio-di-moda-uomo-MGJACXj89tE'
                         alt='Store'
                         style={{
                           width: '50px',
