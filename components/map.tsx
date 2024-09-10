@@ -72,6 +72,7 @@ const Map = ({ user }: any) => {
         // Assuming coords is a tuple [lat, lng]
         if (Array.isArray(coords)) {
           getStoresWithinRadius(coords[0], coords[1]); // Fetch stores when user location is available
+          console.log(stores);
         } else {
           console.error('Invalid coordinates format');
         }
