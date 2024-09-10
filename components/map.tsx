@@ -7,20 +7,14 @@ import { LatLngExpression } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import {
-  navIcon,
-  getMyLocation,
-  parseCoords,
-  storeIcon,
-  haversineDistance,
-} from '@/utils/navigation';
+import { navIcon, getMyLocation, storeIcon } from '@/utils/navigation';
 import { Button } from './ui/button';
 
 interface Store {
   id: number;
   name: string;
   address: string;
-  coordinates: string;
+  location: string; // PostGIS 'location' (geography) field
 }
 
 const Map = ({ user }: any) => {
@@ -30,8 +24,14 @@ const Map = ({ user }: any) => {
   const [coord, setCoord] = useState<LatLngExpression | null>(null);
   const [stores, setStores] = useState<Store[]>([]);
 
+  // Utility to parse the coordinates string '[lat, lng]' into a LatLng array
+  const parseCoordinates = (coordinates: string): [number, number] => {
+    const strippedCoords = coordinates.replace(/[\[\]]/g, '').split(','); // Remove square brackets and split by comma
+    return [parseFloat(strippedCoords[0]), parseFloat(strippedCoords[1])]; // Convert strings to numbers
+  };
+
   useEffect(() => {
-    // Function to get the username of the current user
+    // Fetch user's name
     const getUserName = async () => {
       const { data: userName, error } = await supabase
         .from('users')
@@ -46,11 +46,16 @@ const Map = ({ user }: any) => {
       }
     };
 
-    // Function to get the stores from the database
-    const getStores = async () => {
-      const { data: storeData, error } = await supabase
-        .from('stores')
-        .select('id, name, address, coordinates');
+    // Fetch stores within 3km of user's location
+    const getStoresWithinRadius = async (userLat: number, userLng: number) => {
+      const { data: storeData, error } = await supabase.rpc(
+        'get_stores_within_radius',
+        {
+          lat: userLat,
+          lng: userLng,
+          radius: 3000, // 3 km radius
+        }
+      );
 
       if (error) {
         console.error('Error fetching stores:', error);
@@ -59,23 +64,24 @@ const Map = ({ user }: any) => {
       }
     };
 
-    getUserName();
-    getStores();
-    getMyLocation(setCoord);
-  }, [user.id, supabase]);
+    // Get user's current location and fetch nearby stores
+    getMyLocation((coords: LatLngExpression | null) => {
+      if (coords) {
+        setCoord(coords);
 
-  // Filter stores within 3km radius
-  const filteredStores = stores.filter((store) => {
-    const storeCoordinates = parseCoords(store.coordinates);
-    if (storeCoordinates && coord) {
-      const distance = haversineDistance(
-        coord as [number, number],
-        storeCoordinates as [number, number]
-      );
-      return distance <= 3; // Only include stores within 3km
-    }
-    return false;
-  });
+        // Assuming coords is a tuple [lat, lng]
+        if (Array.isArray(coords)) {
+          getStoresWithinRadius(coords[0], coords[1]); // Fetch stores when user location is available
+        } else {
+          console.error('Invalid coordinates format');
+        }
+      } else {
+        console.error('Unable to fetch user location');
+      }
+    });
+
+    getUserName();
+  }, [user.id, supabase]);
 
   return (
     <>
@@ -100,26 +106,25 @@ const Map = ({ user }: any) => {
           </Marker>
 
           {/* Markers for each store within 3km */}
-          {filteredStores.map((store) => {
-            const storeCoordinates = parseCoords(store.coordinates);
-            if (storeCoordinates) {
-              return (
-                <Marker
-                  key={store.id}
-                  position={storeCoordinates}
-                  icon={storeIcon}
-                >
-                  <Popup>
-                    <strong>{store.name}</strong> <br /> {store.address}
-                    <div className='flex gap-2 my-1'>
-                      <Button variant='secondary'>Prenota</Button>
-                      <Button variant='secondary'>Portami lì</Button>
-                    </div>
-                  </Popup>
-                </Marker>
-              );
-            }
-            return null; // If coordinates are invalid, skip rendering
+          {stores.map((store) => {
+            // Parse the store's location field '[lat, lng]' into actual coordinates
+            const storeCoordinates = parseCoordinates(store.location);
+
+            return (
+              <Marker
+                key={store.id}
+                position={storeCoordinates} // This will now be a [lat, lng] tuple
+                icon={storeIcon}
+              >
+                <Popup>
+                  <strong>{store.name}</strong> <br /> {store.address}
+                  <div className='flex gap-2 my-1'>
+                    <Button variant='secondary'>Prenota</Button>
+                    <Button variant='secondary'>Portami lì</Button>
+                  </div>
+                </Popup>
+              </Marker>
+            );
           })}
         </MapContainer>
       ) : (
