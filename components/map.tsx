@@ -8,6 +8,7 @@ import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import { navIcon, getMyLoc, storeIcon, parseCoords } from '@/utils/navigation';
+
 import { Button } from './ui/button';
 
 interface Store {
