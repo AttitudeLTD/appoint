@@ -7,20 +7,14 @@ import { LatLngExpression } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import {
-  navIcon,
-  getMyLocation,
-  parseCoords,
-  storeIcon,
-  haversineDistance,
-} from '@/utils/navigation';
+import { navIcon, getMyLoc, storeIcon, parseCoords } from '@/utils/navigation';
 import { Button } from './ui/button';
 
 interface Store {
   id: number;
   name: string;
   address: string;
-  coordinates: string;
+  location: string; // PostGIS 'location' (geography) field
 }
 
 const Map = ({ user }: any) => {
@@ -31,7 +25,7 @@ const Map = ({ user }: any) => {
   const [stores, setStores] = useState<Store[]>([]);
 
   useEffect(() => {
-    // Function to get the username of the current user
+    // Fetch user's name
     const getUserName = async () => {
       const { data: userName, error } = await supabase
         .from('users')
@@ -46,11 +40,16 @@ const Map = ({ user }: any) => {
       }
     };
 
-    // Function to get the stores from the database
-    const getStores = async () => {
-      const { data: storeData, error } = await supabase
-        .from('stores')
-        .select('id, name, address, coordinates');
+    // Fetch stores within 3km of user's location
+    const getStoresWithinRadius = async (userLat: number, userLng: number) => {
+      const { data: storeData, error } = await supabase.rpc(
+        'get_stores_within_radius',
+        {
+          lat: userLat,
+          lng: userLng,
+          radius: 3000, // 3 km radius
+        }
+      );
 
       if (error) {
         console.error('Error fetching stores:', error);
@@ -59,23 +58,24 @@ const Map = ({ user }: any) => {
       }
     };
 
-    getUserName();
-    getStores();
-    getMyLocation(setCoord);
-  }, [user.id, supabase]);
+    // Get user's current location and fetch nearby stores
+    getMyLoc((coords: LatLngExpression | null) => {
+      if (coords) {
+        setCoord(coords);
 
-  // Filter stores within 3km radius
-  const filteredStores = stores.filter((store) => {
-    const storeCoordinates = parseCoords(store.coordinates);
-    if (storeCoordinates && coord) {
-      const distance = haversineDistance(
-        coord as [number, number],
-        storeCoordinates as [number, number]
-      );
-      return distance <= 3; // Only include stores within 3km
-    }
-    return false;
-  });
+        // Assuming coords is a tuple [lat, lng]
+        if (Array.isArray(coords)) {
+          getStoresWithinRadius(coords[0], coords[1]); // Fetch stores when user location is available
+        } else {
+          console.error('Invalid coordinates format');
+        }
+      } else {
+        console.error('Unable to fetch user location');
+      }
+    });
+
+    getUserName();
+  }, [user.id, supabase]);
 
   return (
     <>
@@ -100,13 +100,15 @@ const Map = ({ user }: any) => {
           </Marker>
 
           {/* Markers for each store within 3km */}
-          {filteredStores.map((store) => {
-            const storeCoordinates = parseCoords(store.coordinates);
+          {stores.map((store) => {
+            // Parse the store's location field 'POINT(lng lat)' into actual coordinates
+            const storeCoordinates = parseCoords(store.location);
+
             if (storeCoordinates) {
               return (
                 <Marker
                   key={store.id}
-                  position={storeCoordinates}
+                  position={storeCoordinates} // This will now be a [lat, lng] tuple
                   icon={storeIcon}
                 >
                   <Popup>
@@ -118,8 +120,10 @@ const Map = ({ user }: any) => {
                   </Popup>
                 </Marker>
               );
+            } else {
+              console.error(`Invalid coordinates for store: ${store.name}`);
+              return null; // Skip rendering if coordinates are invalid
             }
-            return null; // If coordinates are invalid, skip rendering
           })}
         </MapContainer>
       ) : (

@@ -33,7 +33,7 @@ export const storeIcon = new L.Icon({
 });
 
 // Define and export the getMyLocation function
-export const getMyLocation = (
+export const getMyLoc = (
   callback: (coords: LatLngExpression | null) => void
 ): void => {
   if (navigator.geolocation) {
@@ -54,43 +54,17 @@ export const getMyLocation = (
   }
 };
 
-// Function to parse and validate coordinates from string to array
-export const parseCoords = (coordinates: string): LatLngExpression | null => {
-  try {
-    const parsed = JSON.parse(coordinates); // Convert string to array
-    if (Array.isArray(parsed) && parsed.length === 2) {
-      const [lat, lng] = parsed;
-      if (typeof lat === 'number' && typeof lng === 'number') {
-        return [lat, lng] as LatLngExpression; // Return as valid LatLngExpression
-      }
+// Utility to parse 'POINT(lng lat)' into [lat, lng]
+export const parseCoords = (coordinates: string): [number, number] | null => {
+  const match = coordinates.match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
+  if (match) {
+    const lng = parseFloat(match[1]);
+    const lat = parseFloat(match[2]);
+
+    // Ensure both lat and lng are valid numbers
+    if (!isNaN(lat) && !isNaN(lng)) {
+      return [lat, lng]; // Return valid [lat, lng] tuple
     }
-  } catch (error) {
-    console.error('Invalid coordinates:', coordinates);
   }
-  return null; // Return null if the conversion fails
-};
-
-export const haversineDistance = (
-  coords1: LatLngExpression,
-  coords2: LatLngExpression
-): number => {
-  const toRad = (x: number) => (x * Math.PI) / 180;
-  const R = 6371; // Radius of the Earth in km
-
-  const [lat1, lon1] = coords1 as [number, number];
-  const [lat2, lon2] = coords2 as [number, number];
-
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c; // Distance in km
+  return null; // Return null if parsing failed
 };
