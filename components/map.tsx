@@ -10,6 +10,7 @@ import 'leaflet/dist/leaflet.css';
 import { navIcon, getMyLoc, storeIcon, parseCoords } from '@/utils/navigation';
 
 import { Button } from './ui/button';
+import Image from 'next/image';
 
 interface Store {
   id: number;
@@ -113,10 +114,24 @@ const Map = ({ user }: any) => {
                   icon={storeIcon}
                 >
                   <Popup>
-                    <strong>{store.name}</strong> <br /> {store.address}
-                    <div className='flex gap-2 my-1'>
-                      <Button variant='secondary'>Prenota</Button>
-                      <Button variant='secondary'>Portami lì</Button>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <Image
+                        src='https://your-image-url-here.jpg' // Replace with your actual image URL
+                        alt='Store'
+                        style={{
+                          width: '50px',
+                          height: '50px',
+                          borderRadius: '50%',
+                          marginRight: '10px',
+                        }}
+                      />
+                      <div>
+                        <strong>{store.name}</strong> <br /> {store.address}
+                        <div className='flex gap-2 my-1'>
+                          <Button variant='secondary'>Prenota</Button>
+                          <Button variant='secondary'>Portami lì</Button>
+                        </div>
+                      </div>
                     </div>
                   </Popup>
                 </Marker>
