@@ -7,12 +7,7 @@ import { LatLngExpression } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import {
-  navIcon,
-  getMyLocation,
-  storeIcon,
-  parseCoordinates,
-} from '@/utils/navigation';
+import { navIcon, getMyLoc, storeIcon, parseCoords } from '@/utils/navigation';
 import { Button } from './ui/button';
 
 interface Store {
@@ -64,7 +59,7 @@ const Map = ({ user }: any) => {
     };
 
     // Get user's current location and fetch nearby stores
-    getMyLocation((coords: LatLngExpression | null) => {
+    getMyLoc((coords: LatLngExpression | null) => {
       if (coords) {
         setCoord(coords);
 
@@ -107,7 +102,7 @@ const Map = ({ user }: any) => {
           {/* Markers for each store within 3km */}
           {stores.map((store) => {
             // Parse the store's location field 'POINT(lng lat)' into actual coordinates
-            const storeCoordinates = parseCoordinates(store.location);
+            const storeCoordinates = parseCoords(store.location);
 
             if (storeCoordinates) {
               return (
