@@ -117,7 +117,7 @@ const Map = ({ user }: any) => {
                     <div className='flex pr-3 items-start'>
                       <Image
                         className='mr-2 -ml-2 rounded-full'
-                        src='/store.jpg'
+                        src='/store.jpeg'
                         alt='Store'
                         width={50}
                         height={50}
