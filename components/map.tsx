@@ -18,6 +18,7 @@ import {
 interface Store {
   id: number;
   name: string;
+  address: string;
   coordinates: string;
 }
 
@@ -48,7 +49,7 @@ const Map = ({ user }: any) => {
     const getStores = async () => {
       const { data: storeData, error } = await supabase
         .from('stores')
-        .select('id, name, coordinates');
+        .select('id, name, address, coordinates');
 
       if (error) {
         console.error('Error fetching stores:', error);
@@ -107,7 +108,9 @@ const Map = ({ user }: any) => {
                   position={storeCoordinates}
                   icon={storeIcon}
                 >
-                  <Popup>{store.name}</Popup>
+                  <Popup>
+                    {store.name} <br /> {store.address}
+                  </Popup>
                 </Marker>
               );
             }
