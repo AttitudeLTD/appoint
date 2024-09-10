@@ -116,6 +116,7 @@ const Map = ({ user }: any) => {
                   <Popup>
                     <div className='flex items-center pr-3'>
                       <Image
+                        className='mr-1 -ml-1 rounded-full'
                         src='/store.jpg'
                         alt='Store'
                         width={50}
@@ -123,7 +124,7 @@ const Map = ({ user }: any) => {
                       />
                       <div>
                         <strong>{store.name}</strong> <br /> {store.address}
-                        <div className='flex gap-2 my-1'>
+                        <div className='flex gap-2 my-1 scale-90'>
                           <Button variant='secondary'>Prenota</Button>
                           <Button variant='secondary'>Portami lì</Button>
                         </div>
