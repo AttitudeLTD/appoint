@@ -111,8 +111,10 @@ const Map = ({ user }: any) => {
                 >
                   <Popup>
                     <strong>{store.name}</strong> <br /> {store.address}
-                    <Button variant='secondary'>Prenota</Button>
-                    <Button>Portami lì</Button>
+                    <div className='flex gap-2 my-1'>
+                      <Button variant='secondary'>Prenota</Button>
+                      <Button variant='secondary'>Portami lì</Button>
+                    </div>
                   </Popup>
                 </Marker>
               );
