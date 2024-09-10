@@ -94,3 +94,20 @@ export const haversineDistance = (
 
   return R * c; // Distance in km
 };
+
+// Utility to parse 'POINT(lng lat)' into [lat, lng]
+export const parseCoordinates = (
+  coordinates: string
+): [number, number] | null => {
+  const match = coordinates.match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
+  if (match) {
+    const lng = parseFloat(match[1]);
+    const lat = parseFloat(match[2]);
+
+    // Ensure both lat and lng are valid numbers
+    if (!isNaN(lat) && !isNaN(lng)) {
+      return [lat, lng]; // Return valid [lat, lng] tuple
+    }
+  }
+  return null; // Return null if parsing failed
+};

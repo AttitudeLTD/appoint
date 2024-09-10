@@ -7,7 +7,12 @@ import { LatLngExpression } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import { navIcon, getMyLocation, storeIcon } from '@/utils/navigation';
+import {
+  navIcon,
+  getMyLocation,
+  storeIcon,
+  parseCoordinates,
+} from '@/utils/navigation';
 import { Button } from './ui/button';
 
 interface Store {
@@ -23,12 +28,6 @@ const Map = ({ user }: any) => {
   const [userName, setUserName] = useState<string | null>(null);
   const [coord, setCoord] = useState<LatLngExpression | null>(null);
   const [stores, setStores] = useState<Store[]>([]);
-
-  // Utility to parse the coordinates string '[lat, lng]' into a LatLng array
-  const parseCoordinates = (coordinates: string): [number, number] => {
-    const strippedCoords = coordinates.replace(/[\[\]]/g, '').split(','); // Remove square brackets and split by comma
-    return [parseFloat(strippedCoords[0]), parseFloat(strippedCoords[1])]; // Convert strings to numbers
-  };
 
   useEffect(() => {
     // Fetch user's name
@@ -72,7 +71,6 @@ const Map = ({ user }: any) => {
         // Assuming coords is a tuple [lat, lng]
         if (Array.isArray(coords)) {
           getStoresWithinRadius(coords[0], coords[1]); // Fetch stores when user location is available
-          console.log(stores);
         } else {
           console.error('Invalid coordinates format');
         }
@@ -108,24 +106,29 @@ const Map = ({ user }: any) => {
 
           {/* Markers for each store within 3km */}
           {stores.map((store) => {
-            // Parse the store's location field '[lat, lng]' into actual coordinates
+            // Parse the store's location field 'POINT(lng lat)' into actual coordinates
             const storeCoordinates = parseCoordinates(store.location);
 
-            return (
-              <Marker
-                key={store.id}
-                position={storeCoordinates} // This will now be a [lat, lng] tuple
-                icon={storeIcon}
-              >
-                <Popup>
-                  <strong>{store.name}</strong> <br /> {store.address}
-                  <div className='flex gap-2 my-1'>
-                    <Button variant='secondary'>Prenota</Button>
-                    <Button variant='secondary'>Portami lì</Button>
-                  </div>
-                </Popup>
-              </Marker>
-            );
+            if (storeCoordinates) {
+              return (
+                <Marker
+                  key={store.id}
+                  position={storeCoordinates} // This will now be a [lat, lng] tuple
+                  icon={storeIcon}
+                >
+                  <Popup>
+                    <strong>{store.name}</strong> <br /> {store.address}
+                    <div className='flex gap-2 my-1'>
+                      <Button variant='secondary'>Prenota</Button>
+                      <Button variant='secondary'>Portami lì</Button>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            } else {
+              console.error(`Invalid coordinates for store: ${store.name}`);
+              return null; // Skip rendering if coordinates are invalid
+            }
           })}
         </MapContainer>
       ) : (
