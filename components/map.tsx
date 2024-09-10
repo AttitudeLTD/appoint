@@ -14,6 +14,7 @@ import {
   storeIcon,
   haversineDistance,
 } from '@/utils/navigation';
+import { Button } from './ui/button';
 
 interface Store {
   id: number;
@@ -109,7 +110,9 @@ const Map = ({ user }: any) => {
                   icon={storeIcon}
                 >
                   <Popup>
-                    {store.name} <br /> {store.address}
+                    <strong>{store.name}</strong> <br /> {store.address}
+                    <Button variant='secondary'>Prenota</Button>
+                    <Button>Portami lì</Button>
                   </Popup>
                 </Marker>
               );
