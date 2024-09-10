@@ -113,18 +113,20 @@ const Map = ({ user }: any) => {
                   position={storeCoordinates} // This will now be a [lat, lng] tuple
                   icon={storeIcon}
                 >
-                  <Popup className='flex flex-row'>
-                    <Image
-                      src='/store.jpg'
-                      alt='Store'
-                      width={50}
-                      height={50}
-                    />
-                    <div>
-                      <strong>{store.name}</strong> <br /> {store.address}
-                      <div className='flex gap-2 my-1'>
-                        <Button variant='secondary'>Prenota</Button>
-                        <Button variant='secondary'>Portami lì</Button>
+                  <Popup>
+                    <div className='flex items-center pr-3'>
+                      <Image
+                        src='/store.jpg'
+                        alt='Store'
+                        width={50}
+                        height={50}
+                      />
+                      <div>
+                        <strong>{store.name}</strong> <br /> {store.address}
+                        <div className='flex gap-2 my-1'>
+                          <Button variant='secondary'>Prenota</Button>
+                          <Button variant='secondary'>Portami lì</Button>
+                        </div>
                       </div>
                     </div>
                   </Popup>
