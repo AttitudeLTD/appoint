@@ -118,12 +118,8 @@ const Map = ({ user }: any) => {
                       <Image
                         src='https://unsplash.com/it/foto/rendering-3d-del-negozio-di-moda-uomo-MGJACXj89tE'
                         alt='Store'
-                        style={{
-                          width: '50px',
-                          height: '50px',
-                          borderRadius: '50%',
-                          marginRight: '10px',
-                        }}
+                        width={50}
+                        height={50}
                       />
                       <div>
                         <strong>{store.name}</strong> <br /> {store.address}
