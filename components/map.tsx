@@ -8,7 +8,9 @@ import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import { navIcon, getMyLoc, storeIcon, parseCoords } from '@/utils/navigation';
+
 import { Button } from './ui/button';
+import Image from 'next/image';
 
 interface Store {
   id: number;
@@ -112,10 +114,21 @@ const Map = ({ user }: any) => {
                   icon={storeIcon}
                 >
                   <Popup>
-                    <strong>{store.name}</strong> <br /> {store.address}
-                    <div className='flex gap-2 my-1'>
-                      <Button variant='secondary'>Prenota</Button>
-                      <Button variant='secondary'>Portami lì</Button>
+                    <div className='flex pr-3 items-start'>
+                      <Image
+                        className='mr-2 -ml-2 rounded-full'
+                        src='/store.jpeg'
+                        alt='Store'
+                        width={50}
+                        height={50}
+                      />
+                      <div>
+                        <strong>{store.name}</strong> <br /> {store.address}
+                        <div className='flex gap-2 my-1 scale-90'>
+                          <Button variant='secondary'>Prenota</Button>
+                          <Button variant='secondary'>Portami lì</Button>
+                        </div>
+                      </div>
                     </div>
                   </Popup>
                 </Marker>
