@@ -19,6 +19,14 @@ const Hero = () => {
         {/* Radial gradient for the container to give a faded look */}
         <div className='absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black-100 bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]' />
       </div>
+
+      <div className='flex justify-center'>
+        <div className='max-w-[89vw]'>
+          <h2 className='uppercase tracking-widest'>
+            Trova la prossima attività sul territorio
+          </h2>
+        </div>
+      </div>
     </div>
   );
 };
