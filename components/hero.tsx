@@ -1,3 +1,5 @@
+import { Navigation } from 'lucide-react';
+import MagicButton from './ui/magic-button';
 import { Spotlight } from './ui/spotlight';
 import { TextGenerateEffect } from './ui/text-generate-effect';
 
@@ -35,6 +37,14 @@ const Hero = () => {
           <p className='text-center md:tracking-wider mb-4 text-sm md:text-lg lg:text-2xl'>
             Organizza le tue attività di vendita in base al miglior percorso
           </p>
+
+          <a href='#about'>
+            <MagicButton
+              title='Scopri di più'
+              icon={<Navigation />}
+              position='right'
+            />
+          </a>
         </div>
       </div>
     </div>
