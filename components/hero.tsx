@@ -32,7 +32,7 @@ const Hero = () => {
             words='Trova la prossima attività sul territorio'
           />
 
-          <p className='text-center'></p>
+          <p className='text-center md:tracking-wider mb-4 text-sm md:text-lg lg:text-2xl'></p>
         </div>
       </div>
     </div>
