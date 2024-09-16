@@ -31,6 +31,8 @@ const Hero = () => {
             className='text-center text-[40px] md:text-5xl lg:text-6xl'
             words='Trova la prossima attività sul territorio'
           />
+
+          <p className='text-center'></p>
         </div>
       </div>
     </div>
