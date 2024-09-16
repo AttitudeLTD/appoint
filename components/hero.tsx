@@ -1,4 +1,5 @@
-import { Navigation } from 'lucide-react';
+import { FaLocationArrow } from 'react-icons/fa6';
+
 import MagicButton from './ui/magic-button';
 import { Spotlight } from './ui/spotlight';
 import { TextGenerateEffect } from './ui/text-generate-effect';
@@ -41,7 +42,7 @@ const Hero = () => {
           <a href='#about'>
             <MagicButton
               title='Scopri di più'
-              icon={<Navigation />}
+              icon={<FaLocationArrow />}
               position='right'
             />
           </a>
