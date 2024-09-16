@@ -1,4 +1,5 @@
 import { Spotlight } from './ui/spotlight';
+import { TextGenerateEffect } from './ui/text-generate-effect';
 
 const Hero = () => {
   return (
@@ -25,6 +26,8 @@ const Hero = () => {
           <h2 className='uppercase tracking-widest text-xs text-center text-blue-100 max-w-80'>
             Trova la prossima attività sul territorio
           </h2>
+
+          <TextGenerateEffect className='' words='Attitude Appoint' />
         </div>
       </div>
     </div>
