@@ -32,7 +32,7 @@ const Hero = () => {
             words='Trova la prossima attività sul territorio'
           />
 
-          <p className='text-center md:tracking-wider mb-4 text-sm md:text-lg lg:text-xl'>
+          <p className='text-center md:tracking-wider mb-4 text-sm md:text-lg lg:text-2xl'>
             Organizza le tue attività di vendita in base al miglior percorso
           </p>
         </div>
