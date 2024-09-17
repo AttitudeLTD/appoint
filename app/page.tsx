@@ -1,6 +1,8 @@
 import { FaHome } from 'react-icons/fa';
 
 import Hero from '@/components/hero';
+import Grid from '@/components/grid';
+
 import { FloatingNav } from '@/components/ui/floating-nav';
 
 export default async function Index() {
@@ -11,6 +13,7 @@ export default async function Index() {
           navItems={[{ name: 'Home', link: '/', icon: <FaHome /> }]}
         />
         <Hero />
+        <Grid />
       </div>
     </main>
   );
