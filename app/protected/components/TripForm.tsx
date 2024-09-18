@@ -1,15 +1,15 @@
 import { ThemeToggle } from '@/components/ThemeToggle';
-import PlaceSearchOrigin from './PlaceSearchOrigin';
+// import PlaceSearchOrigin from './PlaceSearchOrigin';
 
 const TripForm = (props: any) => {
   return (
     <form className='flex flex-col mt-5 mx-2'>
-      <PlaceSearchOrigin
+      {/* <PlaceSearchOrigin
         searchOriginLatitude={props.searchOriginLatitude}
         searchOriginLongitude={props.searchOriginLongitude}
         setSetsearchOriginLatitude={props.setSetsearchOriginLatitude}
         setSetsearchOriginLongitude={props.setSetsearchOriginLongitude}
-      />
+      /> */}
 
       <input
         className='bg-black my-2 h-10 rounded-xl text-white font-bold p-2'
