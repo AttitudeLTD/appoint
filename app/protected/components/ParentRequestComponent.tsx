@@ -1,7 +1,6 @@
 'use client';
 
 import TripForm from './TripForm';
-import Map from './Map';
 import { useState } from 'react';
 
 const ParentRequestComponent = () => {
