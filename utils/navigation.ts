@@ -1,4 +1,6 @@
 import L, { LatLngExpression } from 'leaflet';
+import { MapPinPlus } from 'lucide-react';
+
 import MarkerShadow from '../node_modules/leaflet/dist/images/marker-shadow.png';
 
 // Function to convert an SVG element to a data URL
