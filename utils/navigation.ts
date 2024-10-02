@@ -75,3 +75,24 @@ export const parseCoords = (coordinates: string): [number, number] | null => {
   }
   return null; // Return null if parsing failed
 };
+
+// Generate the SVG string for MapPinMinus icon with light orange fill and white stroke
+export const mapPinMinusSvgString = `
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="lightorange" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-minus-inside">
+  <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
+  <path d="M27 30h18"/>
+</svg>`;
+
+// Convert the SVG string to a data URL
+export const mapPinMinusIconUrl = svgToDataUrl(mapPinMinusSvgString);
+
+// Define the new Leaflet icon for booked stores
+export const mapPinMinusIcon = new L.Icon({
+  iconUrl: mapPinMinusIconUrl,
+  iconRetinaUrl: mapPinMinusIconUrl,
+  iconSize: [24, 24],
+  iconAnchor: [12, 24],
+  popupAnchor: [0, -24],
+  shadowUrl: MarkerShadow.src,
+  shadowSize: [41, 41],
+});
