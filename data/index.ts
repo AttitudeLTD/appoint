@@ -60,7 +60,7 @@ export const gridItems = [
   },
   {
     id: 6,
-    title: 'Do you want to start a project together?',
+    title: 'Altre domande?',
     description: '',
     className: 'lg:col-span-2 md:col-span-3 md:row-span-1',
     imgClassName: '',
