@@ -126,7 +126,20 @@ const Map = ({ user }: any) => {
                         <strong>{store.name}</strong> <br /> {store.address}
                         <div className='flex gap-2 my-1 scale-90'>
                           <Button variant='secondary'>Prenota</Button>
-                          <Button variant='secondary'>Portami lì</Button>
+                          <Button
+                            variant='secondary'
+                            onClick={() => {
+                              if (Array.isArray(coord) && coord.length === 2) {
+                                const [lat, lng] = coord;
+                                const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                                window.open(gmapsUrl, '_blank'); // Opens Google Maps in a new tab
+                              } else {
+                                console.error('Invalid coordinates format');
+                              }
+                            }}
+                          >
+                            Portami lì
+                          </Button>
                         </div>
                       </div>
                     </div>
