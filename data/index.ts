@@ -8,7 +8,7 @@ export const navItems = [
 export const gridItems = [
   {
     id: 1,
-    title: 'Agisci da mobile, gestisci tutto il resto da computer!',
+    title: 'Agisci da mobile, gestisci le lavorazioni da computer!',
     description: '',
     className: 'lg:col-span-3 md:col-span-6 md:row-span-4 lg:min-h-[60vh]',
     imgClassName: 'w-full h-full',
