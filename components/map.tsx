@@ -7,8 +7,13 @@ import { LatLngExpression } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import { navIcon, getMyLoc, storeIcon, parseCoords } from '@/utils/navigation';
-
+import {
+  navIcon,
+  getMyLoc,
+  storeIcon,
+  parseCoords,
+  mapPinMinusIcon,
+} from '@/utils/navigation'; // Import mapPinMinusIcon
 import { Button } from './ui/button';
 import Image from 'next/image';
 
@@ -21,10 +26,10 @@ interface Store {
 
 const Map = ({ user }: any) => {
   const supabase = createClient();
-
   const [userName, setUserName] = useState<string | null>(null);
   const [coord, setCoord] = useState<LatLngExpression | null>(null);
   const [stores, setStores] = useState<Store[]>([]);
+  const [bookedStores, setBookedStores] = useState<number[]>([]); // Track booked stores
 
   useEffect(() => {
     // Fetch user's name
@@ -79,6 +84,10 @@ const Map = ({ user }: any) => {
     getUserName();
   }, [user.id, supabase]);
 
+  const handleBookStore = (storeId: number) => {
+    setBookedStores((prev) => [...prev, storeId]);
+  };
+
   return (
     <>
       {coord ? (
@@ -107,11 +116,16 @@ const Map = ({ user }: any) => {
             const storeCoordinates = parseCoords(store.location);
 
             if (storeCoordinates) {
+              // Determine if the store is booked or not
+              const icon = bookedStores.includes(store.id)
+                ? mapPinMinusIcon
+                : storeIcon;
+
               return (
                 <Marker
                   key={store.id}
                   position={storeCoordinates} // This will now be a [lat, lng] tuple
-                  icon={storeIcon}
+                  icon={icon}
                 >
                   <Popup>
                     <div className='flex pr-3 items-start'>
@@ -125,8 +139,26 @@ const Map = ({ user }: any) => {
                       <div>
                         <strong>{store.name}</strong> <br /> {store.address}
                         <div className='flex gap-2 my-1 scale-90'>
-                          <Button variant='secondary'>Prenota</Button>
-                          <Button variant='secondary'>Portami lì</Button>
+                          <Button
+                            variant='secondary'
+                            onClick={() => handleBookStore(store.id)}
+                          >
+                            Prenota
+                          </Button>
+                          <Button
+                            variant='secondary'
+                            onClick={() => {
+                              if (Array.isArray(coord) && coord.length === 2) {
+                                const [lat, lng] = coord;
+                                const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                                window.open(gmapsUrl, '_blank'); // Opens Google Maps in a new tab
+                              } else {
+                                console.error('Invalid coordinates format');
+                              }
+                            }}
+                          >
+                            Portami lì
+                          </Button>
                         </div>
                       </div>
                     </div>
