@@ -17,16 +17,16 @@ export const navIcon = new L.Icon({
   popupAnchor: [0, -12],
 });
 
-// Generate the SVG string for MapPin icon from Lucide with a custom color fill
-export const mapPinSvgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="red" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin"><path d="M12 21s-6-5.686-6-10A6 6 0 0 1 12 5a6 6 0 0 1 6 6c0 4.314-6 10-6 10z"></path><circle cx="12" cy="11" r="3"></circle></svg>`;
+// Generate the SVG string for MapPinPlus icon from Lucide with a blue fill
+export const mapPinPlusSvgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="blue" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-plus"><path d="M12 21s-6-5.686-6-10A6 6 0 0 1 12 5a6 6 0 0 1 6 6c0 4.314-6 10-6 10z"></path><circle cx="12" cy="11" r="3"></circle><line x1="12" y1="7" x2="12" y2="15"></line><line x1="9" y1="11" x2="15" y2="11"></line></svg>`;
 
 // Convert the SVG string to a data URL
-export const mapPinIconUrl = svgToDataUrl(mapPinSvgString);
+export const mapPinPlusIconUrl = svgToDataUrl(mapPinPlusSvgString);
 
-// Define your custom Leaflet store icon using the MapPin SVG data URL
+// Define your custom Leaflet store icon using the MapPinPlus SVG data URL
 export const storeIcon = new L.Icon({
-  iconUrl: mapPinIconUrl,
-  iconRetinaUrl: mapPinIconUrl,
+  iconUrl: mapPinPlusIconUrl,
+  iconRetinaUrl: mapPinPlusIconUrl,
   iconSize: [24, 24], // Adjust the size as needed
   iconAnchor: [12, 24], // Anchor it to the bottom of the icon
   popupAnchor: [0, -24], // Adjust popup position above the icon
