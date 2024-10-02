@@ -1,6 +1,4 @@
 import L, { LatLngExpression } from 'leaflet';
-import { MapPinPlus } from 'lucide-react';
-
 import MarkerShadow from '../node_modules/leaflet/dist/images/marker-shadow.png';
 
 // Function to convert an SVG element to a data URL
@@ -19,8 +17,13 @@ export const navIcon = new L.Icon({
   popupAnchor: [0, -12],
 });
 
-// Generate the SVG string for MapPinPlus icon from Lucide with a blue fill
-export const mapPinPlusSvgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="blue" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-plus"><path d="M12 21s-6-5.686-6-10A6 6 0 0 1 12 5a6 6 0 0 1 6 6c0 4.314-6 10-6 10z"></path><circle cx="12" cy="11" r="3"></circle><line x1="12" y1="7" x2="12" y2="15"></line><line x1="9" y1="11" x2="15" y2="11"></line></svg>`;
+// Generate the SVG string for MapPinPlus icon with blue stroke
+export const mapPinPlusSvgString = `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="blue" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pinned">
+  <path d="M18 8c0 3.613-3.869 7.429-5.393 8.795a1 1 0 0 1-1.214 0C9.87 15.429 6 11.613 6 8a6 6 0 0 1 12 0"/>
+  <circle cx="12" cy="8" r="2"/>
+  <path d="M8.714 14h-3.71a1 1 0 0 0-.948.683l-2.004 6A1 1 0 0 0 3 22h18a1 1 0 0 0 .948-1.316l-2-6a1 1 0 0 0-.949-.684h-3.712"/>
+</svg>`;
 
 // Convert the SVG string to a data URL
 export const mapPinPlusIconUrl = svgToDataUrl(mapPinPlusSvgString);
