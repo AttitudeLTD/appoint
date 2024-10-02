@@ -18,7 +18,7 @@ export const gridItems = [
   },
   {
     id: 2,
-    title: "I'm very flexible with time zone communications",
+    title: 'Ottimizza a monte i tuoi spostamenti prima ancora di partire',
     description: '',
     className: 'lg:col-span-2 md:col-span-3 md:row-span-2',
     imgClassName: '',
