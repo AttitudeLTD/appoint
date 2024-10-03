@@ -159,6 +159,12 @@ const Map = ({ user }: any) => {
                           >
                             Portami lì
                           </Button>
+                          <Button
+                            variant='secondary'
+                            // onClick={() => handleBookStore(store.id)}
+                          >
+                            Chiama
+                          </Button>
                         </div>
                       </div>
                     </div>
