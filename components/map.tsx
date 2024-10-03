@@ -139,6 +139,33 @@ const Map = ({ user }: any) => {
                       <div>
                         <strong>{store.name}</strong> <br /> {store.address}
                         <div className='flex gap-2 my-1 scale-90'>
+                          <div className='mb-1'>
+                            <Button
+                              variant='secondary'
+                              onClick={() => {
+                                if (
+                                  Array.isArray(coord) &&
+                                  coord.length === 2
+                                ) {
+                                  const [lat, lng] = coord;
+                                  const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                                  window.open(gmapsUrl, '_blank'); // Opens Google Maps in a new tab
+                                } else {
+                                  console.error('Invalid coordinates format');
+                                }
+                              }}
+                            >
+                              Portami lì
+                            </Button>
+
+                            <Button
+                              variant='secondary'
+                              // onClick={() => handleBookStore(store.id)}
+                            >
+                              Chiama
+                            </Button>
+                          </div>
+
                           <Button
                             variant='secondary'
                             onClick={() => handleBookStore(store.id)}
@@ -149,26 +176,6 @@ const Map = ({ user }: any) => {
                             {/* In trattativa (15 gg) */}
                             {/* Contratto sottoscritto */}
                             {/* Non interessato */}
-                          </Button>
-                          <Button
-                            variant='secondary'
-                            onClick={() => {
-                              if (Array.isArray(coord) && coord.length === 2) {
-                                const [lat, lng] = coord;
-                                const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
-                                window.open(gmapsUrl, '_blank'); // Opens Google Maps in a new tab
-                              } else {
-                                console.error('Invalid coordinates format');
-                              }
-                            }}
-                          >
-                            Portami lì
-                          </Button>
-                          <Button
-                            variant='secondary'
-                            // onClick={() => handleBookStore(store.id)}
-                          >
-                            Chiama
                           </Button>
                         </div>
                       </div>
