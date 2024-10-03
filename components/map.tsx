@@ -144,6 +144,11 @@ const Map = ({ user }: any) => {
                             onClick={() => handleBookStore(store.id)}
                           >
                             Gestisci
+                            {/* Contatto iniziale (3 gg) */}
+                            {/* Fissato appuntamento (10 gg) */}
+                            {/* In trattativa (15 gg) */}
+                            {/* Contratto sottoscritto */}
+                            {/* Non interessato */}
                           </Button>
                           <Button
                             variant='secondary'
