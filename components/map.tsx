@@ -18,6 +18,18 @@ import {
 import { Phone, Navigation, Settings } from 'lucide-react';
 import { Button } from './ui/button';
 import Image from 'next/image';
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from './ui/sheet';
+import { Label } from './ui/label';
+import { Input } from './ui/input';
 
 interface Store {
   id: number;
@@ -161,12 +173,58 @@ const Map = ({ user }: any) => {
                               <Navigation className='mr-1' /> Portami lì
                             </Button>
 
-                            <Button
-                              variant='secondary'
-                              onClick={() => handleBookStore(store.id)}
-                            >
-                              <Settings className='mr-1' /> Gestisci
-                            </Button>
+                            <Sheet>
+                              <SheetTrigger asChild>
+                                <Button
+                                  variant='secondary'
+                                  // onClick={() => handleBookStore(store.id)}
+                                >
+                                  <Settings className='mr-1' /> Gestisci
+                                </Button>
+                              </SheetTrigger>
+                              <SheetContent>
+                                <SheetHeader>
+                                  <SheetTitle>Edit profile</SheetTitle>
+                                  <SheetDescription>
+                                    Make changes to your profile here. Click
+                                    save when you're done.
+                                  </SheetDescription>
+                                </SheetHeader>
+                                <div className='grid gap-4 py-4'>
+                                  <div className='grid grid-cols-4 items-center gap-4'>
+                                    <Label
+                                      htmlFor='name'
+                                      className='text-right'
+                                    >
+                                      Name
+                                    </Label>
+                                    <Input
+                                      id='name'
+                                      value='Pedro Duarte'
+                                      className='col-span-3'
+                                    />
+                                  </div>
+                                  <div className='grid grid-cols-4 items-center gap-4'>
+                                    <Label
+                                      htmlFor='username'
+                                      className='text-right'
+                                    >
+                                      Username
+                                    </Label>
+                                    <Input
+                                      id='username'
+                                      value='@peduarte'
+                                      className='col-span-3'
+                                    />
+                                  </div>
+                                </div>
+                                <SheetFooter>
+                                  <SheetClose asChild>
+                                    <Button type='submit'>Save changes</Button>
+                                  </SheetClose>
+                                </SheetFooter>
+                              </SheetContent>
+                            </Sheet>
                           </div>
 
                           <Button
