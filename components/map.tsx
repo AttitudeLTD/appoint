@@ -143,7 +143,7 @@ const Map = ({ user }: any) => {
                             variant='secondary'
                             onClick={() => handleBookStore(store.id)}
                           >
-                            Prenota
+                            Gestisci
                           </Button>
                           <Button
                             variant='secondary'
