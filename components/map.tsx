@@ -24,6 +24,7 @@ interface Store {
   name: string;
   address: string;
   location: string; // PostGIS 'location' (geography) field
+  phone: string;
 }
 
 const Map = ({ user }: any) => {
@@ -99,7 +100,7 @@ const Map = ({ user }: any) => {
             width: '100vw',
           }}
           center={coord}
-          zoom={15}
+          zoom={16}
           scrollWheelZoom={true}
         >
           <TileLayer
@@ -171,7 +172,13 @@ const Map = ({ user }: any) => {
                             </Button>
                           </div>
 
-                          <Button className='flex-grow' variant='secondary'>
+                          <Button
+                            className='flex-grow'
+                            variant='secondary'
+                            onClick={
+                              () => window.open(`tel:${store.phone}`, '_self') // Open tel: link in the same tab
+                            }
+                          >
                             <Phone className='mr-1' /> Chiama
                           </Button>
                         </div>
