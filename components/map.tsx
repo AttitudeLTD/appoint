@@ -99,7 +99,7 @@ const Map = ({ user }: any) => {
             width: '100vw',
           }}
           center={coord}
-          zoom={16}
+          zoom={15}
           scrollWheelZoom={true}
         >
           <TileLayer
