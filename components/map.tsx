@@ -131,7 +131,7 @@ const Map = ({ user }: any) => {
                   icon={icon}
                 >
                   <Popup>
-                    <div className='flex pr-3 items-start'>
+                    <div className='flex items-start'>
                       <Image
                         className='mr-2 -ml-2 rounded-full'
                         src='/store.jpeg'
@@ -141,8 +141,8 @@ const Map = ({ user }: any) => {
                       />
                       <div>
                         <strong>{store.name}</strong> <br /> {store.address}
-                        <div className='flex gap-2 my-1 scale-90'>
-                          <div>
+                        <div className='flex flex-col gap-2 my-1 scale-90'>
+                          <div className='flex gap-2'>
                             <Button
                               variant='secondary'
                               onClick={() => {
@@ -163,22 +163,14 @@ const Map = ({ user }: any) => {
 
                             <Button
                               variant='secondary'
-                              // onClick={() => handleBookStore(store.id)}
+                              onClick={() => handleBookStore(store.id)}
                             >
-                              Chiama
+                              Gestisci
                             </Button>
                           </div>
 
-                          <Button
-                            variant='secondary'
-                            onClick={() => handleBookStore(store.id)}
-                          >
-                            Gestisci
-                            {/* Contatto iniziale (3 gg) */}
-                            {/* Fissato appuntamento (10 gg) */}
-                            {/* In trattativa (15 gg) */}
-                            {/* Contratto sottoscritto */}
-                            {/* Non interessato */}
+                          <Button className='flex-grow' variant='secondary'>
+                            Chiama
                           </Button>
                         </div>
                       </div>
