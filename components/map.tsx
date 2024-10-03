@@ -13,7 +13,9 @@ import {
   storeIcon,
   parseCoords,
   mapPinMinusIcon,
-} from '@/utils/navigation'; // Import mapPinMinusIcon
+} from '@/utils/navigation';
+
+import { Phone, Navigation, Settings } from 'lucide-react';
 import { Button } from './ui/button';
 import Image from 'next/image';
 
@@ -131,7 +133,7 @@ const Map = ({ user }: any) => {
                   icon={icon}
                 >
                   <Popup>
-                    <div className='flex items-start'>
+                    <div className='flex pr-10 items-start'>
                       <Image
                         className='mr-2 -ml-2 rounded-full'
                         src='/store.jpeg'
@@ -158,19 +160,19 @@ const Map = ({ user }: any) => {
                                 }
                               }}
                             >
-                              Portami lì
+                              <Navigation className='mr-1' /> Portami lì
                             </Button>
 
                             <Button
                               variant='secondary'
                               onClick={() => handleBookStore(store.id)}
                             >
-                              Gestisci
+                              <Settings className='mr-1' /> Gestisci
                             </Button>
                           </div>
 
                           <Button className='flex-grow' variant='secondary'>
-                            Chiama
+                            <Phone className='mr-1' /> Chiama
                           </Button>
                         </div>
                       </div>
