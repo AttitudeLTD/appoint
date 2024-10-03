@@ -139,7 +139,7 @@ const Map = ({ user }: any) => {
                       <div>
                         <strong>{store.name}</strong> <br /> {store.address}
                         <div className='flex gap-2 my-1 scale-90'>
-                          <div className='mb-1'>
+                          <div>
                             <Button
                               variant='secondary'
                               onClick={() => {
