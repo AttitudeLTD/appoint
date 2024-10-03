@@ -103,10 +103,7 @@ const Map = ({ user }: any) => {
           zoom={16}
           scrollWheelZoom={true}
         >
-          <TileLayer
-            url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
-            attribution='&copy; <a href="https://carto.com/">CartoDB</a> contributors'
-          />
+          <TileLayer url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png' />
 
           {/* Marker for the user's current location */}
           <Marker icon={navIcon} position={coord}>
