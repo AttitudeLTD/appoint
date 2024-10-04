@@ -140,107 +140,98 @@ const Map = ({ user }: any) => {
               return (
                 <Marker key={store.id} position={storeCoordinates} icon={icon}>
                   <Popup>
-                    <div className='flex flex-col max-w-xs p-4 rounded-lg shadow-lg bg-white text-gray-900'>
-                      <div className='flex items-center'>
-                        <Image
-                          className='rounded-full shadow-md'
-                          src='/store.jpeg'
-                          alt='Store'
-                          width={50}
-                          height={50}
-                        />
-                        <div className='ml-3'>
-                          <strong className='text-lg font-semibold'>
-                            {store.name}
-                          </strong>
-                          <p className='text-sm text-gray-500'>
-                            {store.address}
-                          </p>
-                          <p className='text-xs text-gray-400 mt-1'>
-                            Category:{' '}
-                            <span className='font-medium'>
-                              {store.category}
-                            </span>
-                          </p>
-                        </div>
+                    <div className='flex items-center'>
+                      <Image
+                        className='rounded-full shadow-md'
+                        src='/store.jpeg'
+                        alt='Store'
+                        width={50}
+                        height={50}
+                      />
+                      <div className='ml-3'>
+                        <strong className='text-lg font-semibold'>
+                          {store.name}
+                        </strong>
+                        <p className='text-sm text-gray-500'>{store.address}</p>
+                        <p className='text-xs text-gray-400 mt-1'>
+                          Category:{' '}
+                          <span className='font-medium'>{store.category}</span>
+                        </p>
                       </div>
+                    </div>
 
-                      <div className='flex flex-col gap-3 mt-3'>
-                        <div className='flex items-center gap-2'>
-                          <Button
-                            variant='secondary'
-                            className='w-full'
-                            onClick={() => {
-                              if (Array.isArray(coord) && coord.length === 2) {
-                                const [lat, lng] = coord;
-                                const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
-                                window.open(gmapsUrl, '_blank'); // Opens Google Maps in a new tab
-                              } else {
-                                console.error('Invalid coordinates format');
-                              }
-                            }}
-                          >
-                            <Navigation className='mr-2' /> Indicazioni
-                          </Button>
-                        </div>
-
+                    <div className='flex flex-col gap-3 mt-3'>
+                      <div className='flex items-center gap-2'>
                         <Button
                           variant='secondary'
                           className='w-full'
                           onClick={() => {
-                            window.open(`tel:${store.phone}`, '_self'); // Open tel: link in the same tab
-                            console.log(store);
+                            if (Array.isArray(coord) && coord.length === 2) {
+                              const [lat, lng] = coord;
+                              const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                              window.open(gmapsUrl, '_blank'); // Opens Google Maps in a new tab
+                            } else {
+                              console.error('Invalid coordinates format');
+                            }
                           }}
                         >
-                          <Phone className='mr-2' /> Chiama
+                          <Navigation className='mr-2' /> Indicazioni
                         </Button>
-
-                        <Sheet>
-                          <SheetTrigger asChild>
-                            <Button variant='secondary' className='w-full'>
-                              <Settings className='mr-2' /> Gestisci
-                            </Button>
-                          </SheetTrigger>
-                          <SheetContent>
-                            <SheetHeader>
-                              <SheetTitle>Manage Store</SheetTitle>
-                              <SheetDescription>
-                                Customize the store details here.
-                              </SheetDescription>
-                            </SheetHeader>
-                            <div className='grid gap-4 py-4'>
-                              <div className='grid grid-cols-4 items-center gap-4'>
-                                <Label htmlFor='name' className='text-right'>
-                                  Name
-                                </Label>
-                                <Input
-                                  id='name'
-                                  value={store.name}
-                                  className='col-span-3'
-                                />
-                              </div>
-                              <div className='grid grid-cols-4 items-center gap-4'>
-                                <Label
-                                  htmlFor='category'
-                                  className='text-right'
-                                >
-                                  Category
-                                </Label>
-                                <Input
-                                  id='category'
-                                  value={store.category}
-                                  className='col-span-3'
-                                />
-                              </div>
-                            </div>
-                            <SheetFooter>
-                              <SheetClose asChild>
-                                <Button type='submit'>Save changes</Button>
-                              </SheetClose>
-                            </SheetFooter>
-                          </SheetContent>
-                        </Sheet>
                       </div>
+
+                      <Button
+                        variant='secondary'
+                        className='w-full'
+                        onClick={() => {
+                          window.open(`tel:${store.phone}`, '_self'); // Open tel: link in the same tab
+                          console.log(store);
+                        }}
+                      >
+                        <Phone className='mr-2' /> Chiama
+                      </Button>
+
+                      <Sheet>
+                        <SheetTrigger asChild>
+                          <Button variant='secondary' className='w-full'>
+                            <Settings className='mr-2' /> Gestisci
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent>
+                          <SheetHeader>
+                            <SheetTitle>Manage Store</SheetTitle>
+                            <SheetDescription>
+                              Customize the store details here.
+                            </SheetDescription>
+                          </SheetHeader>
+                          <div className='grid gap-4 py-4'>
+                            <div className='grid grid-cols-4 items-center gap-4'>
+                              <Label htmlFor='name' className='text-right'>
+                                Name
+                              </Label>
+                              <Input
+                                id='name'
+                                value={store.name}
+                                className='col-span-3'
+                              />
+                            </div>
+                            <div className='grid grid-cols-4 items-center gap-4'>
+                              <Label htmlFor='category' className='text-right'>
+                                Category
+                              </Label>
+                              <Input
+                                id='category'
+                                value={store.category}
+                                className='col-span-3'
+                              />
+                            </div>
+                          </div>
+                          <SheetFooter>
+                            <SheetClose asChild>
+                              <Button type='submit'>Save changes</Button>
+                            </SheetClose>
+                          </SheetFooter>
+                        </SheetContent>
+                      </Sheet>
                     </div>
                   </Popup>
                 </Marker>
