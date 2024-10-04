@@ -180,7 +180,7 @@ const Map = ({ user }: any) => {
                               }
                             }}
                           >
-                            <Navigation className='mr-2' /> Portami lì
+                            <Navigation className='mr-2' /> Indicazioni
                           </Button>
                         </div>
 
