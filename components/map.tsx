@@ -126,7 +126,7 @@ const Map = ({ user }: any) => {
             </Popup>
           </Marker>
 
-          {/* Markers for each store within 3km */}
+          {/* Marker for each store within 3km */}
           {stores.map((store) => {
             // Parse the store's location field 'POINT(lng lat)' into actual coordinates
             const storeCoordinates = parseCoords(store.location);
@@ -138,107 +138,108 @@ const Map = ({ user }: any) => {
                 : storeIcon;
 
               return (
-                <Marker
-                  key={store.id}
-                  position={storeCoordinates} // This will now be a [lat, lng] tuple
-                  icon={icon}
-                >
+                <Marker key={store.id} position={storeCoordinates} icon={icon}>
                   <Popup>
-                    <div className='flex pr-10 items-start'>
-                      <Image
-                        className='mr-2 -ml-2 rounded-full'
-                        src='/store.jpeg'
-                        alt='Store'
-                        width={50}
-                        height={50}
-                      />
-                      <div>
-                        <strong>{store.name}</strong> <br /> {store.address}
-                        <div className='flex flex-col gap-2 my-1 scale-90'>
-                          <div className='flex gap-2'>
-                            <Button
-                              variant='secondary'
-                              onClick={() => {
-                                if (
-                                  Array.isArray(coord) &&
-                                  coord.length === 2
-                                ) {
-                                  const [lat, lng] = coord;
-                                  const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
-                                  window.open(gmapsUrl, '_blank'); // Opens Google Maps in a new tab
-                                } else {
-                                  console.error('Invalid coordinates format');
-                                }
-                              }}
-                            >
-                              <Navigation className='mr-1' /> Portami lì
-                            </Button>
+                    <div className='flex flex-col max-w-xs p-4 rounded-lg shadow-lg bg-white text-gray-900'>
+                      <div className='flex items-center'>
+                        <Image
+                          className='rounded-full shadow-md'
+                          src='/store.jpeg'
+                          alt='Store'
+                          width={50}
+                          height={50}
+                        />
+                        <div className='ml-3'>
+                          <strong className='text-lg font-semibold'>
+                            {store.name}
+                          </strong>
+                          <p className='text-sm text-gray-500'>
+                            {store.address}
+                          </p>
+                          <p className='text-xs text-gray-400 mt-1'>
+                            Category:{' '}
+                            <span className='font-medium'>
+                              {store.category}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
 
-                            <Sheet>
-                              <SheetTrigger asChild>
-                                <Button
-                                  variant='secondary'
-                                  // onClick={() => handleBookStore(store.id)}
-                                >
-                                  <Settings className='mr-1' /> Gestisci
-                                </Button>
-                              </SheetTrigger>
-                              <SheetContent>
-                                <SheetHeader>
-                                  <SheetTitle>Edit profile</SheetTitle>
-                                  <SheetDescription>
-                                    Make changes to your profile here. Click
-                                    save when you're done.
-                                  </SheetDescription>
-                                </SheetHeader>
-                                <div className='grid gap-4 py-4'>
-                                  <div className='grid grid-cols-4 items-center gap-4'>
-                                    <Label
-                                      htmlFor='name'
-                                      className='text-right'
-                                    >
-                                      Name
-                                    </Label>
-                                    <Input
-                                      id='name'
-                                      value='Pedro Duarte'
-                                      className='col-span-3'
-                                    />
-                                  </div>
-                                  <div className='grid grid-cols-4 items-center gap-4'>
-                                    <Label
-                                      htmlFor='username'
-                                      className='text-right'
-                                    >
-                                      Username
-                                    </Label>
-                                    <Input
-                                      id='username'
-                                      value='@peduarte'
-                                      className='col-span-3'
-                                    />
-                                  </div>
-                                </div>
-                                <SheetFooter>
-                                  <SheetClose asChild>
-                                    <Button type='submit'>Save changes</Button>
-                                  </SheetClose>
-                                </SheetFooter>
-                              </SheetContent>
-                            </Sheet>
-                          </div>
-
+                      <div className='flex flex-col gap-3 mt-3'>
+                        <div className='flex items-center gap-2'>
                           <Button
-                            className='flex-grow'
                             variant='secondary'
+                            className='w-full'
                             onClick={() => {
-                              window.open(`tel:${store.phone}`, '_self'); // Open tel: link in the same tab
-                              console.log(store);
+                              if (Array.isArray(coord) && coord.length === 2) {
+                                const [lat, lng] = coord;
+                                const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                                window.open(gmapsUrl, '_blank'); // Opens Google Maps in a new tab
+                              } else {
+                                console.error('Invalid coordinates format');
+                              }
                             }}
                           >
-                            <Phone className='mr-1' /> Chiama
+                            <Navigation className='mr-2' /> Get Directions
                           </Button>
                         </div>
+
+                        <Button
+                          variant='secondary'
+                          className='w-full'
+                          onClick={() => {
+                            window.open(`tel:${store.phone}`, '_self'); // Open tel: link in the same tab
+                            console.log(store);
+                          }}
+                        >
+                          <Phone className='mr-2' /> Call Store
+                        </Button>
+
+                        <Sheet>
+                          <SheetTrigger asChild>
+                            <Button variant='secondary' className='w-full'>
+                              <Settings className='mr-2' /> Manage
+                            </Button>
+                          </SheetTrigger>
+                          <SheetContent>
+                            <SheetHeader>
+                              <SheetTitle>Manage Store</SheetTitle>
+                              <SheetDescription>
+                                Customize the store details here.
+                              </SheetDescription>
+                            </SheetHeader>
+                            <div className='grid gap-4 py-4'>
+                              <div className='grid grid-cols-4 items-center gap-4'>
+                                <Label htmlFor='name' className='text-right'>
+                                  Name
+                                </Label>
+                                <Input
+                                  id='name'
+                                  value={store.name}
+                                  className='col-span-3'
+                                />
+                              </div>
+                              <div className='grid grid-cols-4 items-center gap-4'>
+                                <Label
+                                  htmlFor='category'
+                                  className='text-right'
+                                >
+                                  Category
+                                </Label>
+                                <Input
+                                  id='category'
+                                  value={store.category}
+                                  className='col-span-3'
+                                />
+                              </div>
+                            </div>
+                            <SheetFooter>
+                              <SheetClose asChild>
+                                <Button type='submit'>Save changes</Button>
+                              </SheetClose>
+                            </SheetFooter>
+                          </SheetContent>
+                        </Sheet>
                       </div>
                     </div>
                   </Popup>
