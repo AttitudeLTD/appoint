@@ -230,9 +230,10 @@ const Map = ({ user }: any) => {
                           <Button
                             className='flex-grow'
                             variant='secondary'
-                            onClick={
-                              () => window.open(`tel:${store.phone}`, '_self') // Open tel: link in the same tab
-                            }
+                            onClick={() => {
+                              window.open(`tel:${store.phone}`, '_self'); // Open tel: link in the same tab
+                              console.log(store);
+                            }}
                           >
                             <Phone className='mr-1' /> Chiama
                           </Button>
