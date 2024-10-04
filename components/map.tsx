@@ -152,11 +152,10 @@ const Map = ({ user }: any) => {
                         <strong className='text-lg font-semibold'>
                           {store.name}
                         </strong>
-                        <p className='text-sm text-gray-500'>{store.address}</p>
-                        <p className='text-xs text-gray-400 mt-1'>
-                          Category:{' '}
+                        <p className='text-base text-gray-400'>
                           <span className='font-medium'>{store.category}</span>
                         </p>
+                        <p className='text-sm text-gray-500'>{store.address}</p>
                       </div>
                     </div>
 
