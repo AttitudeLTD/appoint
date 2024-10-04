@@ -37,6 +37,7 @@ interface Store {
   address: string;
   location: string; // PostGIS 'location' (geography) field
   phone: string;
+  category: string;
 }
 
 const Map = ({ user }: any) => {
