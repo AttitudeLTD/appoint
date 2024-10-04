@@ -61,17 +61,19 @@ export const getMyLoc = (
   }
 };
 
-// Utility to parse 'POINT(lng lat)' into [lat, lng]
 export const parseCoords = (coordinates: string): [number, number] | null => {
   const match = coordinates.match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
   if (match) {
     const lng = parseFloat(match[1]);
     const lat = parseFloat(match[2]);
 
-    // Ensure both lat and lng are valid numbers
     if (!isNaN(lat) && !isNaN(lng)) {
-      return [lat, lng]; // Return valid [lat, lng] tuple
+      return [lat, lng];
+    } else {
+      console.error(`Invalid numeric values in coordinates: ${coordinates}`);
     }
+  } else {
+    console.error(`Invalid POINT format: ${coordinates}`);
   }
   return null; // Return null if parsing failed
 };
