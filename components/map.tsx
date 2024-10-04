@@ -180,7 +180,7 @@ const Map = ({ user }: any) => {
                               }
                             }}
                           >
-                            <Navigation className='mr-2' /> Get Directions
+                            <Navigation className='mr-2' /> Portami lì
                           </Button>
                         </div>
 
@@ -192,13 +192,13 @@ const Map = ({ user }: any) => {
                             console.log(store);
                           }}
                         >
-                          <Phone className='mr-2' /> Call Store
+                          <Phone className='mr-2' /> Chiama
                         </Button>
 
                         <Sheet>
                           <SheetTrigger asChild>
                             <Button variant='secondary' className='w-full'>
-                              <Settings className='mr-2' /> Manage
+                              <Settings className='mr-2' /> Gestisci
                             </Button>
                           </SheetTrigger>
                           <SheetContent>
