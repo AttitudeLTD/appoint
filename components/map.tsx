@@ -195,7 +195,7 @@ const Map = ({ user }: any) => {
                             <Settings className='mr-2' /> Gestisci
                           </Button>
                         </SheetTrigger>
-                        <SheetContent>
+                        <SheetContent className='z-1000'>
                           <SheetHeader>
                             <SheetTitle>Manage Store</SheetTitle>
                             <SheetDescription>
