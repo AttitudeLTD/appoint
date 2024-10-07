@@ -235,7 +235,9 @@ const Map = ({ user }: any) => {
                               </p>
                             </div>
                           </div>
-                          <Button className='w-full mb-3'>Invia e-mail</Button>
+                          <Button className='w-full mb-3'>
+                            <Navigation className='mr-2' /> Invia e-mail
+                          </Button>
                           <SheetFooter>
                             <SheetClose asChild>
                               <Button type='button' className='w-full'>
