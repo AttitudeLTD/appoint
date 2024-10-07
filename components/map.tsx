@@ -237,7 +237,7 @@ const Map = ({ user }: any) => {
                           </div>
                           <SheetFooter>
                             <SheetClose asChild>
-                              <Button type='button' className='w-full mt-4'>
+                              <Button type='button' className='w-full'>
                                 Chiudi
                               </Button>
                             </SheetClose>
