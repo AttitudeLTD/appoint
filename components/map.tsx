@@ -197,7 +197,7 @@ const Map = ({ user }: any) => {
                         </SheetTrigger>
                         <SheetContent className='z-1000'>
                           <SheetHeader>
-                            <SheetTitle>Manage Store</SheetTitle>
+                            <SheetTitle>Info punto vendita</SheetTitle>
                             <SheetDescription>
                               Customize the store details here.
                             </SheetDescription>
