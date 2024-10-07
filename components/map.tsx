@@ -199,7 +199,8 @@ const Map = ({ user }: any) => {
                           <SheetHeader>
                             <SheetTitle>Info punto vendita</SheetTitle>
                             <SheetDescription>
-                              Customize the store details here.
+                              Qui trovi i dettagli dell'attività e tutte le
+                              azioni eseguibili.
                             </SheetDescription>
                           </SheetHeader>
                           <div className='grid gap-4 py-4'>
