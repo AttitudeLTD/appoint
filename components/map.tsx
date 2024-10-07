@@ -149,17 +149,19 @@ const Map = ({ user }: any) => {
                         height={50}
                       />
                       <div className='ml-3'>
-                        <strong className='text-lg font-semibold'>
+                        <strong className='text-lg font-semibold leading-tight'>
                           {store.name}
                         </strong>
-                        <p className='text-base text-gray-400'>
-                          <span className='font-medium'>{store.category}</span>
+                        <p className='text-base text-gray-400 leading-tight'>
+                          {store.category}
                         </p>
-                        <p className='text-sm text-gray-500'>{store.address}</p>
+                        <p className='text-sm text-gray-500 leading-tight'>
+                          {store.address}
+                        </p>
                       </div>
                     </div>
 
-                    <div className='flex flex-col gap-3 mt-3'>
+                    <div className='flex flex-col gap-2 mt-2'>
                       <div className='flex items-center gap-2'>
                         <Button
                           variant='secondary'
