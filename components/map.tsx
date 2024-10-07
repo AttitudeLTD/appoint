@@ -214,26 +214,18 @@ const Map = ({ user }: any) => {
                               <Label htmlFor='name' className='text-right'>
                                 Name
                               </Label>
-                              <Input
-                                id='name'
-                                value={store.name}
-                                className='col-span-3'
-                              />
+                              <p className='col-span-3'>{store.name}</p>{' '}
                             </div>
                             <div className='grid grid-cols-4 items-center gap-4'>
                               <Label htmlFor='category' className='text-right'>
                                 Category
                               </Label>
-                              <Input
-                                id='category'
-                                value={store.category}
-                                className='col-span-3'
-                              />
+                              <p className='col-span-3'>{store.category}</p>{' '}
                             </div>
                           </div>
                           <SheetFooter>
                             <SheetClose asChild>
-                              <Button type='submit'>Save changes</Button>
+                              <Button type='button'>Close</Button>
                             </SheetClose>
                           </SheetFooter>
                         </SheetContent>
