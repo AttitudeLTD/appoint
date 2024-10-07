@@ -149,14 +149,18 @@ const Map = ({ user }: any) => {
                         height={50}
                       />
                       <div className='ml-3'>
-                        <strong className='text-lg font-semibold leading-tight m-0'>
-                          {store.name}
-                        </strong>
-                        <p className='text-base text-gray-400 leading-tight m-0'>
-                          {store.category}
-                        </p>
-                        <p className='text-sm text-gray-500 leading-tight m-0'>
-                          {store.address}
+                        <p className='leading-tight'>
+                          <span className='text-lg font-semibold'>
+                            {store.name}
+                          </span>
+                          <br />
+                          <span className='text-base text-gray-400'>
+                            {store.category}
+                          </span>
+                          <br />
+                          <span className='text-sm text-gray-500'>
+                            {store.address}
+                          </span>
                         </p>
                       </div>
                     </div>
