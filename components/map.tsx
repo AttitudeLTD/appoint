@@ -205,22 +205,24 @@ const Map = ({ user }: any) => {
                           <SheetHeader>
                             <SheetTitle>Info punto vendita</SheetTitle>
                             <SheetDescription>
-                              Qui trovi i dettagli dell'attività e tutte le
-                              azioni eseguibili.
+                              Qui trovi i dettagli dell'attività.
                             </SheetDescription>
                           </SheetHeader>
                           <div className='grid gap-4 py-4'>
-                            <div className='grid grid-cols-4 items-center gap-4'>
-                              <Label htmlFor='name' className='text-right'>
-                                Name
-                              </Label>
-                              <p className='col-span-3'>{store.name}</p>{' '}
+                            <div className='flex items-center'>
+                              <strong className='text-lg font-semibold leading-tight'>
+                                {store.name}
+                              </strong>
                             </div>
-                            <div className='grid grid-cols-4 items-center gap-4'>
-                              <Label htmlFor='category' className='text-right'>
-                                Category
-                              </Label>
-                              <p className='col-span-3'>{store.category}</p>{' '}
+                            <div className='flex items-center'>
+                              <p className='text-base text-gray-400 leading-tight'>
+                                {store.category}
+                              </p>
+                            </div>
+                            <div className='flex items-center'>
+                              <p className='text-sm text-gray-500 leading-tight'>
+                                {store.address}
+                              </p>
                             </div>
                           </div>
                           <SheetFooter>
