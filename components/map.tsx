@@ -203,31 +203,43 @@ const Map = ({ user }: any) => {
                         </SheetTrigger>
                         <SheetContent className='z-1000'>
                           <SheetHeader>
-                            <SheetTitle>Info punto vendita</SheetTitle>
+                            <SheetTitle className='text-xl font-bold'>
+                              Info punto vendita
+                            </SheetTitle>
                             <SheetDescription>
                               Qui trovi i dettagli dell'attività.
                             </SheetDescription>
                           </SheetHeader>
-                          <div className='grid gap-4 py-4'>
-                            <div className='flex items-center'>
-                              <strong className='text-lg font-semibold leading-tight'>
+                          <div className='py-4'>
+                            <div className='py-3 border-b border-gray-200'>
+                              <strong className='text-lg font-semibold'>
                                 {store.name}
                               </strong>
                             </div>
-                            <div className='flex items-center'>
-                              <p className='text-base text-gray-400 leading-tight'>
+
+                            <div className='py-3 border-b border-gray-200'>
+                              <p className='text-base text-gray-400 font-medium'>
+                                Categoria:
+                              </p>
+                              <p className='text-base text-gray-600'>
                                 {store.category}
                               </p>
                             </div>
-                            <div className='flex items-center'>
-                              <p className='text-sm text-gray-500 leading-tight'>
+
+                            <div className='py-3'>
+                              <p className='text-base text-gray-400 font-medium'>
+                                Indirizzo:
+                              </p>
+                              <p className='text-base text-gray-600'>
                                 {store.address}
                               </p>
                             </div>
                           </div>
                           <SheetFooter>
                             <SheetClose asChild>
-                              <Button type='button'>Close</Button>
+                              <Button type='button' className='w-full mt-4'>
+                                Chiudi
+                              </Button>
                             </SheetClose>
                           </SheetFooter>
                         </SheetContent>
