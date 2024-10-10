@@ -237,8 +237,8 @@ const Map = ({ user }: any) => {
                           <Button
                             className='w-full mb-3'
                             onClick={() => {
-                              const mailto = `mailto:example@store.com?subject=Info Request&body=Hello, I'd like to request more information about ${store.name}.`;
-                              window.location.href = mailto; // This will open the default email client
+                              const mailto = `mailto:${store.email}?subject=Info Request&body=Hello, I'd like to request more information about ${store.name}.`;
+                              window.location.href = mailto; // This will open the default email client with the store's email
                             }}
                           >
                             <MailPlus className='mr-2' /> Invia e-mail
