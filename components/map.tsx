@@ -228,7 +228,7 @@ const Map = ({ user }: any) => {
                             <Settings className='mr-2' /> Gestisci
                           </Button>
                         </SheetTrigger>
-                        <SheetContent className='z-1000'>
+                        <SheetContent className='z-1000 flex flex-col h-full'>
                           <SheetHeader>
                             <SheetTitle className='text-xl font-bold'>
                               Info punto vendita
@@ -289,7 +289,7 @@ const Map = ({ user }: any) => {
                             </Select>
                           </div>
 
-                          <SheetFooter>
+                          <SheetFooter className='mt-auto'>
                             <SheetClose asChild>
                               <Button type='button' className='w-full'>
                                 Chiudi
