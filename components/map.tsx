@@ -262,28 +262,32 @@ const Map = ({ user }: any) => {
                               </p>
                             </div>
                           </div>
-                          <Button
-                            className='w-full mb-3'
-                            onClick={() => {
-                              // Personalized email content with store owner and user information
-                              const mailBody = `Gentile Sig/Sig.ra ${store.owner_name},\n\nsono ${agent?.name} ${agent?.surname}, consulente dell'agenzia Attitude, società mandataria di Scalapay spa, iscritto nell'elenco dell'Organismo per la gestione degli agenti in attività Finanziaria con il numero di iscrizione SP2423 (www.organismo-am.it/elenchi-registri/index.html).\n\nIn allegato troverà tutti i dettagli in merito alle soluzioni di pagamento e ai servizi offerti da Scalapay che le ho illustrato durante il nostro incontro.\n\nNel caso di suo interesse a procedere con la sottoscrizione, non esiti a rispondere a questa mail o a contattarmi al numero che troverà in firma.\n\nCordiali saluti,\n${agent?.name} ${agent?.surname}\n${agent?.number}`;
 
-                              const mailto = `mailto:${store.email}?subject=Proposta commerciale&body=${encodeURIComponent(mailBody)}`;
-                              window.location.href = mailto; // Open the default email client with the personalized email
-                            }}
-                          >
-                            <MailPlus className='mr-2' /> Invia e-mail
-                          </Button>
-                          <Select>
-                            <SelectTrigger className='w-[180px]'>
-                              <SelectValue placeholder='Theme' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value='light'>Light</SelectItem>
-                              <SelectItem value='dark'>Dark</SelectItem>
-                              <SelectItem value='system'>System</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className='flex flex-col gap-2 mb-2'>
+                            <Button
+                              className='w-full'
+                              onClick={() => {
+                                // Personalized email content with store owner and user information
+                                const mailBody = `Gentile Sig/Sig.ra ${store.owner_name},\n\nsono ${agent?.name} ${agent?.surname}, consulente dell'agenzia Attitude, società mandataria di Scalapay spa, iscritto nell'elenco dell'Organismo per la gestione degli agenti in attività Finanziaria con il numero di iscrizione SP2423 (www.organismo-am.it/elenchi-registri/index.html).\n\nIn allegato troverà tutti i dettagli in merito alle soluzioni di pagamento e ai servizi offerti da Scalapay che le ho illustrato durante il nostro incontro.\n\nNel caso di suo interesse a procedere con la sottoscrizione, non esiti a rispondere a questa mail o a contattarmi al numero che troverà in firma.\n\nCordiali saluti,\n${agent?.name} ${agent?.surname}\n${agent?.number}`;
+
+                                const mailto = `mailto:${store.email}?subject=Proposta commerciale&body=${encodeURIComponent(mailBody)}`;
+                                window.location.href = mailto; // Open the default email client with the personalized email
+                              }}
+                            >
+                              <MailPlus className='mr-2' /> Invia e-mail
+                            </Button>
+
+                            <Select>
+                              <SelectTrigger>
+                                <SelectValue placeholder='Theme' />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value='light'>Light</SelectItem>
+                                <SelectItem value='dark'>Dark</SelectItem>
+                                <SelectItem value='system'>System</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
 
                           <SheetFooter>
                             <SheetClose asChild>
