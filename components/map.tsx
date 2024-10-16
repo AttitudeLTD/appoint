@@ -172,23 +172,21 @@ const Map = ({ user }: any) => {
                     </div>
 
                     <div className='flex flex-col gap-2 mt-2'>
-                      <div className='flex items-center gap-2'>
-                        <Button
-                          variant='secondary'
-                          className='w-full'
-                          onClick={() => {
-                            if (Array.isArray(coord) && coord.length === 2) {
-                              const [lat, lng] = coord;
-                              const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
-                              window.open(gmapsUrl, '_blank'); // Opens Google Maps in a new tab
-                            } else {
-                              console.error('Invalid coordinates format');
-                            }
-                          }}
-                        >
-                          <Navigation className='mr-2' /> Indicazioni
-                        </Button>
-                      </div>
+                      <Button
+                        variant='secondary'
+                        className='w-full'
+                        onClick={() => {
+                          if (Array.isArray(coord) && coord.length === 2) {
+                            const [lat, lng] = coord;
+                            const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                            window.open(gmapsUrl, '_blank'); // Opens Google Maps in a new tab
+                          } else {
+                            console.error('Invalid coordinates format');
+                          }
+                        }}
+                      >
+                        <Navigation className='mr-2' /> Indicazioni
+                      </Button>
 
                       <Button
                         variant='secondary'
