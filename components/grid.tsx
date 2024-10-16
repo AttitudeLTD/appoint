@@ -3,7 +3,7 @@ import { BentoGrid, BentoGridItem } from './ui/bento-grid';
 
 const Grid = () => {
   return (
-    <section id='about'>
+    <section id='about' className='mb-8'>
       <BentoGrid>
         {gridItems.map(
           ({
