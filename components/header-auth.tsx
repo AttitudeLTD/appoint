@@ -60,8 +60,7 @@ export default async function AuthButton() {
       Ciao, {userName.name}!
       <form action={signOutAction}>
         <Button type='submit' variant={'outline'}>
-          <LogOut />
-          Esci
+          <LogOut className='mr-2 scale-75' /> Esci
         </Button>
       </form>
     </div>
