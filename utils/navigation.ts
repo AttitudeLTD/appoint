@@ -19,7 +19,7 @@ export const navIcon = new L.Icon({
 
 // Free Store Icon (Green)
 export const freeStoreSvgString = `
-<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="lightgreen" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="#205188" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
   <path d="M36 21v18"/>
   <path d="M27 30h18"/>
