@@ -12,8 +12,8 @@ export const navigationIconUrl = svgToDataUrl(navigationSvgString);
 export const navIcon = new L.Icon({
   iconUrl: navigationIconUrl,
   iconRetinaUrl: navigationIconUrl,
-  iconSize: [48, 48],
-  iconAnchor: [24, 12],
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
   popupAnchor: [0, -12],
 });
 
@@ -32,11 +32,11 @@ export const mapPinPlusIconUrl = svgToDataUrl(mapPinPlusSvgString);
 export const storeIcon = new L.Icon({
   iconUrl: mapPinPlusIconUrl,
   iconRetinaUrl: mapPinPlusIconUrl,
-  iconSize: [48, 48],
-  iconAnchor: [24, 48],
+  iconSize: [40, 40],
+  iconAnchor: [24, 50],
   popupAnchor: [0, -48],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [82, 82],
+  shadowSize: [80, 60],
 });
 
 // Define and export the getMyLocation function
