@@ -19,7 +19,11 @@ export const navIcon = new L.Icon({
 
 // Generate the SVG string for MapPinPlus icon with blue stroke
 export const mapPinPlusSvgString = `
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#205188" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-plus"><path d="M19.914 11.105A7.298 7.298 0 0 0 20 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 32 32 0 0 0 .824-.738"/><circle cx="12" cy="10" r="3"/><path d="M16 18h6"/><path d="M19 15v6"/></svg>`;
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="#205188" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-plus-inside">
+  <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
+  <path d="M36 21v18"/>
+  <path d="M27 30h18"/>
+</svg>`;
 
 // Convert the SVG string to a data URL
 export const mapPinPlusIconUrl = svgToDataUrl(mapPinPlusSvgString);
