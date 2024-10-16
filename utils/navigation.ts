@@ -37,11 +37,7 @@ export const freeStoreIcon = new L.Icon({
 
 // In Progress Store Icon (Yellow)
 export const inProgressStoreSvgString = `
-<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="yellow" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
-  <path d="M36 21v18"/>
-  <path d="M27 30h18"/>
-</svg>`;
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-minus-inside"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><path d="M9 10h6"/></svg>`;
 export const inProgressStoreIconUrl = svgToDataUrl(inProgressStoreSvgString);
 export const inProgressStoreIcon = new L.Icon({
   iconUrl: inProgressStoreIconUrl,
