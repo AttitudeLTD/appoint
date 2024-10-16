@@ -37,6 +37,7 @@ interface Store {
   phone: string;
   category: string;
   email: string;
+  owner_name: string;
 }
 
 const Map = ({ user }: any) => {
