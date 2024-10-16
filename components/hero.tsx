@@ -39,13 +39,21 @@ const Hero = () => {
             Organizza le tue attività di vendita in base al miglior percorso
           </p>
 
-          <a href='#about'>
+          <div className='flex gap-3'>
+            <a href='#about'>
+              <MagicButton
+                title='Scopri di più'
+                icon={<FaLocationArrow />}
+                position='right'
+              />
+            </a>
+
             <MagicButton
-              title='Scopri di più'
+              title='Comincia'
               icon={<FaLocationArrow />}
               position='right'
             />
-          </a>
+          </div>
         </div>
       </div>
     </div>
