@@ -10,9 +10,11 @@ import 'leaflet/dist/leaflet.css';
 import {
   navIcon,
   getMyLoc,
-  storeIcon,
   parseCoords,
-  mapPinMinusIcon,
+  freeStoreIcon,
+  inProgressStoreIcon,
+  concludedStoreIcon,
+  failedStoreIcon,
 } from '@/utils/navigation';
 
 import { Phone, Navigation, Settings, MailPlus, Loader } from 'lucide-react';
@@ -139,10 +141,24 @@ const Map = ({ user }: any) => {
             const storeCoordinates = parseCoords(store.location);
 
             if (storeCoordinates) {
-              // Determine if the store is booked or not
-              const icon = bookedStores.includes(store.id)
-                ? mapPinMinusIcon
-                : storeIcon;
+              // Determine the correct icon based on the store's status
+              let icon;
+              switch (store.status) {
+                case 'free':
+                  icon = freeStoreIcon;
+                  break;
+                case 'in_progress':
+                  icon = inProgressStoreIcon;
+                  break;
+                case 'concluded':
+                  icon = concludedStoreIcon;
+                  break;
+                case 'failed':
+                  icon = failedStoreIcon;
+                  break;
+                default:
+                  icon = freeStoreIcon; // fallback to a default store icon
+              }
 
               return (
                 <Marker key={store.id} position={storeCoordinates} icon={icon}>

@@ -17,21 +17,71 @@ export const navIcon = new L.Icon({
   popupAnchor: [0, -12],
 });
 
-// Generate the SVG string for MapPinPlus icon with blue stroke
-export const mapPinPlusSvgString = `
-<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="#205188" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-plus-inside">
+// Free Store Icon (Green)
+export const freeStoreSvgString = `
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="lightgreen" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
   <path d="M36 21v18"/>
   <path d="M27 30h18"/>
 </svg>`;
+export const freeStoreIconUrl = svgToDataUrl(freeStoreSvgString);
+export const freeStoreIcon = new L.Icon({
+  iconUrl: freeStoreIconUrl,
+  iconRetinaUrl: freeStoreIconUrl,
+  iconSize: [40, 40],
+  iconAnchor: [24, 50],
+  popupAnchor: [0, -48],
+  shadowUrl: MarkerShadow.src,
+  shadowSize: [80, 60],
+});
 
-// Convert the SVG string to a data URL
-export const mapPinPlusIconUrl = svgToDataUrl(mapPinPlusSvgString);
+// In Progress Store Icon (Yellow)
+export const inProgressStoreSvgString = `
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="yellow" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
+  <path d="M36 21v18"/>
+  <path d="M27 30h18"/>
+</svg>`;
+export const inProgressStoreIconUrl = svgToDataUrl(inProgressStoreSvgString);
+export const inProgressStoreIcon = new L.Icon({
+  iconUrl: inProgressStoreIconUrl,
+  iconRetinaUrl: inProgressStoreIconUrl,
+  iconSize: [40, 40],
+  iconAnchor: [24, 50],
+  popupAnchor: [0, -48],
+  shadowUrl: MarkerShadow.src,
+  shadowSize: [80, 60],
+});
 
-// Define your custom Leaflet store icon using the MapPinPlus SVG data URL
-export const storeIcon = new L.Icon({
-  iconUrl: mapPinPlusIconUrl,
-  iconRetinaUrl: mapPinPlusIconUrl,
+// Concluded Store Icon (Blue)
+export const concludedStoreSvgString = `
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="lightblue" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
+  <path d="M36 21v18"/>
+  <path d="M27 30h18"/>
+</svg>`;
+export const concludedStoreIconUrl = svgToDataUrl(concludedStoreSvgString);
+export const concludedStoreIcon = new L.Icon({
+  iconUrl: concludedStoreIconUrl,
+  iconRetinaUrl: concludedStoreIconUrl,
+  iconSize: [40, 40],
+  iconAnchor: [24, 50],
+  popupAnchor: [0, -48],
+  shadowUrl: MarkerShadow.src,
+  shadowSize: [80, 60],
+});
+
+// Failed Store Icon (Red)
+export const failedStoreSvgString = `
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="red" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
+  <path d="M36 21v18"/>
+  <path d="M27 30h18"/>
+</svg>`;
+export const failedStoreIconUrl = svgToDataUrl(failedStoreSvgString);
+export const failedStoreIcon = new L.Icon({
+  iconUrl: failedStoreIconUrl,
+  iconRetinaUrl: failedStoreIconUrl,
   iconSize: [40, 40],
   iconAnchor: [24, 50],
   popupAnchor: [0, -48],
