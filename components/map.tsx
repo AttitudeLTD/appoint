@@ -238,7 +238,7 @@ const Map = ({ user }: any) => {
                       </Button>
 
                       <Sheet>
-                        <SheetTrigger asChild>
+                        <SheetTrigger>
                           <Button variant='secondary' className='w-full'>
                             <Settings className='mr-2' /> Gestisci
                           </Button>
@@ -308,7 +308,7 @@ const Map = ({ user }: any) => {
                           </div>
 
                           <SheetFooter className='mt-auto'>
-                            <SheetClose asChild>
+                            <SheetClose>
                               <Button type='button' className='w-full'>
                                 Chiudi
                               </Button>
