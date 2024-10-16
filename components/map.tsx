@@ -52,14 +52,14 @@ const Map = ({ user }: any) => {
     const getUserName = async () => {
       const { data: userName, error } = await supabase
         .from('users')
-        .select('name')
+        .select('name, surname')
         .eq('id', user.id)
         .single();
 
       if (error) {
         console.error('Error fetching user name:', error);
       } else {
-        setUserName(userName?.name || null);
+        setUserName(`${userName?.name} ${userName?.surname}` || null);
       }
     };
 
@@ -238,12 +238,16 @@ const Map = ({ user }: any) => {
                           <Button
                             className='w-full mb-3'
                             onClick={() => {
-                              const mailto = `mailto:${store.email}?subject=Info Request&body=Hello, I'd like to request more information about ${store.name}.`;
-                              window.location.href = mailto; // This will open the default email client with the store's email
+                              // Personalized email content with store owner and user information
+                              const mailBody = `Gentile Sig/Sig.ra ${store.owner_name},\n\nsono ${userName}, consulente dell'agenzia Attitude, società mandataria di Scalapay spa, iscritto nell'elenco dell'Organismo per la gestione degli agenti in attività Finanziaria con il numero di iscrizione SP2423 (www.organismo-am.it/elenchi-registri/index.html).\n\nIn allegato troverà tutti i dettagli in merito alle soluzioni di pagamento e ai servizi offerti da Scalapay che le ho illustrato durante il nostro incontro.\n\nNel caso di suo interesse a procedere con la sottoscrizione, non esiti a rispondere a questa mail o a contattarmi al numero che troverà in firma.\n\nCordiali saluti,\n${userName}`;
+
+                              const mailto = `mailto:${store.email}?subject=Proposta commerciale&body=${encodeURIComponent(mailBody)}`;
+                              window.location.href = mailto; // Open the default email client with the personalized email
                             }}
                           >
                             <MailPlus className='mr-2' /> Invia e-mail
                           </Button>
+
                           <SheetFooter>
                             <SheetClose asChild>
                               <Button type='button' className='w-full'>
