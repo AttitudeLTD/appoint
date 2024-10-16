@@ -47,8 +47,13 @@ const Hero = () => {
                 position='right'
               />
             </a>
-
-            <MagicButton title='Comincia' icon={<FaGlobe />} position='right' />
+            <a href='/sign-in'>
+              <MagicButton
+                title='Comincia'
+                icon={<FaGlobe />}
+                position='right'
+              />
+            </a>
           </div>
         </div>
       </div>
