@@ -32,9 +32,9 @@ export const mapPinPlusIconUrl = svgToDataUrl(mapPinPlusSvgString);
 export const storeIcon = new L.Icon({
   iconUrl: mapPinPlusIconUrl,
   iconRetinaUrl: mapPinPlusIconUrl,
-  iconSize: [24, 24], // Adjust the size as needed
-  iconAnchor: [12, 24], // Anchor it to the bottom of the icon
-  popupAnchor: [0, -24], // Adjust popup position above the icon
+  iconSize: [48, 48], // Adjust the size as needed
+  iconAnchor: [24, 48], // Anchor it to the bottom of the icon
+  popupAnchor: [0, -48], // Adjust popup position above the icon
   shadowUrl: MarkerShadow.src, // Keep the shadow for the marker
   shadowSize: [41, 41],
 });
