@@ -250,6 +250,9 @@ const Map = ({ user }: any) => {
                           >
                             <MailPlus className='mr-2' /> Invia e-mail
                           </Button>
+                          <Button className='w-full mb-3' onClick={() => {}}>
+                            <MailPlus className='mr-2' /> In trattativa
+                          </Button>
 
                           <SheetFooter>
                             <SheetClose asChild>
