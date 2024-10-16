@@ -195,7 +195,6 @@ const Map = ({ user }: any) => {
                         className='w-full'
                         onClick={() => {
                           window.open(`tel:${store.phone}`, '_self'); // Open tel: link in the same tab
-                          console.log(store);
                         }}
                       >
                         <Phone className='mr-2' /> Chiama
