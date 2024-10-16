@@ -1,4 +1,3 @@
-import { ThemeSwitcher } from '@/components/theme-switcher';
 import { GeistSans } from 'geist/font/sans';
 import { ThemeProvider } from 'next-themes';
 import './globals.css';
