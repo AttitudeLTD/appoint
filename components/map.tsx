@@ -38,6 +38,7 @@ interface Store {
   category: string;
   email: string;
   owner_name: string;
+  status: 'free' | 'in_progress' | 'concluded' | 'failed';
 }
 
 interface Agent {
