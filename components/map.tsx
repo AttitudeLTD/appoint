@@ -15,7 +15,7 @@ import {
   mapPinMinusIcon,
 } from '@/utils/navigation';
 
-import { Phone, Navigation, Settings, MailPlus } from 'lucide-react';
+import { Phone, Navigation, Settings, MailPlus, Loader } from 'lucide-react';
 import { Button } from './ui/button';
 import Image from 'next/image';
 import {
@@ -251,7 +251,7 @@ const Map = ({ user }: any) => {
                             <MailPlus className='mr-2' /> Invia e-mail
                           </Button>
                           <Button className='w-full mb-3' onClick={() => {}}>
-                            <MailPlus className='mr-2' /> In trattativa
+                            <Loader className='mr-2' /> In trattativa
                           </Button>
 
                           <SheetFooter>
