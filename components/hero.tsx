@@ -1,4 +1,4 @@
-import { FaLocationArrow } from 'react-icons/fa6';
+import { FaLocationArrow, FaMapLocation } from 'react-icons/fa6';
 
 import MagicButton from './ui/magic-button';
 import { Spotlight } from './ui/spotlight';
@@ -50,7 +50,7 @@ const Hero = () => {
 
             <MagicButton
               title='Comincia'
-              icon={<FaLocationArrow />}
+              icon={<FaMapLocation />}
               position='right'
             />
           </div>
