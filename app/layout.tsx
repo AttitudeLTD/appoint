@@ -27,14 +27,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <main>
-            <div>{children}</div>
-
-            <footer className='w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16'>
-              <p>Powered by Attitude Group S.p.a.</p>
-              <ThemeSwitcher />
-            </footer>
-          </main>
+          <div>{children}</div>
         </ThemeProvider>
       </body>
     </html>
