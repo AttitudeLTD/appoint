@@ -30,6 +30,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from './ui/sheet';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 
 interface Store {
   id: number;
@@ -267,14 +274,16 @@ const Map = ({ user }: any) => {
                           >
                             <MailPlus className='mr-2' /> Invia e-mail
                           </Button>
-                          <Button
-                            className='w-full mb-3'
-                            onClick={() => {
-                              handleBookStore;
-                            }}
-                          >
-                            <Loader className='mr-2' /> In trattativa
-                          </Button>
+                          <Select>
+                            <SelectTrigger className='w-[180px]'>
+                              <SelectValue placeholder='Theme' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value='light'>Light</SelectItem>
+                              <SelectItem value='dark'>Dark</SelectItem>
+                              <SelectItem value='system'>System</SelectItem>
+                            </SelectContent>
+                          </Select>
 
                           <SheetFooter>
                             <SheetClose asChild>
