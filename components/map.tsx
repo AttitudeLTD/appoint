@@ -1,5 +1,7 @@
 'use client';
 
+// TODO: METTI MODULO CONFERMA DOPO CAMBIO STATO, MANDA A APPRAISE DOPO CONCLUSO
+
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 
