@@ -46,6 +46,7 @@ export const Select = ({
         ...base,
         backgroundColor: 'hsl(var(--popover))',
         color: 'hsl(var(--popover-foreground))',
+        border: '1px solid hsl(var(--border))',
       }),
       option: (base: any, { isFocused }: any) => ({
         ...base,
