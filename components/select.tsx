@@ -41,7 +41,7 @@ export const Select = ({
         borderColor: isDark ? '#4a5568' : '#e2e8f0',
         color: isDark ? '#cbd5e0' : '#1a202c',
         ':hover': {
-          borderColor: isDark ? '#a0aec0' : '#cbd5e0',
+          borderColor: isDark ? '#4a5568' : '#cbd5e0',
         },
       }),
       menu: (base: any) => ({
@@ -53,10 +53,10 @@ export const Select = ({
         ...base,
         backgroundColor: isFocused
           ? isDark
-            ? '#4a5568'
+            ? '#2d3748'
             : '#e2e8f0'
           : isDark
-            ? '#2d3748'
+            ? '#1a202c'
             : '#fff',
         color: isDark ? '#cbd5e0' : '#1a202c',
       }),
