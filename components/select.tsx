@@ -1,5 +1,3 @@
-'use client';
-
 import { useMemo } from 'react';
 import { SingleValue } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
@@ -22,7 +20,7 @@ export const Select = ({
   options = [],
   placeholder,
 }: Props) => {
-  const { theme } = useTheme(); // Detect the current theme
+  const { theme } = useTheme();
 
   const onSelect = (option: SingleValue<{ label: string; value: string }>) => {
     onChange(option?.value);
@@ -33,39 +31,39 @@ export const Select = ({
   }, [options, value]);
 
   const customStyles = useMemo(() => {
-    const isDark = theme === 'dark';
     return {
       control: (base: any) => ({
         ...base,
-        backgroundColor: isDark ? '#1a202c' : '#fff',
-        borderColor: isDark ? '#2d3748' : '#e2e8f0',
-        color: isDark ? '#cbd5e0' : '#1a202c',
+        backgroundColor: 'hsl(var(--card))',
+        borderColor: 'hsl(var(--border))',
+        borderRadius: 'var(--radius)',
+        color: 'hsl(var(--foreground))',
         ':hover': {
-          borderColor: isDark ? '#4a5568' : '#cbd5e0',
+          borderColor: 'hsl(var(--border))',
         },
       }),
       menu: (base: any) => ({
         ...base,
-        backgroundColor: isDark ? '#1a202c' : '#fff',
-        color: isDark ? '#cbd5e0' : '#1a202c',
+        backgroundColor: 'hsl(var(--popover))',
+        color: 'hsl(var(--popover-foreground))',
       }),
       option: (base: any, { isFocused }: any) => ({
         ...base,
         backgroundColor: isFocused
-          ? isDark
-            ? '#2d3748'
-            : '#e2e8f0'
-          : isDark
-            ? '#1a202c'
-            : '#fff',
-        color: isDark ? '#cbd5e0' : '#1a202c',
+          ? 'hsl(var(--muted))'
+          : 'hsl(var(--popover))',
+        color: 'hsl(var(--foreground))',
       }),
       singleValue: (base: any) => ({
         ...base,
-        color: isDark ? '#cbd5e0' : '#1a202c',
+        color: 'hsl(var(--foreground))',
+      }),
+      placeholder: (base: any) => ({
+        ...base,
+        color: 'hsl(var(--muted-foreground))',
       }),
     };
-  }, [theme]);
+  }, []);
 
   return (
     <CreatableSelect
