@@ -37,8 +37,8 @@ export const Select = ({
     return {
       control: (base: any) => ({
         ...base,
-        backgroundColor: isDark ? '#2d3748' : '#fff',
-        borderColor: isDark ? '#4a5568' : '#e2e8f0',
+        backgroundColor: isDark ? '#1a202c' : '#fff',
+        borderColor: isDark ? '#2d3748' : '#e2e8f0',
         color: isDark ? '#cbd5e0' : '#1a202c',
         ':hover': {
           borderColor: isDark ? '#4a5568' : '#cbd5e0',
@@ -46,7 +46,7 @@ export const Select = ({
       }),
       menu: (base: any) => ({
         ...base,
-        backgroundColor: isDark ? '#2d3748' : '#fff',
+        backgroundColor: isDark ? '#1a202c' : '#fff',
         color: isDark ? '#cbd5e0' : '#1a202c',
       }),
       option: (base: any, { isFocused }: any) => ({
