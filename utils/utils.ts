@@ -18,18 +18,18 @@ export function encodedRedirect(
 export const statuses = [
   {
     label: 'Disponibile',
-    value: 'eg',
+    value: 'free',
   },
   {
     label: 'In corso',
-    value: '',
+    value: 'in_progress',
   },
   {
     label: 'Concluso',
-    value: '',
+    value: 'concluded',
   },
   {
     label: 'Fallito',
-    value: '',
+    value: 'failed',
   },
 ];
