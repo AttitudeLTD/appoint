@@ -30,13 +30,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from './ui/sheet';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './ui/select';
+import { Select } from './select';
 
 interface Store {
   id: number;
@@ -295,16 +289,10 @@ const Map = ({ user }: any) => {
                               )}
                             </Button>
 
-                            <Select>
-                              <SelectTrigger>
-                                <SelectValue placeholder='Theme' />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value='light'>Light</SelectItem>
-                                <SelectItem value='dark'>Dark</SelectItem>
-                                <SelectItem value='system'>System</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <Select
+                              placeholder='Seleziona un conto'
+                              onChange={() => {}}
+                            />
                           </div>
 
                           <SheetFooter className='mt-auto'>
