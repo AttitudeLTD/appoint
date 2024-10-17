@@ -59,6 +59,32 @@ const Map = ({ user }: any) => {
   const [bookedStores, setBookedStores] = useState<number[]>([]); // Track booked stores
   const [loading, setLoading] = useState(false);
 
+  // Insert updateStoreStatus function here
+  const updateStoreStatus = async (storeId: number, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('stores') // The 'stores' table
+        .update({ status: newStatus }) // Update the status
+        .eq('id', storeId); // Target the correct store by its ID
+
+      if (error) {
+        console.error('Error updating store status:', error);
+      } else {
+        console.log('Store status updated successfully');
+        // Optionally, update the store's status locally
+        setStores((prevStores) =>
+          prevStores.map((store) =>
+            store.id === storeId
+              ? { ...store, status: newStatus as Store['status'] }
+              : store
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+    }
+  };
+
   useEffect(() => {
     // Fetch user's name
     const getUserName = async () => {
@@ -292,8 +318,12 @@ const Map = ({ user }: any) => {
 
                             <Select
                               placeholder='Stato avanzamento'
-                              onChange={() => {}}
-                              options={statuses}
+                              value={store.status} // The current status from the store object
+                              onChange={(newStatus) => {
+                                if (newStatus)
+                                  updateStoreStatus(store.id, newStatus);
+                              }}
+                              options={statuses} // Options defined elsewhere
                             />
                           </div>
 
