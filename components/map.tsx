@@ -72,14 +72,6 @@ const Map = ({ user }: any) => {
         console.error('Error updating store status:', error);
       } else {
         console.log('Store status updated successfully');
-        // Optionally, update the store's status locally
-        setStores((prevStores) =>
-          prevStores.map((store) =>
-            store.id === storeId
-              ? { ...store, status: newStatus as Store['status'] }
-              : store
-          )
-        );
       }
     } catch (error) {
       console.error('Unexpected error:', error);
