@@ -61,7 +61,6 @@ const Map = ({ user }: any) => {
   const [bookedStores, setBookedStores] = useState<number[]>([]); // Track booked stores
   const [loading, setLoading] = useState(false);
 
-  // Insert updateStoreStatus function here
   const updateStoreStatus = async (storeId: number, newStatus: string) => {
     try {
       const { error } = await supabase
