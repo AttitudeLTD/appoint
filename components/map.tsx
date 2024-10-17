@@ -31,6 +31,7 @@ import {
   SheetTrigger,
 } from './ui/sheet';
 import { Select } from './select';
+import { statuses } from '@/utils/utils';
 
 interface Store {
   id: number;
@@ -292,6 +293,7 @@ const Map = ({ user }: any) => {
                             <Select
                               placeholder='Stato avanzamento'
                               onChange={() => {}}
+                              options={statuses}
                             />
                           </div>
 

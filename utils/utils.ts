@@ -14,3 +14,22 @@ export function encodedRedirect(
 ) {
   return redirect(`${path}?${type}=${encodeURIComponent(message)}`);
 }
+
+export const statuses = [
+  {
+    label: 'Disponibile',
+    value: 'eg',
+  },
+  {
+    label: 'In corso',
+    value: '',
+  },
+  {
+    label: 'Concluso',
+    value: '',
+  },
+  {
+    label: 'Fallito',
+    value: '',
+  },
+];
