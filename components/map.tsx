@@ -64,7 +64,7 @@ const Map = ({ user }: any) => {
   const updateStoreStatus = async (storeId: number, newStatus: string) => {
     try {
       const { error } = await supabase
-        .from('stores') // The 'stores' table
+        .from('stores')
         .update({ status: newStatus }) // Update the status
         .eq('id', storeId); // Target the correct store by its ID
 
