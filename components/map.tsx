@@ -207,10 +207,11 @@ const Map = ({ user }: any) => {
             const storeCoordinates = parseCoords(store.location);
 
             if (storeCoordinates) {
-              // Fetch the status for this store if it hasn't been fetched yet
-              if (!storeStatuses[store.id]) {
-                fetchStoreStatus(store.id);
-              }
+              useEffect(() => {
+                if (!storeStatuses[store.id]) {
+                  fetchStoreStatus(store.id);
+                }
+              }, [store.id, storeStatuses]);
 
               // Determine the correct icon based on the store's status
               let icon;
