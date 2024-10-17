@@ -290,7 +290,7 @@ const Map = ({ user }: any) => {
                             </Button>
 
                             <Select
-                              placeholder='Seleziona un conto'
+                              placeholder='Stato avanzamento'
                               onChange={() => {}}
                             />
                           </div>
