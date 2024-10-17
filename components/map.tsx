@@ -58,10 +58,37 @@ const Map = ({ user }: any) => {
   const [agent, setAgent] = useState<Agent | null>(null);
   const [coord, setCoord] = useState<LatLngExpression | null>(null);
   const [stores, setStores] = useState<Store[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const [bookedStores, setBookedStores] = useState<number[]>([]); // Track booked stores
-  const [loading, setLoading] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState<boolean>(false);
+  const [storeStatuses, setStoreStatuses] = useState<{ [key: number]: string }>(
+    {}
+  );
 
+  const fetchStoreStatus = async (storeId: number) => {
+    setLoadingStatus(true);
+    try {
+      const { data, error } = await supabase
+        .from('stores')
+        .select('status')
+        .eq('id', storeId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching store status:', error);
+      } else {
+        setStoreStatuses((prev) => ({ ...prev, [storeId]: data?.status }));
+      }
+    } catch (error) {
+      console.error('Unexpected error while fetching status:', error);
+    } finally {
+      setLoadingStatus(false);
+    }
+  };
+
+  // Update store status and refetch the status from the database
   const updateStoreStatus = async (storeId: number, newStatus: string) => {
+    setLoadingStatus(true);
     try {
       const { error } = await supabase
         .from('stores')
@@ -72,9 +99,12 @@ const Map = ({ user }: any) => {
         console.error('Error updating store status:', error);
       } else {
         console.log('Store status updated successfully');
+        await fetchStoreStatus(storeId); // Refetch the updated status from the database
       }
     } catch (error) {
-      console.error('Unexpected error:', error);
+      console.error('Unexpected error while updating status:', error);
+    } finally {
+      setLoadingStatus(false); // Set loading back to false after the operation is complete
     }
   };
 
@@ -177,9 +207,15 @@ const Map = ({ user }: any) => {
             const storeCoordinates = parseCoords(store.location);
 
             if (storeCoordinates) {
+              // Fetch the status for this store if it hasn't been fetched yet
+              if (!storeStatuses[store.id]) {
+                fetchStoreStatus(store.id);
+              }
+
               // Determine the correct icon based on the store's status
               let icon;
-              switch (store.status) {
+              const status = storeStatuses[store.id] || store.status;
+              switch (status) {
                 case 'free':
                   icon = freeStoreIcon;
                   break;
@@ -311,12 +347,13 @@ const Map = ({ user }: any) => {
 
                             <Select
                               placeholder='Stato avanzamento'
-                              value={store.status} // The current status from the store object
+                              value={status} // The current status from the store object
                               onChange={(newStatus) => {
                                 if (newStatus)
                                   updateStoreStatus(store.id, newStatus);
                               }}
                               options={statuses} // Options defined elsewhere
+                              disabled={loadingStatus} // Disable during status update
                             />
                           </div>
 
