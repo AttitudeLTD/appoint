@@ -18,7 +18,6 @@ import {
   concludedStoreIcon,
   failedStoreIcon,
 } from '@/utils/navigation';
-
 import { Phone, Navigation, Settings, MailPlus, Loader } from 'lucide-react';
 import { Button } from './ui/button';
 import Image from 'next/image';
@@ -58,15 +57,17 @@ const Map = ({ user }: any) => {
   const [agent, setAgent] = useState<Agent | null>(null);
   const [coord, setCoord] = useState<LatLngExpression | null>(null);
   const [stores, setStores] = useState<Store[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [bookedStores, setBookedStores] = useState<number[]>([]); // Track booked stores
-  const [loadingStatus, setLoadingStatus] = useState<boolean>(false);
+  const [loadingEmail, setLoadingEmail] = useState<boolean>(false); // For email sending
+  const [loadingStatus, setLoadingStatus] = useState<{
+    [key: number]: boolean;
+  }>({}); // For status update
   const [storeStatuses, setStoreStatuses] = useState<{ [key: number]: string }>(
     {}
-  );
+  ); // Store statuses
 
+  // Fetch the status for a specific store from the DB
   const fetchStoreStatus = async (storeId: number) => {
-    setLoadingStatus(true);
+    setLoadingStatus((prev) => ({ ...prev, [storeId]: true }));
     try {
       const { data, error } = await supabase
         .from('stores')
@@ -82,13 +83,13 @@ const Map = ({ user }: any) => {
     } catch (error) {
       console.error('Unexpected error while fetching status:', error);
     } finally {
-      setLoadingStatus(false);
+      setLoadingStatus((prev) => ({ ...prev, [storeId]: false }));
     }
   };
 
   // Update store status and refetch the status from the database
   const updateStoreStatus = async (storeId: number, newStatus: string) => {
-    setLoadingStatus(true);
+    setLoadingStatus((prev) => ({ ...prev, [storeId]: true }));
     try {
       const { error } = await supabase
         .from('stores')
@@ -98,13 +99,12 @@ const Map = ({ user }: any) => {
       if (error) {
         console.error('Error updating store status:', error);
       } else {
-        console.log('Store status updated successfully');
         await fetchStoreStatus(storeId); // Refetch the updated status from the database
       }
     } catch (error) {
       console.error('Unexpected error while updating status:', error);
     } finally {
-      setLoadingStatus(false); // Set loading back to false after the operation is complete
+      setLoadingStatus((prev) => ({ ...prev, [storeId]: false }));
     }
   };
 
@@ -146,27 +146,26 @@ const Map = ({ user }: any) => {
     getMyLoc((coords: LatLngExpression | null) => {
       if (coords) {
         setCoord(coords);
-
-        // Assuming coords is a tuple [lat, lng]
         if (Array.isArray(coords)) {
-          getStoresWithinRadius(coords[0], coords[1]); // Fetch stores when user location is available
-        } else {
-          console.error('Invalid coordinates format');
+          getStoresWithinRadius(coords[0], coords[1]);
         }
-      } else {
-        console.error('Unable to fetch user location');
       }
     });
 
     getUserName();
   }, [user.id, supabase]);
 
-  const handleBookStore = (storeId: number) => {
-    setBookedStores((prev) => [...prev, storeId]);
-  };
+  useEffect(() => {
+    // Fetch status for all stores once they are loaded
+    stores.forEach((store) => {
+      if (!storeStatuses[store.id]) {
+        fetchStoreStatus(store.id);
+      }
+    });
+  }, [stores, storeStatuses]);
 
   const handleSendEmail = (store: Store) => {
-    setLoading(true); // Start loading
+    setLoadingEmail(true); // Start loading for email
 
     // Personalized email content with store owner and user information
     const mailBody = `Gentile Sig/Sig.ra ${store.owner_name},\n\nsono ${agent?.name} ${agent?.surname}, consulente dell'agenzia Attitude, società mandataria di Scalapay spa, iscritto nell'elenco dell'Organismo per la gestione degli agenti in attività Finanziaria con il numero di iscrizione SP2423 (www.organismo-am.it/elenchi-registri/index.html).\n\nIn allegato troverà tutti i dettagli in merito alle soluzioni di pagamento e ai servizi offerti da Scalapay che le ho illustrato durante il nostro incontro.\n\nNel caso di suo interesse a procedere con la sottoscrizione, non esiti a rispondere a questa mail o a contattarmi al numero che troverà in firma.\n\nCordiali saluti,\n${agent?.name} ${agent?.surname}\n${agent?.number}`;
@@ -175,7 +174,7 @@ const Map = ({ user }: any) => {
     window.location.href = mailto; // Open the default email client with the personalized email
 
     setTimeout(() => {
-      setLoading(false); // Reset loading state after a short delay
+      setLoadingEmail(false); // Reset loading state after a short delay
     }, 2000); // This simulates the time taken to send the email
   };
 
@@ -206,34 +205,29 @@ const Map = ({ user }: any) => {
             // Parse the store's location field 'POINT(lng lat)' into actual coordinates
             const storeCoordinates = parseCoords(store.location);
 
-            if (storeCoordinates) {
-              useEffect(() => {
-                if (!storeStatuses[store.id]) {
-                  fetchStoreStatus(store.id);
-                }
-              }, [store.id, storeStatuses]);
+            // Determine the correct icon based on the store's status
+            let icon;
+            const status = storeStatuses[store.id] || store.status;
+            switch (status) {
+              case 'free':
+                icon = freeStoreIcon;
+                break;
+              case 'in_progress':
+                icon = inProgressStoreIcon;
+                break;
+              case 'concluded':
+                icon = concludedStoreIcon;
+                break;
+              case 'failed':
+                icon = failedStoreIcon;
+                break;
+              default:
+                icon = freeStoreIcon; // fallback to a default store icon
+            }
 
-              // Determine the correct icon based on the store's status
-              let icon;
-              const status = storeStatuses[store.id] || store.status;
-              switch (status) {
-                case 'free':
-                  icon = freeStoreIcon;
-                  break;
-                case 'in_progress':
-                  icon = inProgressStoreIcon;
-                  break;
-                case 'concluded':
-                  icon = concludedStoreIcon;
-                  break;
-                case 'failed':
-                  icon = failedStoreIcon;
-                  break;
-                default:
-                  icon = freeStoreIcon; // fallback to a default store icon
-              }
-
-              return (
+            // Ensure storeCoordinates is not null before rendering the Marker
+            return (
+              storeCoordinates && (
                 <Marker key={store.id} position={storeCoordinates} icon={icon}>
                   <Popup>
                     <div className='flex items-center'>
@@ -269,9 +263,7 @@ const Map = ({ user }: any) => {
                           if (Array.isArray(coord) && coord.length === 2) {
                             const [lat, lng] = coord;
                             const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
-                            window.open(gmapsUrl, '_blank'); // Opens Google Maps in a new tab
-                          } else {
-                            console.error('Invalid coordinates format');
+                            window.open(gmapsUrl, '_blank');
                           }
                         }}
                       >
@@ -282,7 +274,7 @@ const Map = ({ user }: any) => {
                         variant='secondary'
                         className='w-full'
                         onClick={() => {
-                          window.open(`tel:${store.phone}`, '_self'); // Open tel: link in the same tab
+                          window.open(`tel:${store.phone}`, '_self');
                         }}
                       >
                         <Phone className='mr-2' /> Chiama
@@ -331,13 +323,13 @@ const Map = ({ user }: any) => {
 
                           <div className='flex flex-col gap-2 mb-2'>
                             <Button
-                              disabled={loading}
+                              disabled={loadingEmail}
                               className='w-full'
                               onClick={() => {
                                 handleSendEmail(store);
                               }}
                             >
-                              {loading ? (
+                              {loadingEmail ? (
                                 'Invio...'
                               ) : (
                                 <>
@@ -348,13 +340,13 @@ const Map = ({ user }: any) => {
 
                             <Select
                               placeholder='Stato avanzamento'
-                              value={status} // The current status from the store object
+                              value={status}
                               onChange={(newStatus) => {
                                 if (newStatus)
                                   updateStoreStatus(store.id, newStatus);
                               }}
-                              options={statuses} // Options defined elsewhere
-                              disabled={loadingStatus} // Disable during status update
+                              options={statuses}
+                              disabled={loadingStatus[store.id]} // Disable during status update
                             />
                           </div>
 
@@ -370,11 +362,8 @@ const Map = ({ user }: any) => {
                     </div>
                   </Popup>
                 </Marker>
-              );
-            } else {
-              console.error(`Invalid coordinates for store: ${store.name}`);
-              return null; // Skip rendering if coordinates are invalid
-            }
+              )
+            );
           })}
         </MapContainer>
       ) : (
