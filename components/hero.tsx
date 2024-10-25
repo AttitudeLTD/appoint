@@ -27,8 +27,8 @@ const Hero = () => {
         <Image
           src='/LogoNaming.svg'
           alt='Attitude Logo'
-          width={200}
-          height={200}
+          width={150}
+          height={150}
         />
       </div>
 
