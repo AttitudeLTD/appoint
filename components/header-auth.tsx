@@ -41,7 +41,7 @@ export default async function AuthButton() {
             >
               <Link href='/sign-in'>Accedi</Link>
             </Button>
-            <Button
+            {/* <Button
               asChild
               size='sm'
               variant={'default'}
@@ -49,7 +49,7 @@ export default async function AuthButton() {
               className='opacity-75 cursor-none pointer-events-none'
             >
               <Link href='/sign-up'>Registrati</Link>
-            </Button>
+            </Button> */}
           </div>
         </div>
       </>
