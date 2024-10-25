@@ -27,8 +27,8 @@ const Hero = () => {
         <Image
           src='/LogoNaming.svg'
           alt='Attitude Logo'
-          width={300}
-          height={300}
+          width={200}
+          height={200}
         />
       </div>
 
@@ -48,7 +48,7 @@ const Hero = () => {
             words='Trova la prossima Attività sul Territorio'
           />
 
-          <p className='text-center md:tracking-wider mb-4 text-sm md:text-lg lg:text-2xl'>
+          <p className='text-center text-white md:tracking-wider mb-4 text-sm md:text-lg lg:text-2xl'>
             Organizza le tue attività di vendita in base al miglior percorso
           </p>
 
