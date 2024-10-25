@@ -9,7 +9,7 @@ export function EnvVarWarning() {
         Supabase environment variables required
       </Badge>
       <div className='flex gap-2'>
-        <Button
+        {/* <Button
           asChild
           size='sm'
           variant={'outline'}
@@ -26,7 +26,7 @@ export function EnvVarWarning() {
           className='opacity-75 cursor-none pointer-events-none'
         >
           <Link href='/sign-up'>Registrati</Link>
-        </Button>
+        </Button> */}
       </div>
     </div>
   );
