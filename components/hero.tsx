@@ -3,6 +3,7 @@ import { FaLocationArrow, FaGlobe } from 'react-icons/fa6';
 import MagicButton from './ui/magic-button';
 import { Spotlight } from './ui/spotlight';
 import { TextGenerateEffect } from './ui/text-generate-effect';
+import Image from 'next/image';
 
 const Hero = () => {
   return (
@@ -19,6 +20,15 @@ const Hero = () => {
         <Spotlight
           className='top-28 left-80 h-[80vh] w-[50vw]'
           fill='#264E85'
+        />
+      </div>
+
+      <div className='w-full flex items-center'>
+        <Image
+          src='/LogoNaming.svg'
+          alt='Attitude Logo'
+          width={300}
+          height={300}
         />
       </div>
 
