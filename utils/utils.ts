@@ -21,15 +21,15 @@ export const statuses = [
     value: 'free',
   },
   {
-    label: 'In corso',
+    label: 'Trattativa in corso',
     value: 'in_progress',
   },
   {
-    label: 'Concluso',
+    label: 'Già cliente',
     value: 'concluded',
   },
   {
-    label: 'Fallito',
+    label: 'Bad prospect',
     value: 'failed',
   },
 ];
