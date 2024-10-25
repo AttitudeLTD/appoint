@@ -258,7 +258,7 @@ const Map = ({ user }: any) => {
                     <div className='flex flex-col gap-2 mt-2'>
                       <Button
                         variant='secondary'
-                        className='w-full bg-[#1B304E]'
+                        className='w-full bg-[#1B304E] hover:bg-[#224677]'
                         onClick={() => {
                           if (Array.isArray(coord) && coord.length === 2) {
                             const [lat, lng] = coord;
@@ -272,7 +272,7 @@ const Map = ({ user }: any) => {
 
                       <Button
                         variant='secondary'
-                        className='w-full bg-[#1B304E]'
+                        className='w-full bg-[#1B304E] hover:bg-[#224677]'
                         onClick={() => {
                           window.open(`tel:${store.phone}`, '_self');
                         }}
@@ -284,7 +284,7 @@ const Map = ({ user }: any) => {
                         <SheetTrigger>
                           <Button
                             variant='secondary'
-                            className='w-full bg-[#1B304E]'
+                            className='w-full bg-[#1B304E] hover:bg-[#224677]'
                           >
                             <Settings className='mr-2' /> Gestisci
                           </Button>
