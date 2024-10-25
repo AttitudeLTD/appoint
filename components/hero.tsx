@@ -23,7 +23,7 @@ const Hero = () => {
         />
       </div>
 
-      <div className='w-full flex items-center'>
+      <div className='w-full mx-auto flex justify-center'>
         <Image
           src='/LogoNaming.svg'
           alt='Attitude Logo'
