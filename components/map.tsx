@@ -289,7 +289,7 @@ const Map = ({ user }: any) => {
                             <Settings className='mr-2' /> Gestisci
                           </Button>
                         </SheetTrigger>
-                        <SheetContent className='z-1000 flex flex-col h-full'>
+                        <SheetContent className='bg-[#262626] z-1000 flex flex-col h-full'>
                           <SheetHeader>
                             <SheetTitle className='text-xl font-bold'>
                               Info punto vendita
