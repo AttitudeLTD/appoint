@@ -111,12 +111,12 @@ export const BentoGridItem = ({
             />
           )}
         </div>
-        {id === 6 && (
+        {/* {id === 6 && (
           // add background animation , remove the p tag
           <BackgroundGradientAnimation>
             <div className='absolute z-50 inset-0 flex items-center justify-center text-white font-bold px-4 pointer-events-none text-3xl text-center md:text-4xl lg:text-7xl'></div>
           </BackgroundGradientAnimation>
-        )}
+        )} */}
 
         <div
           className={cn(
@@ -188,7 +188,7 @@ export const BentoGridItem = ({
                 icon={<IoCopyOutline />}
                 position='left'
                 handleClick={handleCopy}
-                otherClasses='!bg-[#161A31]'
+                otherClasses='!bg-[#04071D]'
               />
             </div>
           )}
