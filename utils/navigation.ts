@@ -65,7 +65,7 @@ export const concludedStoreIcon = new L.Icon({
 
 // Failed Store Icon (Red)
 export const failedStoreSvgString = `
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#de2e21" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-x-inside"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><path d="m14.5 7.5-5 5"/><path d="m9.5 7.5 5 5"/></svg>`;
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#DE2E21" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-x-inside"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><path d="m14.5 7.5-5 5"/><path d="m9.5 7.5 5 5"/></svg>`;
 export const failedStoreIconUrl = svgToDataUrl(failedStoreSvgString);
 export const failedStoreIcon = new L.Icon({
   iconUrl: failedStoreIconUrl,
@@ -118,7 +118,7 @@ export const parseCoords = (coordinates: string): [number, number] | null => {
 
 // Generate the SVG string for MapPinMinus icon with light orange fill and white stroke
 export const mapPinMinusSvgString = `
-<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="lightorange" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-minus-inside">
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="#FFBB00" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-minus-inside">
   <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
   <path d="M27 30h18"/>
 </svg>`;
