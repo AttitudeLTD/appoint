@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
-import Select from 'react-select'; // Changed from CreatableSelect to Select
-import { SingleValue } from 'react-select';
-import { useTheme } from 'next-themes'; // Assuming you're using next-themes for dark/light mode
+import { useTheme } from 'next-themes';
+import Select, { SingleValue } from 'react-select';
 
 type Props = {
   onChange: (value?: string) => void;
@@ -74,6 +73,7 @@ export const SelectComponent = ({
       onChange={onSelect}
       options={options}
       isDisabled={disabled}
+      isSearchable={false}
       // isClearable
     />
   );
