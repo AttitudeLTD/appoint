@@ -353,16 +353,18 @@ const Map = ({ user }: any) => {
                             />
                           </div>
 
-                          <Button
-                            onClick={() =>
-                              window.open(
-                                'https://appraise.attitudeltd.com',
-                                '_blank'
-                              )
-                            }
-                          >
-                            Compila distinta
-                          </Button>
+                          {status === 'concluded' && (
+                            <Button
+                              onClick={() =>
+                                window.open(
+                                  'https://appraise.attitudeltd.com',
+                                  '_blank'
+                                )
+                              }
+                            >
+                              Compila distinta
+                            </Button>
+                          )}
 
                           <SheetFooter className='mt-auto'>
                             <SheetClose>
