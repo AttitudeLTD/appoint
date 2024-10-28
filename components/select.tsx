@@ -1,22 +1,21 @@
 import { useMemo } from 'react';
+import Select from 'react-select'; // Changed from CreatableSelect to Select
 import { SingleValue } from 'react-select';
-import CreatableSelect from 'react-select/creatable';
 import { useTheme } from 'next-themes'; // Assuming you're using next-themes for dark/light mode
 
 type Props = {
   onChange: (value?: string) => void;
-  onCreate?: (value: string) => void;
+  onCreate?: (value: string) => void; // This prop is no longer needed if you're disabling creation
   options?: { label: string; value: string }[];
   value?: string | null | undefined;
   disabled?: boolean;
   placeholder?: string;
 };
 
-export const Select = ({
+export const SelectComponent = ({
   value,
   onChange,
   disabled,
-  onCreate,
   options = [],
   placeholder,
 }: Props) => {
@@ -67,15 +66,15 @@ export const Select = ({
   }, []);
 
   return (
-    <CreatableSelect
+    <Select
       placeholder={placeholder}
       className='text-sm h-10'
       styles={customStyles}
       value={formattedValue}
       onChange={onSelect}
       options={options}
-      onCreateOption={onCreate}
       isDisabled={disabled}
+      // isClearable
     />
   );
 };

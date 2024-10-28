@@ -31,7 +31,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from './ui/sheet';
-import { Select } from './select';
+import { SelectComponent } from './select';
 import { statuses } from '@/utils/utils';
 
 interface Store {
@@ -341,7 +341,7 @@ const Map = ({ user }: any) => {
                               )}
                             </Button>
 
-                            <Select
+                            <SelectComponent
                               placeholder='Stato avanzamento'
                               value={status}
                               onChange={(newStatus) => {
