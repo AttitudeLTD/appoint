@@ -353,7 +353,13 @@ const Map = ({ user }: any) => {
                             />
                           </div>
 
-                          <Button>Compila distinta</Button>
+                          <Button
+                            onClick={() =>
+                              (window.location.href = 'https://www.google.com')
+                            }
+                          >
+                            Compila distinta
+                          </Button>
 
                           <SheetFooter className='mt-auto'>
                             <SheetClose>
