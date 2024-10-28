@@ -355,7 +355,10 @@ const Map = ({ user }: any) => {
 
                           <Button
                             onClick={() =>
-                              (window.location.href = 'https://www.google.com')
+                              window.open(
+                                'https://appraise.attitudeltd.com',
+                                '_blank'
+                              )
                             }
                           >
                             Compila distinta
