@@ -353,6 +353,8 @@ const Map = ({ user }: any) => {
                             />
                           </div>
 
+                          <Button>Compila distinta</Button>
+
                           <SheetFooter className='mt-auto'>
                             <SheetClose>
                               <Button type='button' className='w-full'>
