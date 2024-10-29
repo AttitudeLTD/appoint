@@ -89,12 +89,14 @@ const Map = ({ user }: any) => {
 
   // Update store status and refetch the status from the database
   const updateStoreStatus = async (storeId: number, newStatus: string) => {
+    const previousStatus = storeStatuses[storeId] || 'free';
     setLoadingStatus((prev) => ({ ...prev, [storeId]: true }));
+
     try {
       const { error } = await supabase
         .from('stores')
-        .update({ status: newStatus }) // Update the status
-        .eq('id', storeId); // Target the correct store by its ID
+        .update({ status: newStatus })
+        .eq('id', storeId);
 
       if (error) {
         console.error('Error updating store status:', error);
