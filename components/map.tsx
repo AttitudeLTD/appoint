@@ -18,7 +18,14 @@ import {
   concludedStoreIcon,
   failedStoreIcon,
 } from '@/utils/navigation';
-import { Phone, Navigation, Settings, MailPlus, Loader } from 'lucide-react';
+import {
+  Phone,
+  Navigation,
+  Settings,
+  MailPlus,
+  Loader,
+  FileCheck,
+} from 'lucide-react';
 import { Button } from './ui/button';
 import Image from 'next/image';
 import {
@@ -418,7 +425,9 @@ const Map = ({ user }: any) => {
                                 )
                               }
                             >
-                              Compila distinta
+                              <>
+                                <FileCheck className='mr-2' /> Compila distinta
+                              </>
                             </Button>
                           )}
 
