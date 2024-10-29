@@ -111,7 +111,7 @@ const Map = ({ user }: any) => {
             store_id: storeId,
             prev: previousStatus,
             new: newStatus,
-            modifier: agent?.name || 'Unknown', // or pass user ID if available
+            modifier: user.id,
           },
         ]);
 
