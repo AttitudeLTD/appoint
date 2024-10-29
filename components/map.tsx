@@ -335,7 +335,7 @@ const Map = ({ user }: any) => {
                       </Button>
 
                       <Sheet>
-                        <SheetTrigger>
+                        <SheetTrigger onClick={() => fetchStatusLogs(store.id)}>
                           <Button
                             variant='secondary'
                             className='w-full bg-[#1B304E] hover:bg-[#224677]'
