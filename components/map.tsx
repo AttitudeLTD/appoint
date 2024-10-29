@@ -387,6 +387,15 @@ const Map = ({ user }: any) => {
                             />
                           </div>
 
+                          <div className='py-3'>
+                            <p className='text-base text-gray-400 font-medium'>
+                              Storico:
+                            </p>
+                            <p className='text-base text-gray-600'>
+                              {store.address}
+                            </p>
+                          </div>
+
                           <SheetFooter className='mt-auto'>
                             <SheetClose>
                               <Button type='button' className='w-full'>
