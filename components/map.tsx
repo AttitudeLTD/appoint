@@ -343,7 +343,7 @@ const Map = ({ user }: any) => {
                             <Settings className='mr-2' /> Gestisci
                           </Button>
                         </SheetTrigger>
-                        <SheetContent className='bg-[#262626] z-1000 flex flex-col h-full'>
+                        <SheetContent className='z-1000 flex flex-col h-full'>
                           <SheetHeader>
                             <SheetTitle className='text-xl font-bold'>
                               Info punto vendita
@@ -379,37 +379,6 @@ const Map = ({ user }: any) => {
                           </div>
 
                           <div className='flex flex-col gap-2 mb-2'>
-                            {status === 'in_progress' && (
-                              <Button
-                                disabled={loadingEmail}
-                                className='w-full'
-                                onClick={() => {
-                                  handleSendEmail(store);
-                                }}
-                              >
-                                {loadingEmail ? (
-                                  'Invio...'
-                                ) : (
-                                  <>
-                                    <MailPlus className='mr-2' /> Invia e-mail
-                                  </>
-                                )}
-                              </Button>
-                            )}
-
-                            {status === 'concluded' && (
-                              <Button
-                                onClick={() =>
-                                  window.open(
-                                    'https://appraise.attitudeltd.com',
-                                    '_blank'
-                                  )
-                                }
-                              >
-                                Compila distinta
-                              </Button>
-                            )}
-
                             <SelectComponent
                               placeholder='Stato avanzamento'
                               value={status}
@@ -421,6 +390,37 @@ const Map = ({ user }: any) => {
                               disabled={loadingStatus[store.id]} // Disable during status update
                             />
                           </div>
+
+                          {status === 'in_progress' && (
+                            <Button
+                              disabled={loadingEmail}
+                              className='w-full'
+                              onClick={() => {
+                                handleSendEmail(store);
+                              }}
+                            >
+                              {loadingEmail ? (
+                                'Invio...'
+                              ) : (
+                                <>
+                                  <MailPlus className='mr-2' /> Invia e-mail
+                                </>
+                              )}
+                            </Button>
+                          )}
+
+                          {status === 'concluded' && (
+                            <Button
+                              onClick={() =>
+                                window.open(
+                                  'https://appraise.attitudeltd.com',
+                                  '_blank'
+                                )
+                              }
+                            >
+                              Compila distinta
+                            </Button>
+                          )}
 
                           {/* Conditionally render Storico if there are relevant logs */}
                           {statusLogs[store.id]?.length > 0 && (
