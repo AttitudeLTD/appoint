@@ -1,6 +1,6 @@
 'use client';
 
-// TODO: METTI MODULO CONFERMA DOPO CAMBIO STATO, MANDA A APPRAISE DOPO CONCLUSO
+// TODO: METTI MODULO CONFERMA DOPO CAMBIO STATO
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
@@ -109,9 +109,9 @@ const Map = ({ user }: any) => {
         .insert([
           {
             store_id: storeId,
-            previous_status: previousStatus,
-            new_status: newStatus,
-            changed_by: agent?.name || 'Unknown', // or pass user ID if available
+            prev: previousStatus,
+            new: newStatus,
+            modifier: agent?.name || 'Unknown', // or pass user ID if available
           },
         ]);
 
