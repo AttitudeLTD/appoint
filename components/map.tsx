@@ -350,7 +350,7 @@ const Map = ({ user }: any) => {
                             <Settings className='mr-2' /> Gestisci
                           </Button>
                         </SheetTrigger>
-                        <SheetContent className='z-1000 flex flex-col h-full'>
+                        <SheetContent className='z-1000 flex flex-col h-screen overflow-y-auto p-4'>
                           <SheetHeader>
                             <SheetTitle className='text-xl font-bold'>
                               Info punto vendita
@@ -359,7 +359,8 @@ const Map = ({ user }: any) => {
                               Qui trovi i dettagli dell'attività.
                             </SheetDescription>
                           </SheetHeader>
-                          <div className='py-4'>
+
+                          <div className='flex-grow py-4'>
                             <div className='py-3 border-b border-gray-200'>
                               <strong className='text-lg font-semibold'>
                                 {store.name}
