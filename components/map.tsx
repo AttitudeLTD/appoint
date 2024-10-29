@@ -1,6 +1,6 @@
 'use client';
 
-// TODO: METTI MODULO CONFERMA DOPO CAMBIO STATO
+// TODO: METTI MODULO CONFERMA DOPO CAMBIO STATO, fetch stores quando cambi con cursore
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
