@@ -162,15 +162,6 @@ const Map = ({ user }: any) => {
     }
   };
 
-  // Call fetchStatusLogs when the sheet opens (e.g., in a useEffect or onClick)
-  useEffect(() => {
-    stores.forEach((store) => {
-      if (storeStatuses[store.id]) {
-        fetchStatusLogs(store.id);
-      }
-    });
-  }, [stores]);
-
   useEffect(() => {
     // Fetch user's name
     const getUserName = async () => {
@@ -470,7 +461,7 @@ const Map = ({ user }: any) => {
           })}
         </MapContainer>
       ) : (
-        <p>Loading map...</p>
+        <p className='m-20'>Caricamento...</p>
       )}
     </>
   );
