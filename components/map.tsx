@@ -98,10 +98,9 @@ const Map = ({ user }: any) => {
         .update({ status: newStatus })
         .eq('id', storeId);
 
-      if (error) {
-        console.error('Error updating store status:', error);
-      } else {
-        await fetchStoreStatus(storeId); // Refetch the updated status from the database
+      if (updateError) {
+        console.error('Error updating store status:', updateError);
+        return;
       }
     } catch (error) {
       console.error('Unexpected error while updating status:', error);
