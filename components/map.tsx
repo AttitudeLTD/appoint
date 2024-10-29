@@ -102,6 +102,24 @@ const Map = ({ user }: any) => {
         console.error('Error updating store status:', updateError);
         return;
       }
+
+      // Insert a new entry in the log table
+      const { error: logError } = await supabase
+        .from('store_status_logs')
+        .insert([
+          {
+            store_id: storeId,
+            previous_status: previousStatus,
+            new_status: newStatus,
+            changed_by: agent?.name || 'Unknown', // or pass user ID if available
+          },
+        ]);
+
+      if (logError) {
+        console.error('Error logging status change:', logError);
+      } else {
+        await fetchStoreStatus(storeId); // Refetch the updated status from the database
+      }
     } catch (error) {
       console.error('Unexpected error while updating status:', error);
     } finally {
