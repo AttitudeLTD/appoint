@@ -425,22 +425,45 @@ const Map = ({ user }: any) => {
                           {/* Conditionally render Storico if there are relevant logs */}
                           {statusLogs[store.id]?.length > 0 && (
                             <div className='py-3'>
-                              <p className='text-base text-gray-400 font-medium'>
-                                Storico:
+                              <p className='text-lg font-medium text-gray-300 mb-3 border-b border-gray-600 pb-2'>
+                                Storico Modifiche
                               </p>
-                              {statusLogs[store.id].map((log) => (
-                                <div
-                                  key={log.id}
-                                  className='text-sm text-gray-600'
-                                >
-                                  <p>
-                                    Data:{' '}
-                                    {new Date(log.created_at).toLocaleString()}
-                                  </p>
-                                  <p>Stato precedente: {log.prev}</p>
-                                  <p>Nuovo stato: {log.new}</p>
-                                </div>
-                              ))}
+                              {statusLogs[store.id].map((log) => {
+                                const prevLabel =
+                                  statuses.find(
+                                    (status) => status.value === log.prev
+                                  )?.label || log.prev;
+                                const newLabel =
+                                  statuses.find(
+                                    (status) => status.value === log.new
+                                  )?.label || log.new;
+
+                                return (
+                                  <div
+                                    key={log.id}
+                                    className='mb-3 p-3 bg-gray-800 rounded-lg shadow-md border border-gray-700'
+                                  >
+                                    <p className='text-sm text-gray-400 mb-1'>
+                                      <strong>Data:</strong>{' '}
+                                      {new Date(
+                                        log.created_at
+                                      ).toLocaleString()}
+                                    </p>
+                                    <p className='text-sm text-gray-400 mb-1'>
+                                      <strong>Stato Precedente:</strong>{' '}
+                                      <span className='text-gray-200'>
+                                        {prevLabel}
+                                      </span>
+                                    </p>
+                                    <p className='text-sm text-gray-400'>
+                                      <strong>Nuovo Stato:</strong>{' '}
+                                      <span className='text-gray-200'>
+                                        {newLabel}
+                                      </span>
+                                    </p>
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
 
