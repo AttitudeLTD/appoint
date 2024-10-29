@@ -93,7 +93,7 @@ const Map = ({ user }: any) => {
     setLoadingStatus((prev) => ({ ...prev, [storeId]: true }));
 
     try {
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('stores')
         .update({ status: newStatus })
         .eq('id', storeId);
