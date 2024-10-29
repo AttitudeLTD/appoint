@@ -145,7 +145,7 @@ const Map = ({ user }: any) => {
         .select('id, prev, new, created_at, modifier')
         .eq('store_id', storeId)
         .eq('modifier', user.id) // Filter by user ID
-        .order('changed_at', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(3);
 
       if (error) {
