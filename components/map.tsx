@@ -344,21 +344,36 @@ const Map = ({ user }: any) => {
                           </div>
 
                           <div className='flex flex-col gap-2 mb-2'>
-                            <Button
-                              disabled={loadingEmail}
-                              className='w-full'
-                              onClick={() => {
-                                handleSendEmail(store);
-                              }}
-                            >
-                              {loadingEmail ? (
-                                'Invio...'
-                              ) : (
-                                <>
-                                  <MailPlus className='mr-2' /> Invia e-mail
-                                </>
-                              )}
-                            </Button>
+                            {status === 'in_progress' && (
+                              <Button
+                                disabled={loadingEmail}
+                                className='w-full'
+                                onClick={() => {
+                                  handleSendEmail(store);
+                                }}
+                              >
+                                {loadingEmail ? (
+                                  'Invio...'
+                                ) : (
+                                  <>
+                                    <MailPlus className='mr-2' /> Invia e-mail
+                                  </>
+                                )}
+                              </Button>
+                            )}
+
+                            {status === 'concluded' && (
+                              <Button
+                                onClick={() =>
+                                  window.open(
+                                    'https://appraise.attitudeltd.com',
+                                    '_blank'
+                                  )
+                                }
+                              >
+                                Compila distinta
+                              </Button>
+                            )}
 
                             <SelectComponent
                               placeholder='Stato avanzamento'
@@ -371,19 +386,6 @@ const Map = ({ user }: any) => {
                               disabled={loadingStatus[store.id]} // Disable during status update
                             />
                           </div>
-
-                          {status === 'concluded' && (
-                            <Button
-                              onClick={() =>
-                                window.open(
-                                  'https://appraise.attitudeltd.com',
-                                  '_blank'
-                                )
-                              }
-                            >
-                              Compila distinta
-                            </Button>
-                          )}
 
                           <SheetFooter className='mt-auto'>
                             <SheetClose>
