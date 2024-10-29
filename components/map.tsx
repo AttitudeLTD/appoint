@@ -52,6 +52,14 @@ interface Agent {
   number: string;
 }
 
+interface StoreLog {
+  id: number;
+  prev: string;
+  new: string;
+  created_at: string;
+  modifier: number;
+}
+
 const Map = ({ user }: any) => {
   const supabase = createClient();
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -64,6 +72,9 @@ const Map = ({ user }: any) => {
   const [storeStatuses, setStoreStatuses] = useState<{ [key: number]: string }>(
     {}
   ); // Store statuses
+  const [statusLogs, setStatusLogs] = useState<{ [key: number]: StoreLog[] }>(
+    {}
+  );
 
   // Fetch the status for a specific store from the DB
   const fetchStoreStatus = async (storeId: number) => {
@@ -126,6 +137,39 @@ const Map = ({ user }: any) => {
       setLoadingStatus((prev) => ({ ...prev, [storeId]: false }));
     }
   };
+
+  const fetchStatusLogs = async (storeId: number) => {
+    try {
+      const { data, error } = await supabase
+        .from('store_status_logs')
+        .select('id, prev, new, created_at, modifier')
+        .eq('store_id', storeId)
+        .eq('modifier', user.id) // Filter by user ID
+        .order('changed_at', { ascending: false })
+        .limit(3);
+
+      if (error) {
+        console.error('Error fetching status logs:', error);
+      } else {
+        // Explicitly cast data to StoreLog[] to match the state type
+        setStatusLogs((prevLogs) => ({
+          ...prevLogs,
+          [storeId]: (data as StoreLog[]) || [],
+        }));
+      }
+    } catch (error) {
+      console.error('Unexpected error fetching logs:', error);
+    }
+  };
+
+  // Call fetchStatusLogs when the sheet opens (e.g., in a useEffect or onClick)
+  useEffect(() => {
+    stores.forEach((store) => {
+      if (storeStatuses[store.id]) {
+        fetchStatusLogs(store.id);
+      }
+    });
+  }, [stores]);
 
   useEffect(() => {
     // Fetch user's name
@@ -387,14 +431,27 @@ const Map = ({ user }: any) => {
                             />
                           </div>
 
-                          <div className='py-3'>
-                            <p className='text-base text-gray-400 font-medium'>
-                              Storico:
-                            </p>
-                            <p className='text-base text-gray-600'>
-                              {store.address}
-                            </p>
-                          </div>
+                          {/* Conditionally render Storico if there are relevant logs */}
+                          {statusLogs[store.id]?.length > 0 && (
+                            <div className='py-3'>
+                              <p className='text-base text-gray-400 font-medium'>
+                                Storico:
+                              </p>
+                              {statusLogs[store.id].map((log) => (
+                                <div
+                                  key={log.id}
+                                  className='text-sm text-gray-600'
+                                >
+                                  <p>
+                                    Data:{' '}
+                                    {new Date(log.created_at).toLocaleString()}
+                                  </p>
+                                  <p>Stato precedente: {log.prev}</p>
+                                  <p>Nuovo stato: {log.new}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
 
                           <SheetFooter className='mt-auto'>
                             <SheetClose>
