@@ -1,3 +1,5 @@
+import { LatLngExpression } from 'leaflet';
+
 export interface Store {
   id: number;
   name: string;
@@ -23,4 +25,15 @@ export interface StoreLog {
   new: string;
   created_at: string;
   modifier: number;
+}
+
+export interface StorePopupProps {
+  store: Store;
+  coord: LatLngExpression;
+  statusLogs: StoreLog[];
+  loadingStatus: boolean;
+  storeStatuses: { [key: number]: string };
+  fetchStatusLogs: (storeId: number) => void;
+  handleStatusChangeAttempt: (storeId: number, newStatus: string) => void;
+  handleSendEmail: (store: Store) => void;
 }

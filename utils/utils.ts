@@ -33,3 +33,7 @@ export const statuses = [
     value: 'failed',
   },
 ];
+
+export const getStatusLabel = (value: string) => {
+  return statuses.find((status) => status.value === value)?.label || value;
+};
