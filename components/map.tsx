@@ -456,13 +456,11 @@ const Map = ({ user }: any) => {
                           <div className='flex flex-col gap-2 mb-2'>
                             <SelectComponent
                               placeholder='Stato avanzamento'
-                              value={
-                                (storeStatuses[store.id] || store.status) ?? ''
-                              } // Default to empty string if undefined
+                              value={storeStatuses[store.id] || store.status}
                               onChange={(newStatus) =>
                                 handleStatusChangeAttempt(
                                   store.id,
-                                  newStatus ?? ''
+                                  newStatus as string
                                 )
                               }
                               options={statuses}
