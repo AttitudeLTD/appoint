@@ -164,7 +164,18 @@ const Map = ({ user }: any) => {
           ...prevStatuses,
           [storeId]: newStatus,
         }));
-        await fetchStatusLogs(storeId);
+
+        // Insert a new log for the status change
+        await supabase.from('store_status_logs').insert([
+          {
+            store_id: storeId,
+            prev: storeStatuses[storeId] || 'free',
+            new: newStatus,
+            modifier: user.id,
+          },
+        ]);
+
+        await fetchStatusLogs(storeId); // Refetch logs
       } else {
         console.error('Error updating store status:', updateError);
       }
