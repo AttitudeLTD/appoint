@@ -6,9 +6,8 @@ export const svgToDataUrl = (svgString: string) => {
   return `data:image/svg+xml;base64,${btoa(svgString)}`;
 };
 
-// Keep navigation icon the same as before
-export const navigationSvgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="lightblue" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-navigation-2"><polygon points="12 2 19 21 12 17 5 21 12 2"></polygon></svg>`;
-export const navigationIconUrl = svgToDataUrl(navigationSvgString);
+const navigationSvgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="lightblue" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-navigation-2"><polygon points="12 2 19 21 12 17 5 21 12 2"></polygon></svg>`;
+const navigationIconUrl = svgToDataUrl(navigationSvgString);
 export const navIcon = new L.Icon({
   iconUrl: navigationIconUrl,
   iconRetinaUrl: navigationIconUrl,
@@ -17,15 +16,13 @@ export const navIcon = new L.Icon({
   popupAnchor: [0, -12],
 });
 
-export const modifiedByOtherUserSvgString = `
+const modifiedByOtherUserSvgString = `
 <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="#000000" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
   <path d="M36 21v18"/>
   <path d="M27 30h18"/>
 </svg>`;
-export const modifiedByOtherUserIconUrl = svgToDataUrl(
-  modifiedByOtherUserSvgString
-);
+const modifiedByOtherUserIconUrl = svgToDataUrl(modifiedByOtherUserSvgString);
 export const modifiedByOtherUserIcon = new L.Icon({
   iconUrl: modifiedByOtherUserIconUrl,
   iconRetinaUrl: modifiedByOtherUserIconUrl,
@@ -37,13 +34,13 @@ export const modifiedByOtherUserIcon = new L.Icon({
 });
 
 // Free Store Icon (Green)
-export const freeStoreSvgString = `
+const freeStoreSvgString = `
 <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="#205188" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
   <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
   <path d="M36 21v18"/>
   <path d="M27 30h18"/>
 </svg>`;
-export const freeStoreIconUrl = svgToDataUrl(freeStoreSvgString);
+const freeStoreIconUrl = svgToDataUrl(freeStoreSvgString);
 export const freeStoreIcon = new L.Icon({
   iconUrl: freeStoreIconUrl,
   iconRetinaUrl: freeStoreIconUrl,
@@ -55,9 +52,9 @@ export const freeStoreIcon = new L.Icon({
 });
 
 // In Progress Store Icon (Yellow)
-export const inProgressStoreSvgString = `
+const inProgressStoreSvgString = `
 <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="#ffbb00" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-minus-inside"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><path d="M9 10h6"/></svg>`;
-export const inProgressStoreIconUrl = svgToDataUrl(inProgressStoreSvgString);
+const inProgressStoreIconUrl = svgToDataUrl(inProgressStoreSvgString);
 export const inProgressStoreIcon = new L.Icon({
   iconUrl: inProgressStoreIconUrl,
   iconRetinaUrl: inProgressStoreIconUrl,
@@ -69,9 +66,9 @@ export const inProgressStoreIcon = new L.Icon({
 });
 
 // Concluded Store Icon (Blue)
-export const concludedStoreSvgString = `
+const concludedStoreSvgString = `
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#039855" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-check-inside"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><path d="m9 10 2 2 4-4"/></svg>`;
-export const concludedStoreIconUrl = svgToDataUrl(concludedStoreSvgString);
+const concludedStoreIconUrl = svgToDataUrl(concludedStoreSvgString);
 export const concludedStoreIcon = new L.Icon({
   iconUrl: concludedStoreIconUrl,
   iconRetinaUrl: concludedStoreIconUrl,
@@ -83,9 +80,9 @@ export const concludedStoreIcon = new L.Icon({
 });
 
 // Failed Store Icon (Red)
-export const failedStoreSvgString = `
+const failedStoreSvgString = `
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#DE2E21" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-x-inside"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><path d="m14.5 7.5-5 5"/><path d="m9.5 7.5 5 5"/></svg>`;
-export const failedStoreIconUrl = svgToDataUrl(failedStoreSvgString);
+const failedStoreIconUrl = svgToDataUrl(failedStoreSvgString);
 export const failedStoreIcon = new L.Icon({
   iconUrl: failedStoreIconUrl,
   iconRetinaUrl: failedStoreIconUrl,
