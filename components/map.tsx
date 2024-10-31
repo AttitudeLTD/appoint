@@ -430,7 +430,18 @@ const Map = ({ user }: any) => {
 
                           <div className='flex flex-col gap-2 mb-2'>
                             <AlertDialog>
-                              <AlertDialogTrigger>Open</AlertDialogTrigger>
+                              <AlertDialogTrigger>
+                                <SelectComponent
+                                  placeholder='Stato avanzamento'
+                                  value={status}
+                                  onChange={(newStatus) => {
+                                    if (newStatus)
+                                      updateStoreStatus(store.id, newStatus);
+                                  }}
+                                  options={statuses}
+                                  disabled={loadingStatus[store.id]} // Disable during status update
+                                />
+                              </AlertDialogTrigger>
                               <AlertDialogContent className='z-1000'>
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>
