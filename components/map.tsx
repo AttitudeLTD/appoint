@@ -96,6 +96,7 @@ const Map = ({ user }: any) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [loadingConfirm, setLoadingConfirm] = useState(false);
 
   const handleStatusChangeAttempt = (storeId: number, newStatus: string) => {
     setSelectedStoreId(storeId);
@@ -104,10 +105,12 @@ const Map = ({ user }: any) => {
   };
 
   const confirmStatusChange = async () => {
+    setLoadingConfirm(true); // Start loading indicator
     if (selectedStoreId && selectedStatus) {
       await updateStoreStatus(selectedStoreId, selectedStatus);
       setDialogOpen(false); // Close dialog after confirmation
     }
+    setLoadingConfirm(false); // Stop loading indicator
   };
 
   // Fetch the status for a specific store from the DB
@@ -283,8 +286,15 @@ const Map = ({ user }: any) => {
             <AlertDialogCancel onClick={() => setDialogOpen(false)}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={confirmStatusChange}>
-              Continue
+            <AlertDialogAction
+              onClick={confirmStatusChange}
+              disabled={loadingConfirm}
+            >
+              {loadingConfirm ? (
+                <Loader className='animate-spin' />
+              ) : (
+                'Continue'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
