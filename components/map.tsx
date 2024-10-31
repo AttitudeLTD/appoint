@@ -219,30 +219,32 @@ const Map = ({ user }: any) => {
       }
     };
 
-    const getStoresWithinRadius = async (userLat: number, userLng: number) => {
-      const { data: storeData, error } = await supabase.rpc(
+    const fetchStoresAndLogs = async (userLat: number, userLng: number) => {
+      const { data: storesData } = await supabase.rpc(
         'get_stores_within_radius',
-        {
-          lat: userLat,
-          lng: userLng,
-          radius: 3000, // 3 km radius
-        }
+        { lat: userLat, lng: userLng, radius: 3000 }
       );
 
-      if (error) {
-        console.error('Error fetching stores:', error);
-      } else {
-        setStores(storeData || []);
-      }
+      const storesWithLogs = await Promise.all(
+        storesData.map(async (store: any) => {
+          const { data: logs } = await supabase
+            .from('store_status_logs')
+            .select('modifier')
+            .eq('store_id', store.id);
+          const modifiedByOtherUser = logs?.some(
+            (log) => log.modifier !== user.id
+          );
+          return { ...store, modifiedByOtherUser };
+        })
+      );
+
+      setStores(storesWithLogs);
     };
 
-    // Get user's current location and fetch nearby stores
     getMyLoc((coords: LatLngExpression | null) => {
-      if (coords) {
+      if (coords && Array.isArray(coords)) {
         setCoord(coords);
-        if (Array.isArray(coords)) {
-          getStoresWithinRadius(coords[0], coords[1]);
-        }
+        fetchStoresAndLogs(coords[0], coords[1]);
       }
     });
 
