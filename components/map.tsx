@@ -49,6 +49,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from './ui/alert-dialog';
 
 interface Store {
@@ -270,36 +271,6 @@ const Map = ({ user }: any) => {
 
   return (
     <>
-      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Sei sicuro di voler cambiare lo stato?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Questo punto vendita verrà contrassegnato come{' '}
-              {statuses.find((status) => status.value === selectedStatus)
-                ?.label || selectedStatus}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDialogOpen(false)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmStatusChange}
-              disabled={loadingConfirm}
-            >
-              {loadingConfirm ? (
-                <Loader className='animate-spin' />
-              ) : (
-                'Continue'
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       {coord ? (
         <MapContainer
           style={{
@@ -446,19 +417,50 @@ const Map = ({ user }: any) => {
                           </div>
 
                           <div className='flex flex-col gap-2 mb-2'>
-                            <SelectComponent
-                              placeholder='Stato avanzamento'
-                              value={status}
-                              onChange={(newStatus) => {
-                                if (newStatus)
-                                  handleStatusChangeAttempt(
-                                    store.id,
-                                    newStatus
-                                  );
-                              }}
-                              options={statuses}
-                              disabled={loadingStatus[store.id]}
-                            />
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <SelectComponent
+                                  placeholder='Stato avanzamento'
+                                  value={status}
+                                  onChange={(newStatus) => {
+                                    if (newStatus)
+                                      handleStatusChangeAttempt(
+                                        store.id,
+                                        newStatus
+                                      );
+                                  }}
+                                  options={statuses}
+                                  disabled={loadingStatus[store.id]}
+                                />
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Sei sicuro di voler cambiare lo stato?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Questo punto vendita verrà contrassegnato
+                                    come{' '}
+                                    {statuses.find(
+                                      (status) =>
+                                        status.value === selectedStatus
+                                    )?.label || selectedStatus}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={confirmStatusChange}
+                                  >
+                                    {loadingConfirm ? (
+                                      <Loader className='animate-spin' />
+                                    ) : (
+                                      'Continue'
+                                    )}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
 
                           {status === 'in_progress' && (
