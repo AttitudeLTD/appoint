@@ -360,7 +360,7 @@ const Map = ({ user }: any) => {
                             </SheetDescription>
                           </SheetHeader>
 
-                          <div className='flex-grow py-4'>
+                          <div className='py-4'>
                             <div className='py-3 border-b border-gray-200'>
                               <strong className='text-lg font-semibold'>
                                 {store.name}
