@@ -17,7 +17,6 @@ import {
   progressPin,
   closedPin,
   failedPin,
-  modifiedByOtherUserIcon,
   freePinM,
   progressPinM,
   closedPinM,
@@ -111,12 +110,14 @@ const Map = ({ user }: any) => {
   };
 
   const confirmStatusChange = async () => {
-    setLoadingConfirm(true);
     if (selectedStoreId && selectedStatus) {
       await updateStoreStatus(selectedStoreId, selectedStatus);
+      setStoreStatuses((prevStatuses) => ({
+        ...prevStatuses,
+        [selectedStoreId]: selectedStatus,
+      }));
     }
-    setLoadingConfirm(false);
-    setDialogOpen(false); // Close dialog after confirmation
+    setDialogOpen(false);
   };
 
   // Fetch the status for a specific store from the DB
