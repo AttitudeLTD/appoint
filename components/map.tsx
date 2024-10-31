@@ -40,6 +40,17 @@ import {
 } from './ui/sheet';
 import { SelectComponent } from './select';
 import { statuses } from '@/utils/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from './ui/alert-dialog';
 
 interface Store {
   id: number;
@@ -429,6 +440,26 @@ const Map = ({ user }: any) => {
                               disabled={loadingStatus[store.id]} // Disable during status update
                             />
                           </div>
+
+                          <AlertDialog>
+                            <AlertDialogTrigger>Open</AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Are you absolutely sure?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone. This will
+                                  permanently delete your account and remove
+                                  your data from our servers.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction>Continue</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
 
                           {status === 'in_progress' && (
                             <Button
