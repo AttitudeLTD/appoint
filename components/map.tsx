@@ -9,19 +9,7 @@ import { LatLngExpression } from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import {
-  navIcon,
-  getMyLoc,
-  parseCoords,
-  freePin,
-  progressPin,
-  closedPin,
-  failedPin,
-  freePinM,
-  progressPinM,
-  closedPinM,
-  failedPinM,
-} from '@/utils/navigation';
+import { getMyLoc, parseCoords } from '@/utils/navigation';
 import {
   Phone,
   Navigation,
@@ -54,6 +42,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog';
+import {
+  closedPin,
+  closedPinM,
+  failedPin,
+  failedPinM,
+  freePin,
+  freePinM,
+  navIcon,
+  progressPin,
+  progressPinM,
+} from '@/utils/nav-icons';
 
 interface Store {
   id: number;
