@@ -137,6 +137,7 @@ const Map = ({ user }: any) => {
         console.error('Error logging status change:', logError);
       } else {
         await fetchStoreStatus(storeId); // Refetch the updated status from the database
+        await fetchStatusLogs(storeId); // Fetch the latest logs immediately after updating the status
       }
     } catch (error) {
       console.error('Unexpected error while updating status:', error);
