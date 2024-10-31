@@ -18,6 +18,10 @@ import {
   closedPin,
   failedPin,
   modifiedByOtherUserIcon,
+  freePinM,
+  progressPinM,
+  closedPinM,
+  failedPinM,
 } from '@/utils/navigation';
 import {
   Phone,
@@ -334,8 +338,15 @@ const Map = ({ user }: any) => {
           {/* Marker for each store within 3km */}
           {stores.map((store) => {
             const storeCoordinates = parseCoords(store.location);
+            // Choose the appropriate icon based on status and modifiedByOtherUser flag
             const icon = store.modifiedByOtherUser
-              ? modifiedByOtherUserIcon
+              ? store.status === 'free'
+                ? freePinM
+                : store.status === 'in_progress'
+                  ? progressPinM
+                  : store.status === 'concluded'
+                    ? closedPinM
+                    : failedPinM
               : store.status === 'free'
                 ? freePin
                 : store.status === 'in_progress'
