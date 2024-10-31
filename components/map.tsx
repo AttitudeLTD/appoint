@@ -119,8 +119,11 @@ const Map = ({ user }: any) => {
             store.id === selectedStoreId
               ? { ...store, status: selectedStatus }
               : store
-          ) as Store[] // Ensure the type remains Store[]
+          ) as Store[]
       );
+
+      // Refetch logs for the specific store after status update
+      await fetchStatusLogs(selectedStoreId);
     }
     setDialogOpen(false);
   };
