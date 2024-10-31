@@ -219,7 +219,6 @@ const Map = ({ user }: any) => {
       }
     };
 
-    // Fetch stores within 3km of user's location
     const getStoresWithinRadius = async (userLat: number, userLng: number) => {
       const { data: storeData, error } = await supabase.rpc(
         'get_stores_within_radius',
