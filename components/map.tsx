@@ -3,13 +3,7 @@
 // TODO: METTI MODULO CONFERMA DOPO CAMBIO STATO, fetch stores quando cambi con cursore
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
-
-import { LatLngExpression } from 'leaflet';
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-
-import { getMyLoc, parseCoords } from '@/utils/navigation';
+import Image from 'next/image';
 import {
   Phone,
   Navigation,
@@ -18,30 +12,15 @@ import {
   Loader,
   FileCheck,
 } from 'lucide-react';
-import { Button } from './ui/button';
-import Image from 'next/image';
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from './ui/sheet';
-import { SelectComponent } from './select';
+
+import { LatLngExpression } from 'leaflet';
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+
+import { Agent, Store, StoreLog } from '@/types';
+import { createClient } from '@/utils/supabase/client';
+import { getMyLoc, parseCoords } from '@/utils/navigation';
 import { statuses } from '@/utils/utils';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from './ui/alert-dialog';
 import {
   closedPin,
   closedPinM,
@@ -54,32 +33,28 @@ import {
   progressPinM,
 } from '@/utils/nav-icons';
 
-interface Store {
-  id: number;
-  name: string;
-  address: string;
-  location: string; // PostGIS 'location' (geography) field
-  phone: string;
-  category: string;
-  email: string;
-  owner_name: string;
-  status: 'free' | 'in_progress' | 'concluded' | 'failed';
-  modifiedByOtherUser: boolean;
-}
-
-interface Agent {
-  name: string;
-  surname: string;
-  number: string;
-}
-
-interface StoreLog {
-  id: number;
-  prev: string;
-  new: string;
-  created_at: string;
-  modifier: number;
-}
+import { Button } from './ui/button';
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from './ui/sheet';
+import { SelectComponent } from './select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
 
 const Map = ({ user }: any) => {
   const supabase = createClient();
@@ -96,7 +71,6 @@ const Map = ({ user }: any) => {
   const [statusLogs, setStatusLogs] = useState<{ [key: number]: StoreLog[] }>(
     {}
   );
-
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
