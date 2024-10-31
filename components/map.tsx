@@ -383,26 +383,6 @@ const Map = ({ user }: any) => {
                         <Phone className='mr-2' /> Chiama
                       </Button>
 
-                      <AlertDialog>
-                        <AlertDialogTrigger>Open</AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Are you absolutely sure?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will
-                              permanently delete your account and remove your
-                              data from our servers.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction>Continue</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-
                       <Sheet>
                         <SheetTrigger onClick={() => fetchStatusLogs(store.id)}>
                           <Button
@@ -449,16 +429,27 @@ const Map = ({ user }: any) => {
                           </div>
 
                           <div className='flex flex-col gap-2 mb-2'>
-                            <SelectComponent
-                              placeholder='Stato avanzamento'
-                              value={status}
-                              onChange={(newStatus) => {
-                                if (newStatus)
-                                  updateStoreStatus(store.id, newStatus);
-                              }}
-                              options={statuses}
-                              disabled={loadingStatus[store.id]} // Disable during status update
-                            />
+                            <AlertDialog>
+                              <AlertDialogTrigger>Open</AlertDialogTrigger>
+                              <AlertDialogContent className='z-1000'>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Are you absolutely sure?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will
+                                    permanently delete your account and remove
+                                    your data from our servers.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction>
+                                    Continue
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
 
                           {status === 'in_progress' && (
