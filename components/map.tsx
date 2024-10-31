@@ -339,7 +339,8 @@ const Map = ({ user }: any) => {
           {/* Marker for each store within 3km */}
           {stores.map((store) => {
             const storeCoordinates = parseCoords(store.location);
-            // Choose the appropriate icon based on status and modifiedByOtherUser flag
+            if (!storeCoordinates) return null; // Skip rendering if coordinates are invalid
+
             const icon = store.modifiedByOtherUser
               ? store.status === 'free'
                 ? freePinM
@@ -356,212 +357,214 @@ const Map = ({ user }: any) => {
                     ? closedPin
                     : failedPin;
 
-            // Ensure storeCoordinates is not null before rendering the Marker
-            return (
-              storeCoordinates && (
-                <Marker key={store.id} position={storeCoordinates} icon={icon}>
-                  <Popup>
-                    <div className='flex items-center'>
-                      <Image
-                        className='rounded-full shadow-md'
-                        src='/store.jpeg'
-                        alt='Store'
-                        width={50}
-                        height={50}
-                      />
-                      <div className='ml-3'>
-                        <p className='leading-tight'>
-                          <span className='text-lg font-semibold'>
-                            {store.name}
-                          </span>
-                          <br />
-                          <span className='text-base text-gray-400'>
-                            {store.category}
-                          </span>
-                          <br />
-                          <span className='text-sm text-gray-500'>
-                            {store.address}
-                          </span>
-                        </p>
-                      </div>
+            return store.modifiedByOtherUser ? (
+              <Marker key={store.id} position={storeCoordinates} icon={icon}>
+                <Popup>
+                  In questo punto vendita è in corso una trattativa gestita da
+                  un altro agente.
+                </Popup>
+              </Marker>
+            ) : (
+              <Marker key={store.id} position={storeCoordinates} icon={icon}>
+                <Popup>
+                  <div className='flex items-center'>
+                    <Image
+                      className='rounded-full shadow-md'
+                      src='/store.jpeg'
+                      alt='Store'
+                      width={50}
+                      height={50}
+                    />
+                    <div className='ml-3'>
+                      <p className='leading-tight'>
+                        <span className='text-lg font-semibold'>
+                          {store.name}
+                        </span>
+                        <br />
+                        <span className='text-base text-gray-400'>
+                          {store.category}
+                        </span>
+                        <br />
+                        <span className='text-sm text-gray-500'>
+                          {store.address}
+                        </span>
+                      </p>
                     </div>
+                  </div>
 
-                    <div className='flex flex-col gap-2 mt-2'>
-                      <Button
-                        variant='secondary'
-                        className='w-full bg-[#1B304E] hover:bg-[#224677]'
-                        onClick={() => {
-                          if (Array.isArray(coord) && coord.length === 2) {
-                            const [lat, lng] = coord;
-                            const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
-                            window.open(gmapsUrl, '_blank');
-                          }
-                        }}
-                      >
-                        <Navigation className='mr-2' /> Indicazioni
-                      </Button>
+                  <div className='flex flex-col gap-2 mt-2'>
+                    <Button
+                      variant='secondary'
+                      className='w-full bg-[#1B304E] hover:bg-[#224677]'
+                      onClick={() => {
+                        if (Array.isArray(coord) && coord.length === 2) {
+                          const [lat, lng] = coord;
+                          const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                          window.open(gmapsUrl, '_blank');
+                        }
+                      }}
+                    >
+                      <Navigation className='mr-2' /> Indicazioni
+                    </Button>
 
-                      <Button
-                        variant='secondary'
-                        className='w-full bg-[#1B304E] hover:bg-[#224677]'
-                        onClick={() => {
-                          window.open(`tel:${store.phone}`, '_self');
-                        }}
-                      >
-                        <Phone className='mr-2' /> Chiama
-                      </Button>
+                    <Button
+                      variant='secondary'
+                      className='w-full bg-[#1B304E] hover:bg-[#224677]'
+                      onClick={() => {
+                        window.open(`tel:${store.phone}`, '_self');
+                      }}
+                    >
+                      <Phone className='mr-2' /> Chiama
+                    </Button>
 
-                      <Sheet>
-                        <SheetTrigger onClick={() => fetchStatusLogs(store.id)}>
+                    <Sheet>
+                      <SheetTrigger onClick={() => fetchStatusLogs(store.id)}>
+                        <Button
+                          variant='secondary'
+                          className='w-full bg-[#1B304E] hover:bg-[#224677]'
+                        >
+                          <Settings className='mr-2' /> Gestisci
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent className='z-1000 flex flex-col h-screen overflow-y-auto p-4'>
+                        <SheetHeader>
+                          <SheetTitle className='text-xl font-bold'>
+                            Info punto vendita
+                          </SheetTitle>
+                          <SheetDescription>
+                            Qui trovi i dettagli dell'attività.
+                          </SheetDescription>
+                        </SheetHeader>
+
+                        <div className='py-4'>
+                          <div className='py-3 border-b border-gray-200'>
+                            <strong className='text-lg font-semibold'>
+                              {store.name}
+                            </strong>
+                          </div>
+
+                          <div className='py-3 border-b border-gray-200'>
+                            <p className='text-base text-gray-400 font-medium'>
+                              Categoria:
+                            </p>
+                            <p className='text-base text-gray-600'>
+                              {store.category}
+                            </p>
+                          </div>
+
+                          <div className='py-3'>
+                            <p className='text-base text-gray-400 font-medium'>
+                              Indirizzo:
+                            </p>
+                            <p className='text-base text-gray-600'>
+                              {store.address}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className='flex flex-col gap-2 mb-2'>
+                          <SelectComponent
+                            placeholder='Stato avanzamento'
+                            value={storeStatuses[store.id] || store.status}
+                            onChange={(newStatus) =>
+                              handleStatusChangeAttempt(
+                                store.id,
+                                newStatus as string
+                              )
+                            }
+                            options={statuses}
+                            disabled={loadingStatus[store.id]}
+                          />
+                        </div>
+
+                        {status === 'in_progress' && (
                           <Button
-                            variant='secondary'
-                            className='w-full bg-[#1B304E] hover:bg-[#224677]'
+                            disabled={loadingEmail}
+                            className='w-full'
+                            onClick={() => {
+                              handleSendEmail(store);
+                            }}
                           >
-                            <Settings className='mr-2' /> Gestisci
-                          </Button>
-                        </SheetTrigger>
-                        <SheetContent className='z-1000 flex flex-col h-screen overflow-y-auto p-4'>
-                          <SheetHeader>
-                            <SheetTitle className='text-xl font-bold'>
-                              Info punto vendita
-                            </SheetTitle>
-                            <SheetDescription>
-                              Qui trovi i dettagli dell'attività.
-                            </SheetDescription>
-                          </SheetHeader>
-
-                          <div className='py-4'>
-                            <div className='py-3 border-b border-gray-200'>
-                              <strong className='text-lg font-semibold'>
-                                {store.name}
-                              </strong>
-                            </div>
-
-                            <div className='py-3 border-b border-gray-200'>
-                              <p className='text-base text-gray-400 font-medium'>
-                                Categoria:
-                              </p>
-                              <p className='text-base text-gray-600'>
-                                {store.category}
-                              </p>
-                            </div>
-
-                            <div className='py-3'>
-                              <p className='text-base text-gray-400 font-medium'>
-                                Indirizzo:
-                              </p>
-                              <p className='text-base text-gray-600'>
-                                {store.address}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className='flex flex-col gap-2 mb-2'>
-                            <SelectComponent
-                              placeholder='Stato avanzamento'
-                              value={storeStatuses[store.id] || store.status}
-                              onChange={(newStatus) =>
-                                handleStatusChangeAttempt(
-                                  store.id,
-                                  newStatus as string
-                                )
-                              }
-                              options={statuses}
-                              disabled={loadingStatus[store.id]}
-                            />
-                          </div>
-
-                          {status === 'in_progress' && (
-                            <Button
-                              disabled={loadingEmail}
-                              className='w-full'
-                              onClick={() => {
-                                handleSendEmail(store);
-                              }}
-                            >
-                              {loadingEmail ? (
-                                'Invio...'
-                              ) : (
-                                <>
-                                  <MailPlus className='mr-2' /> Invia e-mail
-                                </>
-                              )}
-                            </Button>
-                          )}
-
-                          {status === 'concluded' && (
-                            <Button
-                              onClick={() =>
-                                window.open(
-                                  'https://appraise.attitudeltd.com',
-                                  '_blank'
-                                )
-                              }
-                            >
+                            {loadingEmail ? (
+                              'Invio...'
+                            ) : (
                               <>
-                                <FileCheck className='mr-2' /> Compila distinta
+                                <MailPlus className='mr-2' /> Invia e-mail
                               </>
+                            )}
+                          </Button>
+                        )}
+
+                        {status === 'concluded' && (
+                          <Button
+                            onClick={() =>
+                              window.open(
+                                'https://appraise.attitudeltd.com',
+                                '_blank'
+                              )
+                            }
+                          >
+                            <>
+                              <FileCheck className='mr-2' /> Compila distinta
+                            </>
+                          </Button>
+                        )}
+
+                        {/* Conditionally render Storico if there are relevant logs */}
+                        {statusLogs[store.id]?.length > 0 && (
+                          <div className='py-3'>
+                            <p className='text-lg font-medium text-gray-300 mb-3 border-b border-gray-600 pb-2'>
+                              Storico Modifiche
+                            </p>
+                            {statusLogs[store.id].map((log) => {
+                              const prevLabel =
+                                statuses.find(
+                                  (status) => status.value === log.prev
+                                )?.label || log.prev;
+                              const newLabel =
+                                statuses.find(
+                                  (status) => status.value === log.new
+                                )?.label || log.new;
+
+                              return (
+                                <div
+                                  key={log.id}
+                                  className='mb-3 p-3 bg-gray-800 rounded-lg shadow-md border border-gray-700'
+                                >
+                                  <p className='text-sm text-gray-400 mb-1'>
+                                    <strong>Data:</strong>{' '}
+                                    {new Date(log.created_at).toLocaleString()}
+                                  </p>
+                                  <p className='text-sm text-gray-400 mb-1'>
+                                    <strong>Stato Precedente:</strong>{' '}
+                                    <span className='text-gray-200'>
+                                      {prevLabel}
+                                    </span>
+                                  </p>
+                                  <p className='text-sm text-gray-400'>
+                                    <strong>Nuovo Stato:</strong>{' '}
+                                    <span className='text-gray-200'>
+                                      {newLabel}
+                                    </span>
+                                  </p>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        <SheetFooter className='mt-auto'>
+                          <SheetClose>
+                            <Button type='button' className='w-full'>
+                              Chiudi
                             </Button>
-                          )}
-
-                          {/* Conditionally render Storico if there are relevant logs */}
-                          {statusLogs[store.id]?.length > 0 && (
-                            <div className='py-3'>
-                              <p className='text-lg font-medium text-gray-300 mb-3 border-b border-gray-600 pb-2'>
-                                Storico Modifiche
-                              </p>
-                              {statusLogs[store.id].map((log) => {
-                                const prevLabel =
-                                  statuses.find(
-                                    (status) => status.value === log.prev
-                                  )?.label || log.prev;
-                                const newLabel =
-                                  statuses.find(
-                                    (status) => status.value === log.new
-                                  )?.label || log.new;
-
-                                return (
-                                  <div
-                                    key={log.id}
-                                    className='mb-3 p-3 bg-gray-800 rounded-lg shadow-md border border-gray-700'
-                                  >
-                                    <p className='text-sm text-gray-400 mb-1'>
-                                      <strong>Data:</strong>{' '}
-                                      {new Date(
-                                        log.created_at
-                                      ).toLocaleString()}
-                                    </p>
-                                    <p className='text-sm text-gray-400 mb-1'>
-                                      <strong>Stato Precedente:</strong>{' '}
-                                      <span className='text-gray-200'>
-                                        {prevLabel}
-                                      </span>
-                                    </p>
-                                    <p className='text-sm text-gray-400'>
-                                      <strong>Nuovo Stato:</strong>{' '}
-                                      <span className='text-gray-200'>
-                                        {newLabel}
-                                      </span>
-                                    </p>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          <SheetFooter className='mt-auto'>
-                            <SheetClose>
-                              <Button type='button' className='w-full'>
-                                Chiudi
-                              </Button>
-                            </SheetClose>
-                          </SheetFooter>
-                        </SheetContent>
-                      </Sheet>
-                    </div>
-                  </Popup>
-                </Marker>
-              )
+                          </SheetClose>
+                        </SheetFooter>
+                      </SheetContent>
+                    </Sheet>
+                  </div>
+                </Popup>
+              </Marker>
             );
           })}
         </MapContainer>
