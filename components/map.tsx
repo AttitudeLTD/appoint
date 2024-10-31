@@ -107,9 +107,13 @@ const Map = ({ user }: any) => {
 
   // Update store status and refetch the status from the database
   const updateStoreStatus = async (storeId: number, newStatus: string) => {
-    // Prompt the user for confirmation
+    // Find the label corresponding to the newStatus value
+    const newStatusLabel =
+      statuses.find((status) => status.value === newStatus)?.label || newStatus;
+
+    // Prompt the user for confirmation with the label instead of the value
     const confirmChange = window.confirm(
-      `Sei sicuro di voler cambiare lo stato in "${newStatus}"?`
+      `Sei sicuro di voler cambiare lo stato in "${newStatusLabel}"?`
     );
 
     // If user cancels, stop the function here
@@ -131,7 +135,6 @@ const Map = ({ user }: any) => {
         return;
       }
 
-      // Insert a new entry in the log table
       const { error: logError } = await supabase
         .from('store_status_logs')
         .insert([
