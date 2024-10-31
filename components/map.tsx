@@ -40,17 +40,6 @@ import {
 } from './ui/sheet';
 import { SelectComponent } from './select';
 import { statuses } from '@/utils/utils';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from './ui/alert-dialog';
 
 interface Store {
   id: number;
@@ -97,7 +86,6 @@ const Map = ({ user }: any) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
-  const [loadingConfirm, setLoadingConfirm] = useState(false);
 
   const handleStatusChangeAttempt = (storeId: number, newStatus: string) => {
     setSelectedStoreId(storeId);
@@ -106,12 +94,10 @@ const Map = ({ user }: any) => {
   };
 
   const confirmStatusChange = async () => {
-    setLoadingConfirm(true); // Start loading indicator
     if (selectedStoreId && selectedStatus) {
       await updateStoreStatus(selectedStoreId, selectedStatus);
       setDialogOpen(false); // Close dialog after confirmation
     }
-    setLoadingConfirm(false); // Stop loading indicator
   };
 
   // Fetch the status for a specific store from the DB
@@ -136,7 +122,22 @@ const Map = ({ user }: any) => {
     }
   };
 
+  // Update store status and refetch the status from the database
   const updateStoreStatus = async (storeId: number, newStatus: string) => {
+    // Find the label corresponding to the newStatus value
+    const newStatusLabel =
+      statuses.find((status) => status.value === newStatus)?.label || newStatus;
+
+    // Prompt the user for confirmation with the label instead of the value
+    const confirmChange = window.confirm(
+      `Sei sicuro di voler cambiare lo stato in "${newStatusLabel}"?`
+    );
+
+    // If user cancels, stop the function here
+    if (!confirmChange) {
+      return;
+    }
+
     const previousStatus = storeStatuses[storeId] || 'free';
     setLoadingStatus((prev) => ({ ...prev, [storeId]: true }));
 
@@ -417,50 +418,16 @@ const Map = ({ user }: any) => {
                           </div>
 
                           <div className='flex flex-col gap-2 mb-2'>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <SelectComponent
-                                  placeholder='Stato avanzamento'
-                                  value={status}
-                                  onChange={(newStatus) => {
-                                    if (newStatus)
-                                      handleStatusChangeAttempt(
-                                        store.id,
-                                        newStatus
-                                      );
-                                  }}
-                                  options={statuses}
-                                  disabled={loadingStatus[store.id]}
-                                />
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Sei sicuro di voler cambiare lo stato?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Questo punto vendita verrà contrassegnato
-                                    come{' '}
-                                    {statuses.find(
-                                      (status) =>
-                                        status.value === selectedStatus
-                                    )?.label || selectedStatus}
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={confirmStatusChange}
-                                  >
-                                    {loadingConfirm ? (
-                                      <Loader className='animate-spin' />
-                                    ) : (
-                                      'Continue'
-                                    )}
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            <SelectComponent
+                              placeholder='Stato avanzamento'
+                              value={status}
+                              onChange={(newStatus) => {
+                                if (newStatus)
+                                  updateStoreStatus(store.id, newStatus);
+                              }}
+                              options={statuses}
+                              disabled={loadingStatus[store.id]} // Disable during status update
+                            />
                           </div>
 
                           {status === 'in_progress' && (
