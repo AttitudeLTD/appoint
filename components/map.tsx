@@ -112,10 +112,15 @@ const Map = ({ user }: any) => {
   const confirmStatusChange = async () => {
     if (selectedStoreId && selectedStatus) {
       await updateStoreStatus(selectedStoreId, selectedStatus);
-      setStoreStatuses((prevStatuses) => ({
-        ...prevStatuses,
-        [selectedStoreId]: selectedStatus,
-      }));
+
+      setStores(
+        (prevStores) =>
+          prevStores.map((store) =>
+            store.id === selectedStoreId
+              ? { ...store, status: selectedStatus }
+              : store
+          ) as Store[] // Ensure the type remains Store[]
+      );
     }
     setDialogOpen(false);
   };
@@ -142,45 +147,26 @@ const Map = ({ user }: any) => {
     }
   };
 
-  // Update store status and refetch the status from the database
   const updateStoreStatus = async (storeId: number, newStatus: string) => {
-    // Find the label corresponding to the newStatus value
-    const newStatusLabel =
-      statuses.find((status) => status.value === newStatus)?.label || newStatus;
-
-    const previousStatus = storeStatuses[storeId] || 'free';
     setLoadingStatus((prev) => ({ ...prev, [storeId]: true }));
-
     try {
       const { error: updateError } = await supabase
         .from('stores')
         .update({ status: newStatus })
         .eq('id', storeId);
 
-      if (updateError) {
-        console.error('Error updating store status:', updateError);
-        return;
-      }
-
-      const { error: logError } = await supabase
-        .from('store_status_logs')
-        .insert([
-          {
-            store_id: storeId,
-            prev: previousStatus,
-            new: newStatus,
-            modifier: user.id,
-          },
-        ]);
-
-      if (logError) {
-        console.error('Error logging status change:', logError);
-      } else {
-        await fetchStoreStatus(storeId);
+      if (!updateError) {
+        // Immediately update storeStatuses state
+        setStoreStatuses((prevStatuses) => ({
+          ...prevStatuses,
+          [storeId]: newStatus,
+        }));
         await fetchStatusLogs(storeId);
+      } else {
+        console.error('Error updating store status:', updateError);
       }
     } catch (error) {
-      console.error('Unexpected error while updating status:', error);
+      console.error('Unexpected error:', error);
     } finally {
       setLoadingStatus((prev) => ({ ...prev, [storeId]: false }));
     }
