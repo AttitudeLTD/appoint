@@ -107,6 +107,16 @@ const Map = ({ user }: any) => {
 
   // Update store status and refetch the status from the database
   const updateStoreStatus = async (storeId: number, newStatus: string) => {
+    // Prompt the user for confirmation
+    const confirmChange = window.confirm(
+      `Sei sicuro di voler cambiare lo stato in "${newStatus}"?`
+    );
+
+    // If user cancels, stop the function here
+    if (!confirmChange) {
+      return;
+    }
+
     const previousStatus = storeStatuses[storeId] || 'free';
     setLoadingStatus((prev) => ({ ...prev, [storeId]: true }));
 
@@ -136,8 +146,8 @@ const Map = ({ user }: any) => {
       if (logError) {
         console.error('Error logging status change:', logError);
       } else {
-        await fetchStoreStatus(storeId); // Refetch the updated status from the database
-        await fetchStatusLogs(storeId); // Fetch the latest logs immediately after updating the status
+        await fetchStoreStatus(storeId);
+        await fetchStatusLogs(storeId);
       }
     } catch (error) {
       console.error('Unexpected error while updating status:', error);
