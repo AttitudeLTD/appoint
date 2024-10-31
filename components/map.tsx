@@ -83,6 +83,8 @@ const Map = ({ user }: any) => {
   };
 
   const confirmStatusChange = async () => {
+    setLoadingConfirm(true);
+
     if (selectedStoreId && selectedStatus) {
       await updateStoreStatus(selectedStoreId, selectedStatus);
 
@@ -98,10 +100,11 @@ const Map = ({ user }: any) => {
       // Refetch logs for the specific store after status update
       await fetchStatusLogs(selectedStoreId);
     }
+
+    setLoadingConfirm(false);
     setDialogOpen(false);
   };
 
-  // Fetch the status for a specific store from the DB
   const fetchStoreStatus = async (storeId: number) => {
     setLoadingStatus((prev) => ({ ...prev, [storeId]: true }));
     try {
