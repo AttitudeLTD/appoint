@@ -13,10 +13,10 @@ import {
   navIcon,
   getMyLoc,
   parseCoords,
-  freeStoreIcon,
-  inProgressStoreIcon,
-  concludedStoreIcon,
-  failedStoreIcon,
+  freePin,
+  progressPin,
+  closedPin,
+  failedPin,
   modifiedByOtherUserIcon,
 } from '@/utils/navigation';
 import {
@@ -337,12 +337,12 @@ const Map = ({ user }: any) => {
             const icon = store.modifiedByOtherUser
               ? modifiedByOtherUserIcon
               : store.status === 'free'
-                ? freeStoreIcon
+                ? freePin
                 : store.status === 'in_progress'
-                  ? inProgressStoreIcon
+                  ? progressPin
                   : store.status === 'concluded'
-                    ? concludedStoreIcon
-                    : failedStoreIcon;
+                    ? closedPin
+                    : failedPin;
 
             // Ensure storeCoordinates is not null before rendering the Marker
             return (

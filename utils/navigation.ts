@@ -41,7 +41,7 @@ const freeStoreSvgString = `
   <path d="M27 30h18"/>
 </svg>`;
 const freeStoreIconUrl = svgToDataUrl(freeStoreSvgString);
-export const freeStoreIcon = new L.Icon({
+export const freePin = new L.Icon({
   iconUrl: freeStoreIconUrl,
   iconRetinaUrl: freeStoreIconUrl,
   iconSize: [40, 40],
@@ -55,7 +55,7 @@ export const freeStoreIcon = new L.Icon({
 const inProgressStoreSvgString = `
 <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="#ffbb00" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-minus-inside"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><path d="M9 10h6"/></svg>`;
 const inProgressStoreIconUrl = svgToDataUrl(inProgressStoreSvgString);
-export const inProgressStoreIcon = new L.Icon({
+export const progressPin = new L.Icon({
   iconUrl: inProgressStoreIconUrl,
   iconRetinaUrl: inProgressStoreIconUrl,
   iconSize: [40, 40],
@@ -69,7 +69,7 @@ export const inProgressStoreIcon = new L.Icon({
 const concludedStoreSvgString = `
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#039855" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-check-inside"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><path d="m9 10 2 2 4-4"/></svg>`;
 const concludedStoreIconUrl = svgToDataUrl(concludedStoreSvgString);
-export const concludedStoreIcon = new L.Icon({
+export const closedPin = new L.Icon({
   iconUrl: concludedStoreIconUrl,
   iconRetinaUrl: concludedStoreIconUrl,
   iconSize: [40, 40],
@@ -83,7 +83,7 @@ export const concludedStoreIcon = new L.Icon({
 const failedStoreSvgString = `
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#DE2E21" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-x-inside"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><path d="m14.5 7.5-5 5"/><path d="m9.5 7.5 5 5"/></svg>`;
 const failedStoreIconUrl = svgToDataUrl(failedStoreSvgString);
-export const failedStoreIcon = new L.Icon({
+export const failedPin = new L.Icon({
   iconUrl: failedStoreIconUrl,
   iconRetinaUrl: failedStoreIconUrl,
   iconSize: [40, 40],
