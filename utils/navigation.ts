@@ -16,23 +16,6 @@ export const navIcon = new L.Icon({
   popupAnchor: [0, -12],
 });
 
-const modifiedByOtherUserSvgString = `
-<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="#000000" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
-  <path d="M36 21v18"/>
-  <path d="M27 30h18"/>
-</svg>`;
-const modifiedByOtherUserIconUrl = svgToDataUrl(modifiedByOtherUserSvgString);
-export const modifiedByOtherUserIcon = new L.Icon({
-  iconUrl: modifiedByOtherUserIconUrl,
-  iconRetinaUrl: modifiedByOtherUserIconUrl,
-  iconSize: [40, 40],
-  iconAnchor: [24, 50],
-  popupAnchor: [0, -48],
-  shadowUrl: MarkerShadow.src,
-  shadowSize: [80, 60],
-});
-
 // Free Store Icon (Green)
 const freeStoreSvgString = `
 <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="#205188" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -103,11 +86,11 @@ const freeStoreMutedIconUrl = svgToDataUrl(freeStoreMutedSvgString);
 export const freePinM = new L.Icon({
   iconUrl: freeStoreMutedIconUrl,
   iconRetinaUrl: freeStoreMutedIconUrl,
-  iconSize: [40, 40],
-  iconAnchor: [24, 50],
-  popupAnchor: [0, -48],
+  iconSize: [30, 30],
+  iconAnchor: [14, 40],
+  popupAnchor: [0, -38],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [80, 60],
+  shadowSize: [60, 40],
 });
 
 const inProgressStoreMutedSvgString = `
@@ -116,11 +99,11 @@ const inProgressStoreMutedIconUrl = svgToDataUrl(inProgressStoreMutedSvgString);
 export const progressPinM = new L.Icon({
   iconUrl: inProgressStoreMutedIconUrl,
   iconRetinaUrl: inProgressStoreMutedIconUrl,
-  iconSize: [40, 40],
-  iconAnchor: [24, 50],
-  popupAnchor: [0, -48],
+  iconSize: [30, 30],
+  iconAnchor: [14, 40],
+  popupAnchor: [0, -38],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [80, 60],
+  shadowSize: [60, 40],
 });
 
 const concludedStoreMutedSvgString = `
@@ -129,11 +112,11 @@ const concludedStoreMutedIconUrl = svgToDataUrl(concludedStoreMutedSvgString);
 export const closedPinM = new L.Icon({
   iconUrl: concludedStoreMutedIconUrl,
   iconRetinaUrl: concludedStoreMutedIconUrl,
-  iconSize: [40, 40],
-  iconAnchor: [24, 50],
-  popupAnchor: [0, -48],
+  iconSize: [30, 30],
+  iconAnchor: [14, 40],
+  popupAnchor: [0, -38],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [80, 60],
+  shadowSize: [60, 40],
 });
 
 const failedStoreMutedSvgString = `
@@ -142,11 +125,11 @@ const failedStoreMutedIconUrl = svgToDataUrl(failedStoreMutedSvgString);
 export const failedPinM = new L.Icon({
   iconUrl: failedStoreMutedIconUrl,
   iconRetinaUrl: failedStoreMutedIconUrl,
-  iconSize: [40, 40],
-  iconAnchor: [24, 50],
-  popupAnchor: [0, -48],
+  iconSize: [30, 30],
+  iconAnchor: [14, 40],
+  popupAnchor: [0, -38],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [80, 60],
+  shadowSize: [60, 40],
 });
 
 // Define and export the getMyLocation function
