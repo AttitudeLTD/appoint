@@ -383,6 +383,26 @@ const Map = ({ user }: any) => {
                         <Phone className='mr-2' /> Chiama
                       </Button>
 
+                      <AlertDialog>
+                        <AlertDialogTrigger>Open</AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Are you absolutely sure?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will
+                              permanently delete your account and remove your
+                              data from our servers.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction>Continue</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
                       <Sheet>
                         <SheetTrigger onClick={() => fetchStatusLogs(store.id)}>
                           <Button
@@ -440,26 +460,6 @@ const Map = ({ user }: any) => {
                               disabled={loadingStatus[store.id]} // Disable during status update
                             />
                           </div>
-
-                          <AlertDialog>
-                            <AlertDialogTrigger>Open</AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Are you absolutely sure?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This action cannot be undone. This will
-                                  permanently delete your account and remove
-                                  your data from our servers.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction>Continue</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
 
                           {status === 'in_progress' && (
                             <Button
