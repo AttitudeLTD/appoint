@@ -49,7 +49,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from './ui/alert-dialog';
 
 interface Store {
@@ -97,18 +96,21 @@ const Map = ({ user }: any) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [loadingConfirm, setLoadingConfirm] = useState(false);
 
   const handleStatusChangeAttempt = (storeId: number, newStatus: string) => {
     setSelectedStoreId(storeId);
-    setSelectedStatus(newStatus);
+    setSelectedStatus(newStatus || '');
     setDialogOpen(true);
   };
 
   const confirmStatusChange = async () => {
+    setLoadingConfirm(true);
     if (selectedStoreId && selectedStatus) {
       await updateStoreStatus(selectedStoreId, selectedStatus);
-      setDialogOpen(false); // Close dialog after confirmation
     }
+    setLoadingConfirm(false);
+    setDialogOpen(false); // Close dialog after confirmation
   };
 
   // Fetch the status for a specific store from the DB
@@ -138,16 +140,6 @@ const Map = ({ user }: any) => {
     // Find the label corresponding to the newStatus value
     const newStatusLabel =
       statuses.find((status) => status.value === newStatus)?.label || newStatus;
-
-    // Prompt the user for confirmation with the label instead of the value
-    const confirmChange = window.confirm(
-      `Sei sicuro di voler cambiare lo stato in "${newStatusLabel}"?`
-    );
-
-    // If user cancels, stop the function here
-    if (!confirmChange) {
-      return;
-    }
 
     const previousStatus = storeStatuses[storeId] || 'free';
     setLoadingStatus((prev) => ({ ...prev, [storeId]: true }));
@@ -283,6 +275,39 @@ const Map = ({ user }: any) => {
 
   return (
     <>
+      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <AlertDialogContent className='z-1000'>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Sei sicuro di voler cambiare lo stato?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Questo punto vendita verrà contrassegnato come{' '}
+              <strong>
+                {statuses.find((status) => status.value === selectedStatus)
+                  ?.label || selectedStatus}
+              </strong>
+              .
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDialogOpen(false)}>
+              Annulla
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmStatusChange}
+              disabled={loadingConfirm}
+            >
+              {loadingConfirm ? (
+                <Loader className='animate-spin' />
+              ) : (
+                'Conferma'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {coord ? (
         <MapContainer
           style={{
@@ -429,38 +454,20 @@ const Map = ({ user }: any) => {
                           </div>
 
                           <div className='flex flex-col gap-2 mb-2'>
-                            <AlertDialog>
-                              <AlertDialogTrigger>
-                                <SelectComponent
-                                  placeholder='Stato avanzamento'
-                                  value={status}
-                                  onChange={(newStatus) => {
-                                    if (newStatus)
-                                      updateStoreStatus(store.id, newStatus);
-                                  }}
-                                  options={statuses}
-                                  disabled={loadingStatus[store.id]} // Disable during status update
-                                />
-                              </AlertDialogTrigger>
-                              <AlertDialogContent className='z-1000'>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Are you absolutely sure?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will
-                                    permanently delete your account and remove
-                                    your data from our servers.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction>
-                                    Continue
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            <SelectComponent
+                              placeholder='Stato avanzamento'
+                              value={
+                                (storeStatuses[store.id] || store.status) ?? ''
+                              } // Default to empty string if undefined
+                              onChange={(newStatus) =>
+                                handleStatusChangeAttempt(
+                                  store.id,
+                                  newStatus ?? ''
+                                )
+                              }
+                              options={statuses}
+                              disabled={loadingStatus[store.id]}
+                            />
                           </div>
 
                           {status === 'in_progress' && (
