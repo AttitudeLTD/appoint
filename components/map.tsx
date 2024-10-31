@@ -17,6 +17,7 @@ import {
   inProgressStoreIcon,
   concludedStoreIcon,
   failedStoreIcon,
+  modifiedByOtherUserIcon,
 } from '@/utils/navigation';
 import {
   Phone,
@@ -61,6 +62,7 @@ interface Store {
   email: string;
   owner_name: string;
   status: 'free' | 'in_progress' | 'concluded' | 'failed';
+  modifiedByOtherUser: boolean;
 }
 
 interface Agent {
@@ -331,28 +333,16 @@ const Map = ({ user }: any) => {
 
           {/* Marker for each store within 3km */}
           {stores.map((store) => {
-            // Parse the store's location field 'POINT(lng lat)' into actual coordinates
             const storeCoordinates = parseCoords(store.location);
-
-            // Determine the correct icon based on the store's status
-            let icon;
-            const status = storeStatuses[store.id] || store.status;
-            switch (status) {
-              case 'free':
-                icon = freeStoreIcon;
-                break;
-              case 'in_progress':
-                icon = inProgressStoreIcon;
-                break;
-              case 'concluded':
-                icon = concludedStoreIcon;
-                break;
-              case 'failed':
-                icon = failedStoreIcon;
-                break;
-              default:
-                icon = freeStoreIcon; // fallback to a default store icon
-            }
+            const icon = store.modifiedByOtherUser
+              ? modifiedByOtherUserIcon
+              : store.status === 'free'
+                ? freeStoreIcon
+                : store.status === 'in_progress'
+                  ? inProgressStoreIcon
+                  : store.status === 'concluded'
+                    ? concludedStoreIcon
+                    : failedStoreIcon;
 
             // Ensure storeCoordinates is not null before rendering the Marker
             return (
