@@ -235,7 +235,7 @@ const Map = ({ user }: any) => {
 
     setTimeout(() => {
       setLoadingEmail(false); // Reset loading state after a short delay
-    }, 2000); // This simulates the time taken to send the email
+    }, 3000); // This simulates the time taken to send the email
   };
 
   return (
@@ -329,6 +329,7 @@ const Map = ({ user }: any) => {
                     coord={coord}
                     statusLogs={statusLogs[store.id] || []}
                     loadingStatus={loadingStatus[store.id]}
+                    loadingEmail={loadingEmail}
                     storeStatuses={storeStatuses}
                     fetchStatusLogs={fetchStatusLogs}
                     handleStatusChangeAttempt={handleStatusChangeAttempt}
