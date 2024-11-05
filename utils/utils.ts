@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import { Agent, Store } from '@/types';
 
 /**
  * Redirects to a specified path with an encoded message as a query parameter.
@@ -37,18 +36,4 @@ export const statuses = [
 
 export const getStatusLabel = (value: string) => {
   return statuses.find((status) => status.value === value)?.label || value;
-};
-
-export const generateMailBody = (store: Store, agent: Agent | null): string => {
-  return `Gentile Sig/Sig.ra ${store.owner_name},
-
-sono ${agent?.name} ${agent?.surname}, consulente dell'agenzia Attitude, società mandataria di Scalapay spa, iscritto nell'elenco dell'Organismo per la gestione degli agenti in attività Finanziaria con il numero di iscrizione SP2423 (www.organismo-am.it/elenchi-registri/index.html).
-
-In allegato troverà tutti i dettagli in merito alle soluzioni di pagamento e ai servizi offerti da Scalapay che le ho illustrato durante il nostro incontro.
-
-Nel caso di suo interesse a procedere con la sottoscrizione, non esiti a rispondere a questa mail o a contattarmi al numero che troverà in firma.
-
-Cordiali saluti,
-${agent?.name} ${agent?.surname}
-${agent?.number}`;
 };
