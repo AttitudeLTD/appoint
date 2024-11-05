@@ -32,6 +32,7 @@ export interface StorePopupProps {
   coord: LatLngExpression;
   statusLogs: StoreLog[];
   loadingStatus: boolean;
+  loadingEmail: boolean;
   storeStatuses: { [key: number]: string };
   fetchStatusLogs: (storeId: number) => void;
   handleStatusChangeAttempt: (storeId: number, newStatus: string) => void;

@@ -1,5 +1,12 @@
 import Image from 'next/image';
-import { Phone, Navigation, Settings, MailPlus, FileCheck } from 'lucide-react';
+import {
+  Phone,
+  Navigation,
+  Settings,
+  MailPlus,
+  FileCheck,
+  Loader,
+} from 'lucide-react';
 
 import { SelectComponent } from './select';
 import { Button } from './ui/button';
@@ -23,6 +30,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
   coord,
   statusLogs,
   loadingStatus,
+  loadingEmail,
   storeStatuses,
   fetchStatusLogs,
   handleStatusChangeAttempt,
@@ -132,8 +140,17 @@ const StorePopup: React.FC<StorePopupProps> = ({
             </div>
 
             {storeStatuses[store.id] === 'in_progress' && (
-              <Button className='w-full' onClick={() => handleSendEmail(store)}>
-                <MailPlus className='mr-2' /> Invia e-mail
+              <Button
+                className='w-full'
+                onClick={() => handleSendEmail(store)}
+                disabled={loadingEmail}
+              >
+                {loadingEmail ? (
+                  <Loader className='animate-spin mr-2' />
+                ) : (
+                  <MailPlus className='mr-2' />
+                )}
+                Invia e-mail
               </Button>
             )}
 
