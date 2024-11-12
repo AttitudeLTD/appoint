@@ -1,6 +1,6 @@
 'use client';
 
-// TODO: METTI MODULO CONFERMA DOPO CAMBIO STATO, fetch stores quando cambi con cursore
+// TODO: fetch stores quando cambi con cursore
 
 import { useEffect, useState } from 'react';
 import { Loader } from 'lucide-react';
