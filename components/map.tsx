@@ -114,6 +114,29 @@ const Map = ({ user }: any) => {
   const [selectedLocation, setSelectedLocation] = useState<[number, number]>();
   const [focusedIndex, setFocusedIndex] = useState(-1);
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (searchResults.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setFocusedIndex((prev) =>
+          prev < searchResults.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setFocusedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (focusedIndex >= 0) {
+          handleSelectLocation(searchResults[focusedIndex]);
+        }
+        break;
+    }
+  };
+
   const handleStatusChangeAttempt = (storeId: number, newStatus: string) => {
     setSelectedStoreId(storeId);
     setSelectedStatus(newStatus || '');
@@ -382,6 +405,7 @@ const Map = ({ user }: any) => {
                 type='text'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder='Cerca indirizzo...'
                 className='w-full px-4 py-2 pl-10 border rounded-full shadow-md'
               />
@@ -396,9 +420,9 @@ const Map = ({ user }: any) => {
                         index === 0
                           ? 'rounded-md rounded-b-none'
                           : index === searchResults.length - 1
-                            ? 'rounded-md rounded-t-none'
+                            ? 'rounded-b-md'
                             : 'rounded-none'
-                      }`}
+                      } ${focusedIndex === index ? 'bg-accent' : ''}`}
                       onClick={() => handleSelectLocation(result)}
                     >
                       <p className='text-sm truncate'>{result.display_name}</p>
