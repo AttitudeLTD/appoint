@@ -42,8 +42,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog';
-import StorePopup from './StorePopup';
 import { Input } from './ui/input';
+
+import StorePopup from './StorePopup';
 
 // Create a new component to handle map movements
 function MapEventHandler({
@@ -308,16 +309,18 @@ const Map = ({ user }: any) => {
       </AlertDialog>
 
       <div className='relative w-full h-full'>
-        <div className='absolute top-4 left-4 z-[1000] w-[300px]'>
-          <div className='relative'>
-            <Input
-              type='text'
-              placeholder='Cerca indirizzo...'
-              className='w-full px-4 py-2 pl-10 border rounded-md shadow-md'
-            />
-            <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
+        {coord && (
+          <div className='absolute top-4 left-4 z-[1000] w-[300px]'>
+            <div className='relative'>
+              <Input
+                type='text'
+                placeholder='Cerca indirizzo...'
+                className='w-full px-4 py-2 pl-10 border rounded-md shadow-md'
+              />
+              <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
+            </div>
           </div>
-        </div>
+        )}
 
         {coord ? (
           <MapContainer
