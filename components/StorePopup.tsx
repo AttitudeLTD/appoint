@@ -62,7 +62,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
       <div className='flex flex-col gap-2 mt-2'>
         <Button
           variant='secondary'
-          className='w-full bg-[#1B304E] hover:bg-[#224677]'
+          className='w-full bg-[#1B304E] hover:bg-[#224677] text-white'
           onClick={() => {
             if (
               Array.isArray(coord) &&
@@ -80,7 +80,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
 
         <Button
           variant='secondary'
-          className='w-full bg-[#1B304E] hover:bg-[#224677]'
+          className='w-full bg-[#1B304E] hover:bg-[#224677] text-white'
           onClick={() => {
             window.open(`tel:${store.phone}`, '_self');
           }}
@@ -92,7 +92,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
           <SheetTrigger onClick={() => fetchStatusLogs(store.id)}>
             <Button
               variant='secondary'
-              className='w-full bg-[#1B304E] hover:bg-[#224677]'
+              className='w-full bg-[#1B304E] hover:bg-[#224677] text-white'
             >
               <Settings className='mr-2' /> Gestisci
             </Button>
