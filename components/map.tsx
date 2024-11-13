@@ -328,15 +328,14 @@ const Map = ({ user }: any) => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Handle location selection
   const handleSelectLocation = (result: SearchResult) => {
     const newLocation: [number, number] = [
       parseFloat(result.lat),
       parseFloat(result.lon),
     ];
     setSelectedLocation(newLocation);
-    setSearchResults([]); // Clear results after selection
-    setSearchQuery(result.display_name); // Set the input to the selected address
+    setSearchResults([]);
+    setSearchQuery('');
   };
 
   return (
