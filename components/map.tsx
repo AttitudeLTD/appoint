@@ -45,6 +45,7 @@ import {
 import { Input } from './ui/input';
 
 import StorePopup from './StorePopup';
+import { Button } from './ui/button';
 
 // Create a new component to handle map movements
 function MapEventHandler({
@@ -388,17 +389,16 @@ const Map = ({ user }: any) => {
               />
               <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
 
-              {/* Search Results Dropdown */}
               {searchResults.length > 0 && (
-                <div className='absolute w-full mt-2 bg-white rounded-md shadow-lg max-h-60 overflow-auto'>
+                <div className='absolute w-full mt-2 rounded-md shadow-lg max-h-60 overflow-auto'>
                   {searchResults.map((result, index) => (
-                    <button
+                    <Button
                       key={index}
-                      className='w-full px-4 py-2 text-left hover:bg-gray-100 focus:outline-none focus:bg-gray-100'
+                      className='w-full px-4 py-2 text-left focus:outline-none'
                       onClick={() => handleSelectLocation(result)}
                     >
                       <p className='text-sm truncate'>{result.display_name}</p>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               )}
