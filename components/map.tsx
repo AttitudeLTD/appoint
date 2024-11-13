@@ -388,7 +388,7 @@ const Map = ({ user }: any) => {
               <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
 
               {searchResults.length > 0 && (
-                <div className='absolute w-full mt-2 rounded-md shadow-lg max-h-60 overflow-auto'>
+                <div className='absolute w-full mt-2 shadow-lg max-h-60 overflow-auto'>
                   {searchResults.map((result, index) => (
                     <Button
                       key={index}
