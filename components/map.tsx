@@ -70,6 +70,26 @@ function MapEventHandler({
   return null;
 }
 
+// Add this type for search results
+type SearchResult = {
+  display_name: string;
+  lat: string;
+  lon: string;
+};
+
+// Add this new component to handle map movement
+function MapController({ newCenter }: { newCenter?: [number, number] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (newCenter) {
+      map.setView(newCenter, 16);
+    }
+  }, [map, newCenter]);
+
+  return null;
+}
+
 const Map = ({ user }: any) => {
   const supabase = createClient();
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -89,6 +109,10 @@ const Map = ({ user }: any) => {
   const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [loadingConfirm, setLoadingConfirm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<[number, number]>();
 
   const handleStatusChangeAttempt = (storeId: number, newStatus: string) => {
     setSelectedStoreId(storeId);
@@ -273,6 +297,49 @@ const Map = ({ user }: any) => {
     }, 3000); // This simulates the time taken to send the email
   };
 
+  // Add debounced search function
+  const searchAddress = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          query
+        )}&limit=5`
+      );
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (error) {
+      console.error('Error searching address:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Add debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchAddress(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Handle location selection
+  const handleSelectLocation = (result: SearchResult) => {
+    const newLocation: [number, number] = [
+      parseFloat(result.lat),
+      parseFloat(result.lon),
+    ];
+    setSelectedLocation(newLocation);
+    setSearchResults([]); // Clear results after selection
+    setSearchQuery(result.display_name); // Set the input to the selected address
+  };
+
   return (
     <>
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -314,10 +381,34 @@ const Map = ({ user }: any) => {
             <div className='relative'>
               <Input
                 type='text'
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder='Cerca indirizzo...'
                 className='w-full px-4 py-2 pl-10 border rounded-full shadow-md'
               />
               <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
+
+              {/* Search Results Dropdown */}
+              {searchResults.length > 0 && (
+                <div className='absolute w-full mt-2 bg-white rounded-md shadow-lg max-h-60 overflow-auto'>
+                  {searchResults.map((result, index) => (
+                    <button
+                      key={index}
+                      className='w-full px-4 py-2 text-left hover:bg-gray-100 focus:outline-none focus:bg-gray-100'
+                      onClick={() => handleSelectLocation(result)}
+                    >
+                      <p className='text-sm truncate'>{result.display_name}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Loading indicator */}
+              {isSearching && (
+                <div className='absolute right-3 top-2.5'>
+                  <Loader className='h-5 w-5 animate-spin text-gray-400' />
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -333,6 +424,7 @@ const Map = ({ user }: any) => {
             scrollWheelZoom={true}
             zoomControl={false}
           >
+            <MapController newCenter={selectedLocation} />
             <MapEventHandler onMapMove={fetchStoresAndLogs} />
             <TileLayer url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png' />
             <ZoomControl position='bottomright' />
