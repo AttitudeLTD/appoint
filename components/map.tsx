@@ -443,7 +443,7 @@ const Map = ({ user }: any) => {
                     <Button
                       key={index}
                       variant={'outline'}
-                      className={`w-full px-4 py-2 text-left border-none focus:outline-none ${
+                      className={`w-full px-4 py-1 text-left flex justify-start border-none focus:outline-none ${
                         index === 0
                           ? 'rounded-md rounded-b-none'
                           : index === searchResults.length - 1
