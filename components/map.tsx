@@ -393,7 +393,13 @@ const Map = ({ user }: any) => {
             })}
           </MapContainer>
         ) : (
-          <p className='m-20'>Caricamento...</p>
+          <div className='h-[80vh] w-full flex flex-col items-center justify-center'>
+            <Loader className='h-8 w-8 animate-spin text-[#1B304E] mb-4' />
+            <p className='text-lg font-medium'>Caricamento mappa...</p>
+            <p className='text-sm mt-2'>
+              Attendi mentre recuperiamo la tua posizione
+            </p>
+          </div>
         )}
       </div>
     </>
