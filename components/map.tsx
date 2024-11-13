@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Loader, Search } from 'lucide-react';
+import { Loader, MapPin, Search } from 'lucide-react';
 
 import { LatLngExpression } from 'leaflet';
 import {
@@ -452,6 +452,7 @@ const Map = ({ user }: any) => {
                       } ${focusedIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
                       onClick={() => handleSelectLocation(result)}
                     >
+                      <MapPin className='h-4 w-4 text-gray-400 flex-shrink-0' />
                       <p className='text-sm truncate'>{result.display_name}</p>
                     </Button>
                   ))}
