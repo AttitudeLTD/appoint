@@ -343,6 +343,10 @@ const Map = ({ user }: any) => {
     }
   };
 
+  useEffect(() => {
+    setFocusedIndex(-1);
+  }, [searchResults]);
+
   // Add debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -420,9 +424,9 @@ const Map = ({ user }: any) => {
                         index === 0
                           ? 'rounded-md rounded-b-none'
                           : index === searchResults.length - 1
-                            ? 'rounded-b-md'
+                            ? 'rounded-md rounded-t-none'
                             : 'rounded-none'
-                      } ${focusedIndex === index ? 'bg-accent' : ''}`}
+                      } ${focusedIndex === index ? 'bg-primary/90' : ''}`}
                       onClick={() => handleSelectLocation(result)}
                     >
                       <p className='text-sm truncate'>{result.display_name}</p>
