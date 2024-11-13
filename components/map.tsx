@@ -315,7 +315,7 @@ const Map = ({ user }: any) => {
               <Input
                 type='text'
                 placeholder='Cerca indirizzo...'
-                className='w-full px-4 py-2 pl-10 border rounded-md shadow-md'
+                className='w-full px-4 py-2 pl-10 border rounded-full shadow-md'
               />
               <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
             </div>
@@ -393,7 +393,7 @@ const Map = ({ user }: any) => {
             })}
           </MapContainer>
         ) : (
-          <div className='h-[80vh] w-full flex flex-col items-center justify-center'>
+          <div className='h-[80vh] w-[100vw] flex flex-col items-center justify-center'>
             <Loader className='h-8 w-8 animate-spin text-[#1B304E] mb-4' />
             <p className='text-lg font-medium'>Caricamento mappa...</p>
             <p className='text-sm mt-2'>
