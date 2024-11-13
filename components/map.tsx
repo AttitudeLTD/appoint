@@ -2,11 +2,11 @@
 
 // TODO: fetch stores quando cambi con cursore
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Loader } from 'lucide-react';
 
 import { LatLngExpression } from 'leaflet';
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import { Agent, Store, StoreLog } from '@/types';
@@ -36,6 +36,30 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import StorePopup from './StorePopup';
+
+// Create a new component to handle map movements
+function MapEventHandler({
+  onMapMove,
+}: {
+  onMapMove: (lat: number, lng: number) => void;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    const handleMoveEnd = () => {
+      const center = map.getCenter();
+      onMapMove(center.lat, center.lng);
+    };
+
+    map.on('moveend', handleMoveEnd);
+
+    return () => {
+      map.off('moveend', handleMoveEnd);
+    };
+  }, [map, onMapMove]);
+
+  return null;
+}
 
 const Map = ({ user }: any) => {
   const supabase = createClient();
@@ -167,26 +191,11 @@ const Map = ({ user }: any) => {
     }
   };
 
-  useEffect(() => {
-    // Fetch user's name
-    const getUserName = async () => {
-      const { data: userName, error } = await supabase
-        .from('users')
-        .select('name, surname, number')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user name:', error);
-      } else {
-        setAgent(userName || null);
-      }
-    };
-
-    const fetchStoresAndLogs = async (userLat: number, userLng: number) => {
+  const fetchStoresAndLogs = useCallback(
+    async (lat: number, lng: number) => {
       const { data: storesData } = await supabase.rpc(
         'get_stores_within_radius',
-        { lat: userLat, lng: userLng, radius: 3000 }
+        { lat, lng, radius: 3000 }
       );
 
       const storesWithLogs = await Promise.all(
@@ -203,6 +212,24 @@ const Map = ({ user }: any) => {
       );
 
       setStores(storesWithLogs);
+    },
+    [supabase, user.id]
+  );
+
+  useEffect(() => {
+    // Fetch user's name
+    const getUserName = async () => {
+      const { data: userName, error } = await supabase
+        .from('users')
+        .select('name, surname, number')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user name:', error);
+      } else {
+        setAgent(userName || null);
+      }
     };
 
     getMyLoc((coords: LatLngExpression | null) => {
@@ -213,7 +240,7 @@ const Map = ({ user }: any) => {
     });
 
     getUserName();
-  }, [user.id, supabase]);
+  }, [user.id, supabase, fetchStoresAndLogs]);
 
   useEffect(() => {
     // Fetch status for all stores once they are loaded
@@ -282,6 +309,7 @@ const Map = ({ user }: any) => {
           zoom={16}
           scrollWheelZoom={true}
         >
+          <MapEventHandler onMapMove={fetchStoresAndLogs} />
           <TileLayer url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png' />
 
           {/* Marker for the user's current location */}
