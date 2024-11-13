@@ -1,7 +1,5 @@
 'use client';
 
-// TODO: ricerca indirizzo
-
 import { useEffect, useState, useCallback } from 'react';
 import { Loader, Search } from 'lucide-react';
 
