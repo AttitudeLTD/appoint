@@ -113,6 +113,25 @@ const Map = ({ user }: any) => {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<[number, number]>();
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [showSearchResults, setShowSearchResults] = useState(true);
+
+  function MapClickHandler() {
+    const map = useMap();
+
+    useEffect(() => {
+      const handleMapClick = () => {
+        setShowSearchResults(false);
+      };
+
+      map.on('click', handleMapClick);
+
+      return () => {
+        map.off('click', handleMapClick);
+      };
+    }, [map]);
+
+    return null;
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (searchResults.length === 0) return;
@@ -408,26 +427,28 @@ const Map = ({ user }: any) => {
               <Input
                 type='text'
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSearchResults(true);
+                }}
                 onKeyDown={handleKeyDown}
                 placeholder='Cerca indirizzo...'
                 className='w-full px-4 py-2 pl-10 border rounded-full shadow-md'
               />
               <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
 
-              {searchResults.length > 0 && (
+              {searchResults.length > 0 && showSearchResults && (
                 <div className='absolute w-full mt-2 shadow-lg max-h-60 overflow-auto'>
                   {searchResults.map((result, index) => (
                     <Button
                       key={index}
-                      variant={'outline'}
-                      className={`w-full px-4 py-2 text-left border-none focus:outline-none ${
+                      className={`w-full px-4 py-2 text-left focus:outline-none ${
                         index === 0
                           ? 'rounded-md rounded-b-none'
                           : index === searchResults.length - 1
-                            ? 'rounded-md rounded-t-none'
+                            ? 'rounded-b-md'
                             : 'rounded-none'
-                      } ${focusedIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
+                      }`}
                       onClick={() => handleSelectLocation(result)}
                     >
                       <p className='text-sm truncate'>{result.display_name}</p>
