@@ -391,7 +391,9 @@ const Map = ({ user }: any) => {
                   {searchResults.map((result, index) => (
                     <Button
                       key={index}
-                      className='w-full px-4 rounded-none py-2 text-left focus:outline-none'
+                      className={`w-full px-4 py-2 text-left focus:outline-none ${
+                        index === 0 ? 'rounded-t-md' : 'rounded-none'
+                      }`}
                       onClick={() => handleSelectLocation(result)}
                     >
                       <p className='text-sm truncate'>{result.display_name}</p>
