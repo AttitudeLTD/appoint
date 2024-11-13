@@ -112,6 +112,7 @@ const Map = ({ user }: any) => {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<[number, number]>();
+  const [focusedIndex, setFocusedIndex] = useState(-1);
 
   const handleStatusChangeAttempt = (storeId: number, newStatus: string) => {
     setSelectedStoreId(storeId);
