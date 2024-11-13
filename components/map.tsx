@@ -1,6 +1,6 @@
 'use client';
 
-// TODO: fetch stores quando cambi con cursore
+// TODO: ricerca indirizzo
 
 import { useEffect, useState, useCallback } from 'react';
 import { Loader } from 'lucide-react';
