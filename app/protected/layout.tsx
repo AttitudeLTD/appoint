@@ -21,7 +21,7 @@ export default async function Layout({
         </div>
       </nav>
       <div className='flex flex-col gap-12 items-start'>{children}</div>
-      <footer className='w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16'>
+      <footer className='w-full flex items-center justify-center border-t mx-auto text-center text-xs pt-1'>
         <p>Powered by Attitude Group S.p.a.</p>
         <ThemeSwitcher />
       </footer>
