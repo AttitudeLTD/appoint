@@ -442,13 +442,14 @@ const Map = ({ user }: any) => {
                   {searchResults.map((result, index) => (
                     <Button
                       key={index}
-                      className={`w-full px-4 py-2 text-left focus:outline-none ${
+                      variant={'outline'}
+                      className={`w-full px-4 py-2 text-left border-none focus:outline-none ${
                         index === 0
                           ? 'rounded-md rounded-b-none'
                           : index === searchResults.length - 1
-                            ? 'rounded-b-md'
+                            ? 'rounded-md rounded-t-none'
                             : 'rounded-none'
-                      }`}
+                      } ${focusedIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
                       onClick={() => handleSelectLocation(result)}
                     >
                       <p className='text-sm truncate'>{result.display_name}</p>
@@ -478,6 +479,7 @@ const Map = ({ user }: any) => {
             scrollWheelZoom={true}
             zoomControl={false}
           >
+            <MapClickHandler />
             <MapController newCenter={selectedLocation} />
             <MapEventHandler onMapMove={fetchStoresAndLogs} />
             <TileLayer url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png' />
