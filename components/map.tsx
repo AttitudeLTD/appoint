@@ -3,7 +3,7 @@
 // TODO: ricerca indirizzo
 
 import { useEffect, useState, useCallback } from 'react';
-import { Loader } from 'lucide-react';
+import { Loader, Search } from 'lucide-react';
 
 import { LatLngExpression } from 'leaflet';
 import {
@@ -43,6 +43,7 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import StorePopup from './StorePopup';
+import { Input } from './ui/input';
 
 // Create a new component to handle map movements
 function MapEventHandler({
@@ -306,79 +307,92 @@ const Map = ({ user }: any) => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {coord ? (
-        <MapContainer
-          style={{
-            height: '80vh',
-            width: '100vw',
-          }}
-          center={coord}
-          zoom={16}
-          scrollWheelZoom={true}
-          zoomControl={false}
-        >
-          <MapEventHandler onMapMove={fetchStoresAndLogs} />
-          <TileLayer url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png' />
-          <ZoomControl position='bottomright' />
+      <div className='relative w-full h-full'>
+        <div className='absolute top-4 left-4 z-[1000] w-[300px]'>
+          <div className='relative'>
+            <Input
+              type='text'
+              placeholder='Cerca indirizzo...'
+              className='w-full px-4 py-2 pl-10 border rounded-md shadow-md'
+            />
+            <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
+          </div>
+        </div>
 
-          {/* Marker for the user's current location */}
-          <Marker icon={navIcon} position={coord}>
-            <Popup>
-              Ciao {agent?.name}, oggi ti mancano 3 attività per raggiungere il
-              tuo obiettivo.
-            </Popup>
-          </Marker>
+        {coord ? (
+          <MapContainer
+            style={{
+              height: '80vh',
+              width: '100vw',
+            }}
+            center={coord}
+            zoom={16}
+            scrollWheelZoom={true}
+            zoomControl={false}
+          >
+            <MapEventHandler onMapMove={fetchStoresAndLogs} />
+            <TileLayer url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png' />
+            <ZoomControl position='bottomright' />
 
-          {/* Marker for each store within 3km */}
-          {stores.map((store) => {
-            const storeCoordinates = parseCoords(store.location);
-            if (!storeCoordinates) return null; // Skip rendering if coordinates are invalid
+            {/* Marker for the user's current location */}
+            <Marker icon={navIcon} position={coord}>
+              <Popup>
+                Ciao {agent?.name}, oggi ti mancano 3 attività per raggiungere
+                il tuo obiettivo.
+              </Popup>
+            </Marker>
 
-            const icon = store.modifiedByOtherUser
-              ? store.status === 'free'
-                ? freePinM
-                : store.status === 'in_progress'
-                  ? progressPinM
-                  : store.status === 'concluded'
-                    ? closedPinM
-                    : failedPinM
-              : store.status === 'free'
-                ? freePin
-                : store.status === 'in_progress'
-                  ? progressPin
-                  : store.status === 'concluded'
-                    ? closedPin
-                    : failedPin;
+            {/* Marker for each store within 3km */}
+            {stores.map((store) => {
+              const storeCoordinates = parseCoords(store.location);
+              if (!storeCoordinates) return null; // Skip rendering if coordinates are invalid
 
-            return store.modifiedByOtherUser ? (
-              <Marker key={store.id} position={storeCoordinates} icon={icon}>
-                <Popup>
-                  In questo punto vendita è in corso una trattativa gestita da
-                  un altro agente.
-                </Popup>
-              </Marker>
-            ) : (
-              <Marker key={store.id} position={storeCoordinates} icon={icon}>
-                <Popup>
-                  <StorePopup
-                    store={store}
-                    coord={coord}
-                    statusLogs={statusLogs[store.id] || []}
-                    loadingStatus={loadingStatus[store.id]}
-                    loadingEmail={loadingEmail}
-                    storeStatuses={storeStatuses}
-                    fetchStatusLogs={fetchStatusLogs}
-                    handleStatusChangeAttempt={handleStatusChangeAttempt}
-                    handleSendEmail={handleSendEmail}
-                  />
-                </Popup>
-              </Marker>
-            );
-          })}
-        </MapContainer>
-      ) : (
-        <p className='m-20'>Caricamento...</p>
-      )}
+              const icon = store.modifiedByOtherUser
+                ? store.status === 'free'
+                  ? freePinM
+                  : store.status === 'in_progress'
+                    ? progressPinM
+                    : store.status === 'concluded'
+                      ? closedPinM
+                      : failedPinM
+                : store.status === 'free'
+                  ? freePin
+                  : store.status === 'in_progress'
+                    ? progressPin
+                    : store.status === 'concluded'
+                      ? closedPin
+                      : failedPin;
+
+              return store.modifiedByOtherUser ? (
+                <Marker key={store.id} position={storeCoordinates} icon={icon}>
+                  <Popup>
+                    In questo punto vendita è in corso una trattativa gestita da
+                    un altro agente.
+                  </Popup>
+                </Marker>
+              ) : (
+                <Marker key={store.id} position={storeCoordinates} icon={icon}>
+                  <Popup>
+                    <StorePopup
+                      store={store}
+                      coord={coord}
+                      statusLogs={statusLogs[store.id] || []}
+                      loadingStatus={loadingStatus[store.id]}
+                      loadingEmail={loadingEmail}
+                      storeStatuses={storeStatuses}
+                      fetchStatusLogs={fetchStatusLogs}
+                      handleStatusChangeAttempt={handleStatusChangeAttempt}
+                      handleSendEmail={handleSendEmail}
+                    />
+                  </Popup>
+                </Marker>
+              );
+            })}
+          </MapContainer>
+        ) : (
+          <p className='m-20'>Caricamento...</p>
+        )}
+      </div>
     </>
   );
 };
