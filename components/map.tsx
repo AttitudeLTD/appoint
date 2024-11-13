@@ -6,7 +6,14 @@ import { useEffect, useState, useCallback } from 'react';
 import { Loader } from 'lucide-react';
 
 import { LatLngExpression } from 'leaflet';
-import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import {
+  MapContainer,
+  Marker,
+  Popup,
+  TileLayer,
+  useMap,
+  ZoomControl,
+} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import { Agent, Store, StoreLog } from '@/types';
@@ -308,9 +315,11 @@ const Map = ({ user }: any) => {
           center={coord}
           zoom={16}
           scrollWheelZoom={true}
+          zoomControl={false}
         >
           <MapEventHandler onMapMove={fetchStoresAndLogs} />
           <TileLayer url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png' />
+          <ZoomControl position='bottomright' />
 
           {/* Marker for the user's current location */}
           <Marker icon={navIcon} position={coord}>
