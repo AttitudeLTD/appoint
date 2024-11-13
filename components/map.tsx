@@ -422,7 +422,7 @@ const Map = ({ user }: any) => {
 
       <div className='relative w-full h-full'>
         {coord && (
-          <div className='absolute top-4 left-4 z-[1000] w-[300px]'>
+          <div className='absolute top-4 left-4 z-[1000] w-[400px]'>
             <div className='relative'>
               <Input
                 type='text'
