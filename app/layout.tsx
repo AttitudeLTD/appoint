@@ -10,12 +10,6 @@ export const metadata = {
   metadataBase: new URL(defaultUrl),
   title: 'Attitude Appoint',
   description: 'Organizza le tue attività sul territorio',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
 };
 
 export default function RootLayout({
