@@ -13,9 +13,9 @@ import { createClient } from '@/utils/supabase/server';
 interface StoreWithStatus {
   store_id: string;
   store_name: string;
+  address: string;
   status: string;
   created_at: string;
-  // Add other fields you need
 }
 
 export async function UserList() {
@@ -25,7 +25,7 @@ export async function UserList() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Get the latest status for each store using a subquery approach
+  // First get status logs
   const { data: storeStatuses, error: statusError } = await supabase
     .from('store_status_logs')
     .select('*')
@@ -46,12 +46,35 @@ export async function UserList() {
     }
   });
 
-  const stores = Array.from(storeMap.values()).map((status) => ({
-    store_id: status.store_id,
-    store_name: status.stores?.name,
-    status: status.status,
-    created_at: status.created_at,
-  }));
+  // Get unique store IDs
+  const uniqueStoreIds = Array.from(storeMap.keys());
+
+  // Fetch store details for these IDs
+  const { data: storeDetails, error: storeError } = await supabase
+    .from('stores')
+    .select('id, name, address, status')
+    .in('id', uniqueStoreIds);
+
+  if (storeError) {
+    console.error('Error fetching store details:', storeError);
+  }
+
+  // Create a map of store details for easy lookup
+  const storeDetailsMap = new Map(
+    storeDetails?.map((store) => [store.id, store])
+  );
+
+  // Combine the data
+  const stores = Array.from(storeMap.values()).map((status) => {
+    const store = storeDetailsMap.get(status.store_id);
+    return {
+      store_id: status.store_id,
+      store_name: store?.name,
+      address: store?.address,
+      status: store?.status,
+      created_at: status.created_at,
+    };
+  });
 
   return (
     <Sheet>
@@ -79,6 +102,7 @@ export async function UserList() {
                 <Store className='h-5 w-5 text-gray-500' />
                 <div>
                   <h3 className='font-medium'>{store.store_name}</h3>
+                  <p className='text-sm text-gray-500'>{store.address}</p>
                   <p className='text-sm text-gray-500'>{store.status}</p>
                 </div>
               </div>
