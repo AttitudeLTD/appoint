@@ -83,7 +83,7 @@ const SheetContent = React.forwardRef<
         {showPanelToggle && (
           <button
             onClick={onPanelToggle}
-            className='absolute left-1/2 -translate-x-1/2 top-2 p-1 rounded-full hover:bg-accent opacity-50 hover:opacity-100 transition-opacity'
+            className='absolute left-1/2 -translate-x-1/2 top-2 p-1 rounded-full hover:bg-accent opacity-50 hover:opacity-100 transition-opacity z-50'
           >
             <PanelBottomOpen className='h-4 w-4' />
           </button>

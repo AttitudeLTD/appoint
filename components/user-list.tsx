@@ -13,7 +13,7 @@ import { List, Store } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
-import { fetchUserStores } from '@/app/actions/stores';
+import { fetchUserStores } from '@/utils/stores';
 
 export function UserList() {
   const [isExpanded, setIsExpanded] = useState(false);
