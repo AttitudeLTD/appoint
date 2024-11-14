@@ -37,7 +37,7 @@ export default async function AuthButton() {
       </Button>
       <form action={signOutAction}>
         <Button type='submit' variant={'outline'}>
-          <LogOut className='mr-2 scale-75' />
+          <LogOut />
         </Button>
       </form>
     </div>
