@@ -32,11 +32,11 @@ export default async function AuthButton() {
     <div className='flex items-center gap-4'>
       <Button variant='ghost' className='p-0 h-8 w-8 rounded-full'>
         <Avatar className='h-8 w-8 flex items-center justify-center'>
-          <List className='h-4 w-4' />
+          <List />
         </Avatar>
       </Button>
       <form action={signOutAction}>
-        <Button type='submit' variant={'outline'}>
+        <Button type='submit' variant={'outline'} className='rounded-full'>
           <LogOut />
         </Button>
       </form>
