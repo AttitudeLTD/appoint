@@ -91,12 +91,12 @@ export async function UserList() {
       </SheetTrigger>
       <SheetContent
         side='bottom'
-        className='h-[96%] sm:h-[385px] sm:rounded-t-[10px] z-[1000]'
+        className='h-[96%] sm:h-[385px] sm:rounded-t-[10px] z-[1000] overflow-y-auto'
       >
-        <SheetHeader>
+        <SheetHeader className='sticky top-0 bg-background pb-4'>
           <SheetTitle>Attività in corso</SheetTitle>
         </SheetHeader>
-        <div className='mt-6'>
+        <div className='mt-6 overflow-y-auto'>
           {stores.map((store) => (
             <div
               key={store.store_id}
