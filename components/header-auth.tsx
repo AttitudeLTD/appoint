@@ -3,8 +3,8 @@ import { hasEnvVars } from '@/utils/supabase/check-env-vars';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { createClient } from '@/utils/supabase/server';
-import { LogOut } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { LogOut, List } from 'lucide-react';
+import { Avatar } from './ui/avatar';
 
 export default async function AuthButton() {
   const supabase = createClient();
@@ -30,18 +30,14 @@ export default async function AuthButton() {
   }
   return userName ? (
     <div className='flex items-center gap-4'>
-      <Avatar className='h-8 w-8'>
-        <AvatarImage
-          src={`https://avatar.vercel.sh/${userName.name}`}
-          alt={userName.name}
-        />
-        <AvatarFallback>
-          {userName.name.slice(0, 2).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
+      <Button variant='ghost' className='p-0 h-8 w-8 rounded-full'>
+        <Avatar className='h-8 w-8 flex items-center justify-center'>
+          <List className='h-4 w-4' />
+        </Avatar>
+      </Button>
       <form action={signOutAction}>
         <Button type='submit' variant={'outline'}>
-          <LogOut className='mr-2 scale-75' /> Esci
+          <LogOut className='mr-2 scale-75' />
         </Button>
       </form>
     </div>
