@@ -21,38 +21,11 @@ export default async function AuthButton() {
 
   if (!hasEnvVars) {
     return (
-      <>
-        <div className='flex gap-4 items-center'>
-          <div>
-            <Badge
-              variant={'default'}
-              className='font-normal pointer-events-none'
-            >
-              Please update .env.local file with anon key and url
-            </Badge>
-          </div>
-          <div className='flex gap-2'>
-            {/* <Button
-              asChild
-              size='sm'
-              variant={'outline'}
-              disabled
-              className='opacity-75 cursor-none pointer-events-none'
-            >
-              <Link href='/sign-in'>Accedi</Link>
-            </Button> */}
-            {/* <Button 
-              asChild
-              size='sm'
-              variant={'default'}
-              disabled
-              className='opacity-75 cursor-none pointer-events-none'
-            >
-              <Link href='/sign-up'>Registrati</Link>
-            </Button> */}
-          </div>
-        </div>
-      </>
+      <div className='flex gap-4 items-center'>
+        <Badge variant={'default'} className='font-normal pointer-events-none'>
+          Please update .env.local file with anon key and url
+        </Badge>
+      </div>
     );
   }
   return userName ? (
@@ -65,13 +38,6 @@ export default async function AuthButton() {
       </form>
     </div>
   ) : (
-    <div className='flex gap-2'>
-      {/* <Button asChild size='sm' variant={'outline'}>
-        <Link href='/sign-in'>Accedi</Link>
-      </Button>
-      <Button asChild size='sm' variant={'default'}>
-        <Link href='/sign-up'>Registrati</Link>
-      </Button> */}
-    </div>
+    <div className='flex gap-2'></div>
   );
 }
