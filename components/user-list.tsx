@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Sheet,
   SheetContent,
@@ -8,77 +10,29 @@ import {
 import { Button } from './ui/button';
 import { Avatar } from './ui/avatar';
 import { List, Store } from 'lucide-react';
-import { createClient } from '@/utils/supabase/server';
-import { getStatusLabel } from '@/utils/utils';
+import { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
+import { createClient } from '@/utils/supabase/client';
+import { fetchUserStores } from '@/app/actions/stores';
 
-interface StoreWithStatus {
-  store_id: string;
-  store_name: string;
-  address: string;
-  status: string;
-  created_at: string;
-}
-
-export async function UserList() {
+export function UserList() {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [stores, setStores] = useState<any[]>([]);
   const supabase = createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // First get status logs
-  const { data: storeStatuses, error: statusError } = await supabase
-    .from('store_status_logs')
-    .select('*')
-    .eq('modifier', user?.id)
-    .order('store_id')
-    .order('created_at', { ascending: false })
-    .limit(1000);
-
-  if (statusError) {
-    console.error('Error fetching store statuses:', statusError);
-  }
-
-  // Filter to keep only the latest status for each store
-  const storeMap = new Map();
-  storeStatuses?.forEach((status) => {
-    if (!storeMap.has(status.store_id)) {
-      storeMap.set(status.store_id, status);
+  useEffect(() => {
+    async function loadStores() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const storesData = await fetchUserStores(user.id);
+        setStores(storesData);
+      }
     }
-  });
 
-  // Get unique store IDs
-  const uniqueStoreIds = Array.from(storeMap.keys());
-
-  // Fetch store details for these IDs
-  const { data: storeDetails, error: storeError } = await supabase
-    .from('stores')
-    .select('id, name, address, status')
-    .in('id', uniqueStoreIds);
-
-  if (storeError) {
-    console.error('Error fetching store details:', storeError);
-  }
-
-  // Create a map of store details for easy lookup
-  const storeDetailsMap = new Map(
-    storeDetails?.map((store) => [store.id, store])
-  );
-
-  // Combine the data
-  const stores = Array.from(storeMap.values())
-    .map((status) => {
-      const store = storeDetailsMap.get(status.store_id);
-      return {
-        store_id: status.store_id,
-        store_name: store?.name,
-        address: store?.address,
-        status: store?.status || '',
-        status_label: getStatusLabel(store?.status || ''),
-        created_at: status.created_at,
-      };
-    })
-    .filter((store) => store.status !== 'free'); // Filter out stores with 'free' status
+    loadStores();
+  }, []);
 
   return (
     <Sheet>
@@ -92,7 +46,12 @@ export async function UserList() {
       <SheetContent
         side='bottom'
         hideClose
-        className='h-[96%] sm:h-[385px] sm:rounded-t-[10px] z-[1000] overflow-y-auto p-0'
+        showPanelToggle
+        onPanelToggle={() => setIsExpanded(!isExpanded)}
+        className={cn(
+          'h-[96%] sm:h-[385px] sm:rounded-t-[10px] z-[1000] overflow-y-auto p-0 transition-[height]',
+          isExpanded && 'h-[75vh] sm:h-[75vh]'
+        )}
       >
         <SheetHeader className='sticky top-0 bg-background p-4 border-b backdrop-blur-sm'>
           <div className='absolute inset-0 bg-background/80' />
