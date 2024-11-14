@@ -30,13 +30,13 @@ export default async function AuthButton() {
   }
   return userName ? (
     <div className='flex items-center gap-4'>
-      <Button variant='ghost' className='p-0 h-8 w-8 rounded-full'>
+      <Button variant='ghost' className='border p-0 h-8 w-8 rounded-full'>
         <Avatar className='h-8 w-8 flex items-center justify-center'>
           <List className='h-4 w-4' />
         </Avatar>
       </Button>
       <form action={signOutAction}>
-        <Button variant='ghost' className='p-0 h-8 w-8 rounded-full'>
+        <Button variant='ghost' className='border p-0 h-8 w-8 rounded-full'>
           <Avatar className='h-8 w-8 flex items-center justify-center'>
             <LogOut className='h-4 w-4' />
           </Avatar>
