@@ -93,11 +93,11 @@ export async function UserList() {
         side='bottom'
         className='h-[96%] sm:h-[385px] sm:rounded-t-[10px] z-[1000] overflow-y-auto p-0'
       >
-        <SheetHeader className='sticky top-0 bg-background pt-6 pb-4 border-b backdrop-blur-sm'>
+        <SheetHeader className='sticky top-0 bg-background p-4 border-b backdrop-blur-sm'>
           <div className='absolute inset-0 bg-background/80' />
           <SheetTitle className='relative z-10'>Attività in corso</SheetTitle>
         </SheetHeader>
-        <div className='mt-6 overflow-y-auto'>
+        <div className='mt-6 p-6 overflow-y-auto'>
           {stores.map((store) => (
             <div
               key={store.store_id}
