@@ -93,8 +93,9 @@ export async function UserList() {
         side='bottom'
         className='h-[96%] sm:h-[385px] sm:rounded-t-[10px] z-[1000] overflow-y-auto'
       >
-        <SheetHeader className='sticky top-0 bg-background pb-4'>
-          <SheetTitle>Attività in corso</SheetTitle>
+        <SheetHeader className='sticky top-0 bg-background pb-4 border-b backdrop-blur-sm'>
+          <div className='absolute inset-0 bg-background/80' />
+          <SheetTitle className='relative z-10'>Attività in corso</SheetTitle>
         </SheetHeader>
         <div className='mt-6 overflow-y-auto'>
           {stores.map((store) => (
