@@ -9,6 +9,7 @@ import { Button } from './ui/button';
 import { Avatar } from './ui/avatar';
 import { List, Store } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
+import { getStatusLabel } from '@/utils/utils';
 
 interface StoreWithStatus {
   store_id: string;
@@ -65,16 +66,19 @@ export async function UserList() {
   );
 
   // Combine the data
-  const stores = Array.from(storeMap.values()).map((status) => {
-    const store = storeDetailsMap.get(status.store_id);
-    return {
-      store_id: status.store_id,
-      store_name: store?.name,
-      address: store?.address,
-      status: store?.status,
-      created_at: status.created_at,
-    };
-  });
+  const stores = Array.from(storeMap.values())
+    .map((status) => {
+      const store = storeDetailsMap.get(status.store_id);
+      return {
+        store_id: status.store_id,
+        store_name: store?.name,
+        address: store?.address,
+        status: store?.status || '',
+        status_label: getStatusLabel(store?.status || ''),
+        created_at: status.created_at,
+      };
+    })
+    .filter((store) => store.status !== 'free'); // Filter out stores with 'free' status
 
   return (
     <Sheet>
@@ -103,7 +107,7 @@ export async function UserList() {
                 <div>
                   <h3 className='font-medium'>{store.store_name}</h3>
                   <p className='text-sm text-gray-500'>{store.address}</p>
-                  <p className='text-sm text-gray-500'>{store.status}</p>
+                  <p className='text-sm text-gray-500'>{store.status_label}</p>
                 </div>
               </div>
               <div className='text-sm font-medium text-gray-500'>
