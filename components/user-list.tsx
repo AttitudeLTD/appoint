@@ -21,7 +21,7 @@ export function UserList() {
       </SheetTrigger>
       <SheetContent
         side='bottom'
-        className='h-[96%] sm:h-[385px] sm:rounded-t-[10px]'
+        className='h-[96%] sm:h-[385px] sm:rounded-t-[10px] z-[1000]'
       >
         <SheetHeader>
           <SheetTitle>Menu</SheetTitle>
