@@ -91,6 +91,7 @@ export async function UserList() {
       </SheetTrigger>
       <SheetContent
         side='bottom'
+        hideClose
         className='h-[96%] sm:h-[385px] sm:rounded-t-[10px] z-[1000] overflow-y-auto p-0'
       >
         <SheetHeader className='sticky top-0 bg-background p-4 border-b backdrop-blur-sm'>
