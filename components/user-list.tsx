@@ -41,7 +41,7 @@ export function UserList() {
         className='h-[96%] sm:h-[385px] sm:rounded-t-[10px] z-[1000]'
       >
         <SheetHeader>
-          <SheetTitle>Attività in corso</SheetTitle>
+          <SheetTitle>Le tue attività in corso</SheetTitle>
         </SheetHeader>
         <div className='mt-6'>
           {mockStores.map((store) => (
