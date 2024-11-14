@@ -5,6 +5,13 @@ import { Button } from './ui/button';
 import { createClient } from '@/utils/supabase/server';
 import { LogOut, List } from 'lucide-react';
 import { Avatar } from './ui/avatar';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from './ui/sheet';
 
 export default async function AuthButton() {
   const supabase = createClient();
@@ -30,13 +37,26 @@ export default async function AuthButton() {
   }
   return userName ? (
     <div className='flex items-center gap-4'>
-      <Button variant='ghost' className='border p-0 h-8 w-8 rounded-full'>
-        <Avatar className='h-8 w-8 flex items-center justify-center'>
-          <List className='h-4 w-4' />
-        </Avatar>
-      </Button>
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant='ghost' className='p-0 h-8 w-8 rounded-full'>
+            <Avatar className='h-8 w-8 flex items-center justify-center'>
+              <List className='h-4 w-4' />
+            </Avatar>
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side='bottom'
+          className='h-[96%] sm:h-[385px] sm:rounded-t-[10px]'
+        >
+          <SheetHeader>
+            <SheetTitle>Menu</SheetTitle>
+          </SheetHeader>
+          {/* Add your sheet content here */}
+        </SheetContent>
+      </Sheet>
       <form action={signOutAction}>
-        <Button variant='ghost' className='border p-0 h-8 w-8 rounded-full'>
+        <Button variant='ghost' className='p-0 h-8 w-8 rounded-full'>
           <Avatar className='h-8 w-8 flex items-center justify-center'>
             <LogOut className='h-4 w-4' />
           </Avatar>
