@@ -76,7 +76,7 @@ export function UserList() {
                 </div>
               </div>
               <div className='text-sm font-medium text-gray-500'>
-                {new Date(store.created_at).toLocaleTimeString()}
+                {store.category}
               </div>
             </div>
           ))}

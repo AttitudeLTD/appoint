@@ -56,6 +56,9 @@ export async function fetchUserStores(userId: string) {
         address: store?.address,
         status: store?.status || '',
         created_at: status.created_at,
+        owner_name: store?.owner_name,
+        phone: store?.phone,
+        category: store?.category,
       };
     })
     .filter((store) => store.status !== 'free');
