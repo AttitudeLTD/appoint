@@ -64,7 +64,6 @@ const StorePopup: React.FC<StorePopupProps> = ({
           variant='secondary'
           className='w-full bg-[#1B304E] hover:bg-[#224677] text-white'
           onClick={() => {
-            console.log(store.location);
             if (
               Array.isArray(coord) &&
               coord.length === 2 &&
