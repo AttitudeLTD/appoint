@@ -59,6 +59,7 @@ export async function fetchUserStores(userId: string) {
         owner_name: store?.owner_name,
         phone: store?.phone,
         category: store?.category,
+        location: store?.location,
       };
     })
     .filter((store) => store.status !== 'free');
