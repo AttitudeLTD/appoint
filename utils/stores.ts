@@ -60,6 +60,7 @@ export async function fetchUserStores(userId: string) {
         phone: store?.phone,
         category: store?.category,
         location: store?.location,
+        coordinates: store?.coordinates,
       };
     })
     .filter((store) => store.status !== 'free');

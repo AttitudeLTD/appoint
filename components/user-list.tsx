@@ -96,10 +96,10 @@ export function UserList() {
                   size='icon'
                   className='h-8 w-8'
                   onClick={() => {
-                    console.log(store.location);
+                    console.log(store.coordinates);
                     getMyLoc((coord) => {
                       if (coord && Array.isArray(coord)) {
-                        const storeCoordinates = parseCoords(store.location);
+                        const storeCoordinates = parseCoords(store.coordinates);
                         if (storeCoordinates) {
                           const [lat, lng] = coord;
                           const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
