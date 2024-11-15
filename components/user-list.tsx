@@ -66,7 +66,18 @@ export function UserList() {
               className='flex items-center justify-between p-4 mb-3 border rounded-lg hover:bg-gray-50'
             >
               <div className='flex items-center gap-3'>
-                <Store className='h-5 w-5 text-gray-500' />
+                <Store
+                  className={cn('h-5 w-5', {
+                    'text-[#ffbb00]': store.status === 'in_progress',
+                    'text-[#039855]': store.status === 'concluded',
+                    'text-[#DE2E21]': store.status === 'failed',
+                    'text-gray-500': ![
+                      'in_progress',
+                      'concluded',
+                      'failed',
+                    ].includes(store.status),
+                  })}
+                />
                 <div>
                   <h3 className='font-medium'>{store.store_name}</h3>
                   <p className='text-sm text-gray-500'>{store.address}</p>
