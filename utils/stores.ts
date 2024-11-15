@@ -33,7 +33,7 @@ export async function fetchUserStores(userId: string) {
   // Fetch store details for these IDs
   const { data: storeDetails, error: storeError } = await supabase
     .from('stores')
-    .select('id, name, address, status')
+    .select('*')
     .in('id', uniqueStoreIds);
 
   if (storeError) {
