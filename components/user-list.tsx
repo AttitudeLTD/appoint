@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores } from '@/utils/stores';
 import { getStatusLabel } from '@/utils/utils';
+import { getMyLoc, parseCoords } from '@/utils/navigation';
 
 export function UserList() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -90,7 +91,24 @@ export function UserList() {
                 <Button variant='outline' size='icon' className='h-8 w-8'>
                   <Info className='h-4 w-4' />
                 </Button>
-                <Button variant='outline' size='icon' className='h-8 w-8'>
+                <Button
+                  variant='outline'
+                  size='icon'
+                  className='h-8 w-8'
+                  onClick={() => {
+                    console.log(store.location);
+                    getMyLoc((coord) => {
+                      if (coord && Array.isArray(coord)) {
+                        const storeCoordinates = parseCoords(store.location);
+                        if (storeCoordinates) {
+                          const [lat, lng] = coord;
+                          const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                          window.open(gmapsUrl, '_blank');
+                        }
+                      }
+                    });
+                  }}
+                >
                   <Navigation className='h-4 w-4' />
                 </Button>
               </div>
