@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores } from '@/utils/stores';
+import { getStatusLabel } from '@/utils/utils';
 
 export function UserList() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -27,7 +28,6 @@ export function UserList() {
       } = await supabase.auth.getUser();
       if (user) {
         const storesData = await fetchUserStores(user.id);
-        console.log(storesData);
         setStores(storesData);
       }
     }
@@ -69,7 +69,9 @@ export function UserList() {
                 <div>
                   <h3 className='font-medium'>{store.store_name}</h3>
                   <p className='text-sm text-gray-500'>{store.address}</p>
-                  <p className='text-sm text-gray-500'>{store.status}</p>
+                  <p className='text-sm text-gray-500'>
+                    {getStatusLabel(store.status)}
+                  </p>
                 </div>
               </div>
               <div className='text-sm font-medium text-gray-500'>
