@@ -29,7 +29,6 @@ export function UserList() {
       } = await supabase.auth.getUser();
       if (user) {
         const storesData = await fetchUserStores(user.id);
-        console.log(storesData);
         setStores(storesData);
       }
     }
@@ -96,7 +95,6 @@ export function UserList() {
                   size='icon'
                   className='h-8 w-8'
                   onClick={() => {
-                    console.log(store.coordinates);
                     getMyLoc((coord) => {
                       if (coord && Array.isArray(coord)) {
                         const storeCoordinates = parseCoords(store.coordinates);
