@@ -37,7 +37,6 @@ const StorePopup: React.FC<StorePopupProps> = ({
   handleSendEmail,
 }) => {
   const storeCoordinates = parseCoords(store.location);
-  console.log(store.location);
 
   return (
     <div>
