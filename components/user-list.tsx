@@ -15,13 +15,22 @@ import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores } from '@/utils/stores';
 import { getStatusLabel } from '@/utils/utils';
+import { getMyLoc } from '@/utils/navigation';
 
 export function UserList() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [stores, setStores] = useState<any[]>([]);
+  const [coord, setCoord] = useState<[number, number] | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
+    // Get user location
+    getMyLoc((coords) => {
+      if (coords) {
+        setCoord(coords as [number, number]);
+      }
+    });
+
     async function loadStores() {
       const {
         data: { user },
@@ -89,7 +98,22 @@ export function UserList() {
                 <Button variant='outline' size='icon' className='h-8 w-8'>
                   <Info className='h-4 w-4' />
                 </Button>
-                <Button variant='outline' size='icon' className='h-8 w-8'>
+                <Button
+                  variant='outline'
+                  size='icon'
+                  className='h-8 w-8'
+                  onClick={() => {
+                    if (
+                      Array.isArray(coord) &&
+                      coord.length === 2 &&
+                      store.coordinates
+                    ) {
+                      const [lat, lng] = coord;
+                      const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${store.coordinates[0]},${store.coordinates[1]}`;
+                      window.open(gmapsUrl, '_blank');
+                    }
+                  }}
+                >
                   <Navigation className='h-4 w-4' />
                 </Button>
               </div>
