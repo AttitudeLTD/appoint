@@ -27,6 +27,7 @@ export function UserList() {
       } = await supabase.auth.getUser();
       if (user) {
         const storesData = await fetchUserStores(user.id);
+        console.log(storesData);
         setStores(storesData);
       }
     }
@@ -68,7 +69,7 @@ export function UserList() {
                 <div>
                   <h3 className='font-medium'>{store.store_name}</h3>
                   <p className='text-sm text-gray-500'>{store.address}</p>
-                  <p className='text-sm text-gray-500'>{store.status_label}</p>
+                  <p className='text-sm text-gray-500'>{store.status}</p>
                 </div>
               </div>
               <div className='text-sm font-medium text-gray-500'>
