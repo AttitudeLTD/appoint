@@ -279,9 +279,9 @@ const Map = ({ user }: any) => {
             .from('store_status_logs')
             .select('modifier')
             .eq('store_id', store.id);
-          const modifiedByOtherUser = logs?.some(
-            (log) => log.modifier !== user.id
-          );
+          const modifiedByOtherUser =
+            store.status !== 'free' &&
+            logs?.some((log) => log.modifier !== user.id);
           return { ...store, modifiedByOtherUser };
         })
       );
