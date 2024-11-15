@@ -63,7 +63,7 @@ export function UserList() {
           {stores.map((store) => (
             <div
               key={store.store_id}
-              className='flex items-center justify-between p-4 mb-3 border rounded-lg hover:bg-gray-50'
+              className='flex items-center justify-between p-4 mb-3 border rounded-lg'
             >
               <div className='flex items-center gap-3'>
                 <Store
