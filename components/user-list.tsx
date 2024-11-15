@@ -68,57 +68,62 @@ export function UserList() {
           <SheetTitle className='relative z-10'>Attività in corso</SheetTitle>
         </SheetHeader>
         <div className='mt-6 p-6 overflow-y-auto'>
-          {stores.map((store) => (
-            <div
-              key={store.store_id}
-              className='flex items-center justify-between p-4 mb-3 border rounded-lg'
-            >
-              <div className='flex items-center gap-3'>
-                <Store
-                  className={cn('h-5 w-5', {
-                    'text-[#ffbb00]': store.status === 'in_progress',
-                    'text-[#039855]': store.status === 'concluded',
-                    'text-[#DE2E21]': store.status === 'failed',
-                    'text-gray-500': ![
-                      'in_progress',
-                      'concluded',
-                      'failed',
-                    ].includes(store.status),
-                  })}
-                />
-                <div>
-                  <h3 className='font-medium'>{store.store_name}</h3>
-                  <p className='text-sm text-gray-500'>{store.address}</p>
-                  <p className='text-sm text-gray-500'>
-                    {getStatusLabel(store.status)}
-                  </p>
-                </div>
-              </div>
-              <div className='flex gap-2'>
-                <Button variant='outline' size='icon' className='h-8 w-8'>
-                  <Info className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant='outline'
-                  size='icon'
-                  className='h-8 w-8'
-                  onClick={() => {
-                    if (
-                      Array.isArray(coord) &&
-                      coord.length === 2 &&
-                      store.coordinates
-                    ) {
-                      const [lat, lng] = coord;
-                      const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${store.coordinates[0]},${store.coordinates[1]}`;
-                      window.open(gmapsUrl, '_blank');
-                    }
-                  }}
+          {stores.map(
+            (store) => (
+              console.log(store.coordinates),
+              (
+                <div
+                  key={store.store_id}
+                  className='flex items-center justify-between p-4 mb-3 border rounded-lg'
                 >
-                  <Navigation className='h-4 w-4' />
-                </Button>
-              </div>
-            </div>
-          ))}
+                  <div className='flex items-center gap-3'>
+                    <Store
+                      className={cn('h-5 w-5', {
+                        'text-[#ffbb00]': store.status === 'in_progress',
+                        'text-[#039855]': store.status === 'concluded',
+                        'text-[#DE2E21]': store.status === 'failed',
+                        'text-gray-500': ![
+                          'in_progress',
+                          'concluded',
+                          'failed',
+                        ].includes(store.status),
+                      })}
+                    />
+                    <div>
+                      <h3 className='font-medium'>{store.store_name}</h3>
+                      <p className='text-sm text-gray-500'>{store.address}</p>
+                      <p className='text-sm text-gray-500'>
+                        {getStatusLabel(store.status)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className='flex gap-2'>
+                    <Button variant='outline' size='icon' className='h-8 w-8'>
+                      <Info className='h-4 w-4' />
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='icon'
+                      className='h-8 w-8'
+                      onClick={() => {
+                        if (
+                          Array.isArray(coord) &&
+                          coord.length === 2 &&
+                          store.coordinates
+                        ) {
+                          const [lat, lng] = coord;
+                          const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${store.coordinates[0]},${store.coordinates[1]}`;
+                          window.open(gmapsUrl, '_blank');
+                        }
+                      }}
+                    >
+                      <Navigation className='h-4 w-4' />
+                    </Button>
+                  </div>
+                </div>
+              )
+            )
+          )}
           {stores.length === 0 && (
             <div className='text-center text-gray-500 mt-4'>
               Nessuna attività in corso
