@@ -9,7 +9,7 @@ import {
 } from './ui/sheet';
 import { Button } from './ui/button';
 import { Avatar } from './ui/avatar';
-import { List, Store } from 'lucide-react';
+import { Info, List, Navigation, Store } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
@@ -86,8 +86,13 @@ export function UserList() {
                   </p>
                 </div>
               </div>
-              <div className='text-sm font-medium text-gray-500'>
-                {store.category}
+              <div className='flex gap-2'>
+                <Button variant='outline' size='icon' className='h-8 w-8'>
+                  <Info className='h-4 w-4' />
+                </Button>
+                <Button variant='outline' size='icon' className='h-8 w-8'>
+                  <Navigation className='h-4 w-4' />
+                </Button>
               </div>
             </div>
           ))}
