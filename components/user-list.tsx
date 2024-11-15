@@ -97,7 +97,12 @@ export function UserList() {
                   onClick={() => {
                     getMyLoc((coord) => {
                       if (coord && Array.isArray(coord)) {
-                        const storeCoordinates = parseCoords(store.coordinates);
+                        const storeCoordinates = Array.isArray(
+                          store.coordinates
+                        )
+                          ? [store.coordinates[0], store.coordinates[1]]
+                          : parseCoords(store.coordinates);
+
                         if (storeCoordinates) {
                           const [lat, lng] = coord;
                           const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
