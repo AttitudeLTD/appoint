@@ -28,6 +28,7 @@ export function UserList() {
       } = await supabase.auth.getUser();
       if (user) {
         const storesData = await fetchUserStores(user.id);
+        console.log(storesData);
         setStores(storesData);
       }
     }
