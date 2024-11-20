@@ -1,9 +1,5 @@
-import { navItems } from '@/data';
-
 import Hero from '@/components/hero';
 import Grid from '@/components/grid';
-
-import { FloatingNav } from '@/components/ui/floating-nav';
 
 export default async function Index() {
   return (
