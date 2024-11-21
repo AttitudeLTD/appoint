@@ -25,7 +25,7 @@ const Hero = () => {
 
       <div className='w-full mx-auto flex justify-center'>
         <Image
-          src='/LogoNaming.svg'
+          src='/AppointWhite.svg'
           alt='Attitude Logo'
           width={150}
           height={150}
