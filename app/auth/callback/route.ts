@@ -12,13 +12,27 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    try {
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) {
+        console.error('Error exchanging code for session:', error.message);
+        return NextResponse.redirect(
+          `${origin}/sign-in?error=${error.message}`
+        );
+      }
+    } catch (err) {
+      console.error('Exception during code exchange:', err);
+      return NextResponse.redirect(
+        `${origin}/sign-in?error=Authentication failed`
+      );
+    }
   }
 
+  // If there's a specific redirect_to parameter, use that
   if (redirectTo) {
     return NextResponse.redirect(`${origin}${redirectTo}`);
   }
 
-  // URL to redirect to after Registrati process completes
+  // Default: redirect to protected page after authentication completes
   return NextResponse.redirect(`${origin}/protected`);
 }

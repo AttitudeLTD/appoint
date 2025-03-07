@@ -16,7 +16,7 @@ const Hero = () => {
       provider: 'azure',
       options: {
         scopes: 'email',
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}`,
       },
     });
 
