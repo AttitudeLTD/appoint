@@ -1,14 +1,10 @@
-import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
 
 export async function GET(request: Request) {
-  // The `/auth/callback` route is required for the server-side auth flow implemented
-  // by the SSR package. It exchanges an auth code for the user's session.
-  // https://supabase.com/docs/guides/auth/server-side/nextjs
-  const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get('code');
-  const origin = requestUrl.origin;
-  const redirectTo = requestUrl.searchParams.get('redirect_to')?.toString();
+  const { searchParams, origin } = new URL(request.url);
+  const code = searchParams.get('code');
+  const next = searchParams.get('next') ?? '/protected';
 
   if (code) {
     const supabase = createClient();
@@ -17,22 +13,22 @@ export async function GET(request: Request) {
       if (error) {
         console.error('Error exchanging code for session:', error.message);
         return NextResponse.redirect(
-          `${origin}/sign-in?error=${error.message}`
+          `${origin}/login?message=Errore durante l'accesso con Microsoft`
         );
       }
+
+      // Successfully exchanged code for session
+      return NextResponse.redirect(`${origin}${next}`);
     } catch (err) {
       console.error('Exception during code exchange:', err);
       return NextResponse.redirect(
-        `${origin}/sign-in?error=Authentication failed`
+        `${origin}/login?message=Errore durante l'accesso con Microsoft`
       );
     }
   }
 
-  // If there's a specific redirect_to parameter, use that
-  if (redirectTo) {
-    return NextResponse.redirect(`${origin}${redirectTo}`);
-  }
-
-  // Default: redirect to protected page after authentication completes
-  return NextResponse.redirect(`${origin}/protected`);
+  // Return the user to an error page with instructions
+  return NextResponse.redirect(
+    `${origin}/login?message=Errore durante l'accesso con Microsoft`
+  );
 }

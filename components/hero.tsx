@@ -16,11 +16,12 @@ const Hero = () => {
       provider: 'azure',
       options: {
         scopes: 'email',
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}`,
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/protected`,
       },
     });
 
     if (error) {
+      console.error('Error during Azure sign-in:', error.message);
       return redirect("/login?message=Errore durante l'accesso con Microsoft");
     }
 
