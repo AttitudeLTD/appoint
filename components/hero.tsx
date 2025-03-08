@@ -17,23 +17,13 @@ const Hero = () => {
       options: {
         scopes: 'email',
         redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-        queryParams: {
-          redirect_to: '/protected',
-        },
       },
     });
 
-    if (error) {
-      console.error('Error during Azure sign-in:', error.message);
-      return redirect("/login?message=Errore durante l'accesso con Microsoft");
-    }
-
     // Redirect to the OAuth URL provided by Supabase
     if (data.url) {
-      return redirect(data.url);
+      redirect(data.url);
     }
-
-    return redirect("/login?message=Errore durante l'accesso con Microsoft");
   };
   return (
     <div className='pb-20 pt-20'>
