@@ -16,7 +16,10 @@ const Hero = () => {
       provider: 'azure',
       options: {
         scopes: 'email',
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/protected`,
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+        queryParams: {
+          redirect_to: '/protected',
+        },
       },
     });
 

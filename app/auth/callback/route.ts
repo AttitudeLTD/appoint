@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/protected';
+  const redirectTo = searchParams.get('redirect_to') ?? '/protected';
 
   if (code) {
     const supabase = createClient();
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
       }
 
       // Successfully exchanged code for session
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(`${origin}${redirectTo}`);
     } catch (err) {
       console.error('Exception during code exchange:', err);
       return NextResponse.redirect(
