@@ -1,4 +1,4 @@
-import { FaLocationArrow, FaGlobe } from 'react-icons/fa6';
+import { FaLocationArrow } from 'react-icons/fa6';
 
 import MagicButton from './ui/magic-button';
 import { Spotlight } from './ui/spotlight';
@@ -6,25 +6,27 @@ import { TextGenerateEffect } from './ui/text-generate-effect';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
+import SignInButton from './signin-button';
+
+const signInWithAzure = async () => {
+  'use server';
+
+  const supabase = createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'azure',
+    options: {
+      scopes: 'email',
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+    },
+  });
+
+  // Redirect to the OAuth URL provided by Supabase
+  if (data.url) {
+    redirect(data.url);
+  }
+};
 
 const Hero = () => {
-  const signInWithAzure = async () => {
-    'use server';
-
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'azure',
-      options: {
-        scopes: 'email',
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-      },
-    });
-
-    // Redirect to the OAuth URL provided by Supabase
-    if (data.url) {
-      redirect(data.url);
-    }
-  };
   return (
     <div className='pb-20 pt-20'>
       <div>
@@ -79,13 +81,7 @@ const Hero = () => {
                 position='right'
               />
             </a>
-            <form action={signInWithAzure}>
-              <MagicButton
-                title='Comincia'
-                icon={<FaGlobe />}
-                position='right'
-              />
-            </form>
+            <SignInButton signInAction={signInWithAzure} />
           </div>
         </div>
       </div>
