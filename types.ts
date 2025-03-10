@@ -11,6 +11,7 @@ export interface Store {
   owner_name: string;
   status: 'free' | 'in_progress' | 'concluded' | 'failed';
   modifiedByOtherUser: boolean;
+  modifierName?: string; // Optional name of the agent who modified the store
 }
 
 export interface Agent {
@@ -25,6 +26,7 @@ export interface StoreLog {
   new: string;
   created_at: string;
   modifier: number;
+  modifierName?: string; // Name of the user who made the change
 }
 
 export interface StorePopupProps {

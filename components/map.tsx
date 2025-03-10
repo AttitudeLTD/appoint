@@ -248,21 +248,62 @@ const Map = ({ user }: any) => {
         .from('store_status_logs')
         .select('id, prev, new, created_at, modifier')
         .eq('store_id', storeId)
-        .eq('modifier', user.id) // Filter by user ID
+        // Remove the filter by current user ID to get logs from all users
         .order('created_at', { ascending: false })
         .limit(3);
 
       if (error) {
         console.error('Error fetching status logs:', error);
+        return;
+      }
+
+      // For each log, fetch the user's name and surname
+      if (data && data.length > 0) {
+        const logsWithUserInfo = await Promise.all(
+          data.map(async (log) => {
+            const userInfo = await fetchUserInfo(log.modifier);
+            return {
+              ...log,
+              modifierName: userInfo
+                ? `${userInfo.name} ${userInfo.surname}`
+                : 'Unknown User',
+            };
+          })
+        );
+
+        setStatusLogs((prev) => ({
+          ...prev,
+          [storeId]: logsWithUserInfo,
+        }));
       } else {
-        // Explicitly cast data to StoreLog[] to match the state type
-        setStatusLogs((prevLogs) => ({
-          ...prevLogs,
-          [storeId]: (data as StoreLog[]) || [],
+        setStatusLogs((prev) => ({
+          ...prev,
+          [storeId]: [],
         }));
       }
     } catch (error) {
-      console.error('Unexpected error fetching logs:', error);
+      console.error('Error in fetchStatusLogs:', error);
+    }
+  };
+
+  // New function to fetch user information by ID
+  const fetchUserInfo = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('name, surname')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user info:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Unexpected error in fetchUserInfo:', error);
+      return null;
     }
   };
 
@@ -277,12 +318,28 @@ const Map = ({ user }: any) => {
         storesData.map(async (store: any) => {
           const { data: logs } = await supabase
             .from('store_status_logs')
-            .select('modifier')
-            .eq('store_id', store.id);
+            .select('modifier, created_at')
+            .eq('store_id', store.id)
+            .order('created_at', { ascending: false });
+
           const modifiedByOtherUser =
             store.status !== 'free' &&
             logs?.some((log) => log.modifier !== user.id);
-          return { ...store, modifiedByOtherUser };
+
+          // If modified by another user, get their information
+          let modifierName = '';
+          if (modifiedByOtherUser && logs && logs.length > 0) {
+            // Find the latest log from another user
+            const otherUserLog = logs.find((log) => log.modifier !== user.id);
+            if (otherUserLog) {
+              const userInfo = await fetchUserInfo(otherUserLog.modifier);
+              if (userInfo) {
+                modifierName = `${userInfo.name} ${userInfo.surname}`;
+              }
+            }
+          }
+
+          return { ...store, modifiedByOtherUser, modifierName };
         })
       );
 
@@ -519,7 +576,10 @@ const Map = ({ user }: any) => {
                 <Marker key={store.id} position={storeCoordinates} icon={icon}>
                   <Popup>
                     In questo punto vendita è in corso una trattativa gestita da
-                    un altro agente.
+                    {store.modifierName
+                      ? ` ${store.modifierName}`
+                      : ' un altro agente'}
+                    .
                   </Popup>
                 </Marker>
               ) : (
