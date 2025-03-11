@@ -37,6 +37,11 @@ const StorePopup: React.FC<StorePopupProps> = ({
   handleSendEmail,
 }) => {
   const storeCoordinates = parseCoords(store.location);
+  // Filter out 'Disponibile' option if the store is in 'in_progress' status
+  const filteredStatuses =
+    storeStatuses[store.id] === 'in_progress' || store.status === 'in_progress'
+      ? statuses.filter((status) => status.value !== 'free')
+      : statuses;
 
   return (
     <div>
@@ -134,7 +139,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
                     handleStatusChangeAttempt(store.id, newStatus);
                   }
                 }}
-                options={statuses}
+                options={filteredStatuses}
                 disabled={loadingStatus}
               />
             </div>
