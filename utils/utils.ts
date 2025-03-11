@@ -16,30 +16,43 @@ export function encodedRedirect(
   return redirect(`${path}?${type}=${encodeURIComponent(message)}`);
 }
 
-export const statuses = [
+// Define a type for the status items
+export type StatusItem = {
+  label: string;
+  value: string;
+  iconType: string;
+};
+
+export const statuses: StatusItem[] = [
   {
     label: 'Disponibile',
     value: 'free',
+    iconType: 'plus',
   },
   {
     label: 'Trattativa in corso',
     value: 'in_progress',
+    iconType: 'clock',
   },
   {
     label: 'Contratto sottoscritto',
     value: 'concluded',
+    iconType: 'check-circle',
   },
   {
     label: 'Già cliente',
     value: 'already_client',
+    iconType: 'star',
   },
   {
     label: 'Bad prospect',
     value: 'failed',
+    iconType: 'ban',
   },
   {
     label: 'Non interessato',
     value: 'not_interested',
+    iconType: 'x',
   },
 ];
 

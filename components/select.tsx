@@ -1,12 +1,18 @@
 import { useMemo } from 'react';
 import { useTheme } from 'next-themes';
-import Select, { SingleValue } from 'react-select';
+import Select, { SingleValue, components } from 'react-select';
 import { ChevronDown } from 'lucide-react';
+
+export type SelectOption = {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+};
 
 type Props = {
   onChange: (value?: string) => void;
   onCreate?: (value: string) => void; // This prop is no longer needed if you're disabling creation
-  options?: { label: string; value: string }[];
+  options?: { label: string; value: string; icon?: React.ReactNode }[];
   value?: string | null | undefined;
   disabled?: boolean;
   placeholder?: string;
@@ -21,7 +27,13 @@ export const SelectComponent = ({
 }: Props) => {
   const { theme } = useTheme();
 
-  const onSelect = (option: SingleValue<{ label: string; value: string }>) => {
+  const onSelect = (
+    option: SingleValue<{
+      label: string;
+      value: string;
+      icon?: React.ReactNode;
+    }>
+  ) => {
     onChange(option?.value);
   };
 
@@ -76,6 +88,9 @@ export const SelectComponent = ({
           : 'hsl(var(--foreground))',
         padding: '10px 12px',
         cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
         ':active': {
           backgroundColor: 'hsl(var(--accent))',
         },
@@ -83,6 +98,9 @@ export const SelectComponent = ({
       singleValue: (base: any) => ({
         ...base,
         color: 'hsl(var(--foreground))',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
       }),
       placeholder: (base: any) => ({
         ...base,
@@ -102,6 +120,22 @@ export const SelectComponent = ({
     };
   }, []);
 
+  // Custom Option component with icon
+  const Option = (props: any) => (
+    <components.Option {...props}>
+      {props.data.icon && <span className='mr-2'>{props.data.icon}</span>}
+      {props.data.label}
+    </components.Option>
+  );
+
+  // Custom SingleValue component with icon
+  const SingleValue = (props: any) => (
+    <components.SingleValue {...props}>
+      {props.data.icon && <span className='mr-2'>{props.data.icon}</span>}
+      {props.data.label}
+    </components.SingleValue>
+  );
+
   return (
     <Select
       placeholder={placeholder}
@@ -116,6 +150,8 @@ export const SelectComponent = ({
         DropdownIndicator: (props) => (
           <ChevronDown size={16} className='text-muted-foreground mx-2' />
         ),
+        Option,
+        SingleValue,
       }}
     />
   );

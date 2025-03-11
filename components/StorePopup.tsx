@@ -10,6 +10,16 @@ import {
   Medal,
   Trophy,
   Circle,
+  CreditCard,
+  Store as StoreIcon,
+  AlertCircle,
+  Check,
+  Clock,
+  Ban,
+  X,
+  Star,
+  Plus,
+  CheckCircle,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
@@ -27,7 +37,7 @@ import {
 } from './ui/sheet';
 
 import { StorePopupProps } from '@/types';
-import { getStatusLabel, statuses } from '@/utils/utils';
+import { getStatusLabel, statuses, StatusItem } from '@/utils/utils';
 import { parseCoords } from '@/utils/navigation';
 
 // Function to get tier icon
@@ -47,6 +57,26 @@ const getTierIcon = (tier?: string) => {
   }
 };
 
+// Helper function to render icon based on iconType
+const getIconByType = (iconType: string) => {
+  switch (iconType) {
+    case 'plus':
+      return <Plus size={16} className='text-blue-700' />;
+    case 'clock':
+      return <Clock size={16} className='text-amber-500' />;
+    case 'check-circle':
+      return <CheckCircle size={16} className='text-emerald-600' />;
+    case 'star':
+      return <Star size={16} className='text-emerald-600' />;
+    case 'ban':
+      return <Ban size={16} className='text-red-600' />;
+    case 'x':
+      return <X size={16} className='text-red-600' />;
+    default:
+      return null;
+  }
+};
+
 const StorePopup: React.FC<StorePopupProps> = ({
   store,
   coord,
@@ -61,16 +91,34 @@ const StorePopup: React.FC<StorePopupProps> = ({
   const [selectedNote, setSelectedNote] = useState('');
 
   const storeCoordinates: [number, number] | null = parseCoords(store.location);
-  // Filter out 'Disponibile' option if the store is in 'in_progress' status
+  // Create a modified statuses array with actual icon elements
+  const statusesWithIcons = statuses.map((status) => ({
+    label: status.label,
+    value: status.value,
+    icon: getIconByType(status.iconType),
+  }));
+
   const filteredStatuses =
     storeStatuses[store.id] === 'in_progress' || store.status === 'in_progress'
-      ? statuses.filter((status) => status.value !== 'free')
-      : statuses;
+      ? statusesWithIcons.filter((status) => status.value !== 'free')
+      : statusesWithIcons;
 
   const notesOptions = [
-    { label: 'Fatturato errato', value: 'fatturato errato' },
-    { label: 'Tipologia errata', value: 'tipologia errata' },
-    { label: 'Altro', value: 'altro' },
+    {
+      label: 'Fatturato errato',
+      value: 'fatturato errato',
+      icon: <CreditCard size={16} className='text-amber-500' />,
+    },
+    {
+      label: 'Tipologia errata',
+      value: 'tipologia errata',
+      icon: <StoreIcon size={16} className='text-purple-500' />,
+    },
+    {
+      label: 'Altro',
+      value: 'altro',
+      icon: <AlertCircle size={16} className='text-gray-500' />,
+    },
   ];
 
   return (
