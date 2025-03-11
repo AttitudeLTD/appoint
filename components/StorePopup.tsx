@@ -362,12 +362,14 @@ const StorePopup: React.FC<StorePopupProps> = ({
                       <strong>Data:</strong>{' '}
                       {new Date(log.created_at).toLocaleString()}
                     </p>
-                    <p className='text-sm text-gray-400 mb-1'>
-                      <strong>Stato Precedente:</strong>{' '}
-                      <span className='text-gray-200'>
-                        {getStatusLabel(log.prev)}
-                      </span>
-                    </p>
+                    {log.modifierName && (
+                      <p className='text-sm text-gray-400 mb-1'>
+                        <strong>Modificato da:</strong>{' '}
+                        <span className='text-gray-200'>
+                          {log.modifierName}
+                        </span>
+                      </p>
+                    )}
                     <p className='text-sm text-gray-400'>
                       <strong>Nuovo Stato:</strong>{' '}
                       <span className='text-gray-200'>
