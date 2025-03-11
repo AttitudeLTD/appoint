@@ -60,6 +60,24 @@ const StorePopup: React.FC<StorePopupProps> = ({
             <span className='text-base text-gray-400'>{store.category}</span>
             <br />
             <span className='text-sm text-gray-500'>{store.address}</span>
+            <br />
+            <span
+              className={`text-sm font-medium ${
+                !store.tier
+                  ? 'text-gray-400'
+                  : store.tier === 'gold+'
+                    ? 'text-yellow-500'
+                    : store.tier === 'gold'
+                      ? 'text-yellow-400'
+                      : store.tier === 'silver'
+                        ? 'text-gray-400'
+                        : store.tier === 'bronze'
+                          ? 'text-amber-700'
+                          : 'text-gray-400'
+              }`}
+            >
+              Tier {store.tier?.toUpperCase() || 'N/A'}
+            </span>
           </p>
         </div>
       </div>
@@ -121,6 +139,26 @@ const StorePopup: React.FC<StorePopupProps> = ({
                   Categoria:
                 </p>
                 <p className='text-base text-gray-600'>{store.category}</p>
+              </div>
+              <div className='py-3 border-b border-gray-200'>
+                <p className='text-base text-gray-400 font-medium'>Tier:</p>
+                <p
+                  className={`text-base font-medium ${
+                    !store.tier
+                      ? 'text-gray-400'
+                      : store.tier === 'gold+'
+                        ? 'text-yellow-500'
+                        : store.tier === 'gold'
+                          ? 'text-yellow-400'
+                          : store.tier === 'silver'
+                            ? 'text-gray-400'
+                            : store.tier === 'bronze'
+                              ? 'text-amber-700'
+                              : 'text-gray-400'
+                  }`}
+                >
+                  {store.tier?.toUpperCase() || 'Sconosciuto'}
+                </p>
               </div>
               <div className='py-3'>
                 <p className='text-base text-gray-400 font-medium'>

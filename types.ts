@@ -10,6 +10,7 @@ export interface Store {
   email: string;
   owner_name: string;
   status: 'free' | 'in_progress' | 'concluded' | 'failed';
+  tier: 'bronze' | 'silver' | 'gold' | 'gold+';
   modifiedByOtherUser: boolean;
   modifierName?: string; // Optional name of the agent who modified the store
 }
