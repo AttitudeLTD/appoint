@@ -89,6 +89,9 @@ const StorePopup: React.FC<StorePopupProps> = ({
   handleSendEmail,
 }) => {
   const [selectedNote, setSelectedNote] = useState('');
+  const [logsOffset, setLogsOffset] = useState(0);
+  const [loadingMoreLogs, setLoadingMoreLogs] = useState(false);
+  const [hasMoreLogs, setHasMoreLogs] = useState(true);
 
   const storeCoordinates: [number, number] | null = parseCoords(store.location);
   // Create a modified statuses array with actual icon elements
@@ -120,6 +123,27 @@ const StorePopup: React.FC<StorePopupProps> = ({
       icon: <AlertCircle size={16} className='text-gray-500' />,
     },
   ];
+
+  // Function to handle loading more logs
+  const handleLoadMoreLogs = async () => {
+    setLoadingMoreLogs(true);
+    const newOffset = logsOffset + 3;
+    const logsCount = await fetchStatusLogs(store.id, newOffset);
+    setLogsOffset(newOffset);
+
+    // If no logs or less than 3 logs were returned, there are no more logs to load
+    if (!logsCount || logsCount < 3) {
+      setHasMoreLogs(false);
+    }
+
+    setLoadingMoreLogs(false);
+  };
+
+  // Reset pagination when store changes
+  useEffect(() => {
+    setLogsOffset(0);
+    setHasMoreLogs(true);
+  }, [store.id]);
 
   return (
     <div>
@@ -193,7 +217,13 @@ const StorePopup: React.FC<StorePopupProps> = ({
         </Button>
 
         <Sheet>
-          <SheetTrigger onClick={() => fetchStatusLogs(store.id)}>
+          <SheetTrigger
+            onClick={() => {
+              setLogsOffset(0);
+              setHasMoreLogs(true);
+              fetchStatusLogs(store.id, 0);
+            }}
+          >
             <Button
               variant='secondary'
               className='w-full bg-[#1B304E] hover:bg-[#224677] text-white'
@@ -386,6 +416,24 @@ const StorePopup: React.FC<StorePopupProps> = ({
                     </p>
                   </div>
                 ))}
+
+                {hasMoreLogs && (
+                  <Button
+                    variant='outline'
+                    className='w-full mt-2 text-gray-300 border-gray-600 hover:bg-gray-700'
+                    onClick={handleLoadMoreLogs}
+                    disabled={loadingMoreLogs}
+                  >
+                    {loadingMoreLogs ? (
+                      <>
+                        <Loader className='mr-2 h-4 w-4 animate-spin' />
+                        Caricamento...
+                      </>
+                    ) : (
+                      'Carica altre modifiche'
+                    )}
+                  </Button>
+                )}
               </div>
             )}
             <SheetFooter className='mt-auto'>

@@ -43,7 +43,7 @@ export type StorePopupProps = {
   loadingStatus: { [key: number]: boolean };
   loadingEmail: boolean;
   storeStatuses: { [key: number]: string };
-  fetchStatusLogs: (storeId: number) => Promise<void>;
+  fetchStatusLogs: (storeId: number, offset?: number) => Promise<number | void>;
   handleStatusChangeAttempt: (
     storeId: number,
     newStatus: string,

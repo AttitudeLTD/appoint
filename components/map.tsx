@@ -258,15 +258,14 @@ const Map = ({ user }: any) => {
     }
   };
 
-  const fetchStatusLogs = async (storeId: number) => {
+  const fetchStatusLogs = async (storeId: number, offset: number = 0) => {
     try {
       const { data, error } = await supabase
         .from('store_status_logs')
         .select('id, prev, new, created_at, modifier')
         .eq('store_id', storeId)
-        // Remove the filter by current user ID to get logs from all users
         .order('created_at', { ascending: false })
-        .limit(3);
+        .range(offset, offset + 2); // This gets 3 logs (0,1,2 or 3,4,5 etc.)
 
       if (error) {
         console.error('Error fetching status logs:', error);
@@ -287,15 +286,26 @@ const Map = ({ user }: any) => {
           })
         );
 
+        // If offset is 0, replace logs; otherwise append them
         setStatusLogs((prev) => ({
           ...prev,
-          [storeId]: logsWithUserInfo,
+          [storeId]:
+            offset === 0
+              ? logsWithUserInfo
+              : [...(prev[storeId] || []), ...logsWithUserInfo],
         }));
+
+        // Return the count of logs retrieved for UI feedback
+        return logsWithUserInfo.length;
       } else {
-        setStatusLogs((prev) => ({
-          ...prev,
-          [storeId]: [],
-        }));
+        if (offset === 0) {
+          // Only clear if this is the initial fetch
+          setStatusLogs((prev) => ({
+            ...prev,
+            [storeId]: [],
+          }));
+        }
+        return 0;
       }
     } catch (error) {
       console.error('Error in fetchStatusLogs:', error);
