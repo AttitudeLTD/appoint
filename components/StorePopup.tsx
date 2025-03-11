@@ -6,6 +6,10 @@ import {
   MailPlus,
   FileCheck,
   Loader,
+  Award,
+  Medal,
+  Trophy,
+  Circle,
 } from 'lucide-react';
 
 import { SelectComponent } from './select';
@@ -24,6 +28,23 @@ import {
 import { StorePopupProps } from '@/types';
 import { getStatusLabel, statuses } from '@/utils/utils';
 import { parseCoords } from '@/utils/navigation';
+
+// Function to get tier icon
+const getTierIcon = (tier?: string) => {
+  if (!tier) return <Circle size={14} />;
+  switch (tier.toLowerCase()) {
+    case 'gold+':
+      return <Trophy size={14} className='text-yellow-500' />;
+    case 'gold':
+      return <Award size={14} className='text-yellow-400' />;
+    case 'silver':
+      return <Medal size={14} className='text-gray-400' />;
+    case 'bronze':
+      return <Circle size={14} className='text-amber-700' />;
+    default:
+      return <Circle size={14} />;
+  }
+};
 
 const StorePopup: React.FC<StorePopupProps> = ({
   store,
@@ -61,23 +82,26 @@ const StorePopup: React.FC<StorePopupProps> = ({
             <br />
             <span className='text-sm text-gray-500'>{store.address}</span>
             <br />
-            <span
-              className={`text-sm font-medium ${
-                !store.tier
-                  ? 'text-gray-400'
-                  : store.tier === 'gold+'
-                    ? 'text-yellow-500'
-                    : store.tier === 'gold'
-                      ? 'text-yellow-400'
-                      : store.tier === 'silver'
-                        ? 'text-gray-400'
-                        : store.tier === 'bronze'
-                          ? 'text-amber-700'
-                          : 'text-gray-400'
-              }`}
-            >
-              Tier {store.tier?.toUpperCase() || 'N/A'}
-            </span>
+            <div className='mt-1 inline-flex items-center gap-1'>
+              {getTierIcon(store.tier)}
+              <span
+                className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  !store.tier
+                    ? 'bg-gray-100 text-gray-500'
+                    : store.tier === 'gold+'
+                      ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+                      : store.tier === 'gold'
+                        ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                        : store.tier === 'silver'
+                          ? 'bg-gray-100 text-gray-600 border border-gray-200'
+                          : store.tier === 'bronze'
+                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                            : 'bg-gray-100 text-gray-500'
+                }`}
+              >
+                {store.tier?.toUpperCase() || 'N/A'}
+              </span>
+            </div>
           </p>
         </div>
       </div>
@@ -142,23 +166,58 @@ const StorePopup: React.FC<StorePopupProps> = ({
               </div>
               <div className='py-3 border-b border-gray-200'>
                 <p className='text-base text-gray-400 font-medium'>Tier:</p>
-                <p
-                  className={`text-base font-medium ${
-                    !store.tier
-                      ? 'text-gray-400'
-                      : store.tier === 'gold+'
-                        ? 'text-yellow-500'
-                        : store.tier === 'gold'
-                          ? 'text-yellow-400'
-                          : store.tier === 'silver'
-                            ? 'text-gray-400'
-                            : store.tier === 'bronze'
-                              ? 'text-amber-700'
-                              : 'text-gray-400'
-                  }`}
-                >
-                  {store.tier?.toUpperCase() || 'Sconosciuto'}
-                </p>
+                <div className='flex items-center gap-2 mt-1'>
+                  <div
+                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md ${
+                      !store.tier
+                        ? 'bg-gray-100'
+                        : store.tier === 'gold+'
+                          ? 'bg-yellow-50 border border-yellow-200'
+                          : store.tier === 'gold'
+                            ? 'bg-yellow-50 border border-yellow-100'
+                            : store.tier === 'silver'
+                              ? 'bg-gray-100 border border-gray-200'
+                              : store.tier === 'bronze'
+                                ? 'bg-amber-50 border border-amber-200'
+                                : 'bg-gray-100'
+                    }`}
+                  >
+                    <span className='mr-1'>
+                      {store.tier === 'gold+' && (
+                        <Trophy size={18} className='text-yellow-500' />
+                      )}
+                      {store.tier === 'gold' && (
+                        <Award size={18} className='text-yellow-400' />
+                      )}
+                      {store.tier === 'silver' && (
+                        <Medal size={18} className='text-gray-500' />
+                      )}
+                      {store.tier === 'bronze' && (
+                        <Circle size={18} className='text-amber-700' />
+                      )}
+                      {!store.tier && (
+                        <Circle size={18} className='text-gray-400' />
+                      )}
+                    </span>
+                    <span
+                      className={`text-base font-medium ${
+                        !store.tier
+                          ? 'text-gray-500'
+                          : store.tier === 'gold+'
+                            ? 'text-yellow-700'
+                            : store.tier === 'gold'
+                              ? 'text-yellow-600'
+                              : store.tier === 'silver'
+                                ? 'text-gray-600'
+                                : store.tier === 'bronze'
+                                  ? 'text-amber-700'
+                                  : 'text-gray-500'
+                      }`}
+                    >
+                      {store.tier?.toUpperCase() || 'Sconosciuto'}
+                    </span>
+                  </div>
+                </div>
               </div>
               <div className='py-3'>
                 <p className='text-base text-gray-400 font-medium'>
