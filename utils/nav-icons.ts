@@ -36,7 +36,7 @@ export const freePin = new L.Icon({
 
 // In Progress Store Icon (Yellow)
 const inProgressStoreSvgString = `
-<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="#ffbb00" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-minus-inside"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><path d="M9 10h6"/></svg>`;
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="#ffbb00" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-clock"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/><path d="M12 8v2l1 1"/></svg>`;
 const inProgressStoreIconUrl = svgToDataUrl(inProgressStoreSvgString);
 export const progressPin = new L.Icon({
   iconUrl: inProgressStoreIconUrl,
@@ -94,7 +94,7 @@ export const freePinM = new L.Icon({
 });
 
 const inProgressStoreMutedSvgString = `
-<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="#594b00" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-minus-inside"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><path d="M9 10h6"/></svg>`;
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="#594b00" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-clock"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/><path d="M12 8v2l1 1"/></svg>`;
 const inProgressStoreMutedIconUrl = svgToDataUrl(inProgressStoreMutedSvgString);
 export const progressPinM = new L.Icon({
   iconUrl: inProgressStoreMutedIconUrl,
