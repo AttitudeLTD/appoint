@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTheme } from 'next-themes';
 import Select, { SingleValue } from 'react-select';
+import { ChevronDown } from 'lucide-react';
 
 type Props = {
   onChange: (value?: string) => void;
@@ -30,28 +31,54 @@ export const SelectComponent = ({
 
   const customStyles = useMemo(() => {
     return {
-      control: (base: any) => ({
+      control: (base: any, state: any) => ({
         ...base,
         backgroundColor: 'hsl(var(--card))',
-        borderColor: 'hsl(var(--border))',
+        borderColor: state.isFocused
+          ? 'hsl(var(--primary))'
+          : 'hsl(var(--border))',
         borderRadius: 'var(--radius)',
         color: 'hsl(var(--foreground))',
+        boxShadow: state.isFocused ? '0 0 0 1px hsl(var(--primary))' : 'none',
         ':hover': {
-          borderColor: 'hsl(var(--border))',
+          borderColor: state.isFocused
+            ? 'hsl(var(--primary))'
+            : 'hsl(var(--border-hover, var(--border)))',
         },
+        padding: '2px 8px',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+      }),
+      valueContainer: (base: any) => ({
+        ...base,
+        padding: '2px 8px',
       }),
       menu: (base: any) => ({
         ...base,
         backgroundColor: 'hsl(var(--popover))',
         color: 'hsl(var(--popover-foreground))',
         border: '1px solid hsl(var(--border))',
+        borderRadius: 'var(--radius)',
+        boxShadow:
+          'var(--shadow, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06))',
+        overflow: 'hidden',
+        zIndex: 100,
       }),
-      option: (base: any, { isFocused }: any) => ({
+      option: (base: any, { isFocused, isSelected }: any) => ({
         ...base,
-        backgroundColor: isFocused
-          ? 'hsl(var(--muted))'
-          : 'hsl(var(--popover))',
-        color: 'hsl(var(--foreground))',
+        backgroundColor: isSelected
+          ? 'hsl(var(--primary))'
+          : isFocused
+            ? 'hsl(var(--accent))'
+            : 'hsl(var(--popover))',
+        color: isSelected
+          ? 'hsl(var(--primary-foreground))'
+          : 'hsl(var(--foreground))',
+        padding: '10px 12px',
+        cursor: 'pointer',
+        ':active': {
+          backgroundColor: 'hsl(var(--accent))',
+        },
       }),
       singleValue: (base: any) => ({
         ...base,
@@ -61,20 +88,35 @@ export const SelectComponent = ({
         ...base,
         color: 'hsl(var(--muted-foreground))',
       }),
+      dropdownIndicator: (base: any) => ({
+        ...base,
+        color: 'hsl(var(--muted-foreground))',
+        ':hover': {
+          color: 'hsl(var(--foreground))',
+        },
+        padding: '0 8px',
+      }),
+      indicatorSeparator: () => ({
+        display: 'none',
+      }),
     };
   }, []);
 
   return (
     <Select
       placeholder={placeholder}
-      className='text-sm h-10'
+      className='text-sm'
       styles={customStyles}
       value={formattedValue}
       onChange={onSelect}
       options={options}
       isDisabled={disabled}
       isSearchable={false}
-      // isClearable
+      components={{
+        DropdownIndicator: (props) => (
+          <ChevronDown size={16} className='text-muted-foreground mx-2' />
+        ),
+      }}
     />
   );
 };

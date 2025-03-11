@@ -236,7 +236,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
               </div>
             </div>
 
-            <div className='flex flex-col gap-2 mb-2'>
+            <div className='flex flex-col gap-3 mb-4'>
               <SelectComponent
                 placeholder='Stato avanzamento'
                 value={storeStatuses[store.id] || store.status}
