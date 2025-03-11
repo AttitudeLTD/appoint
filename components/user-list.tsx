@@ -80,12 +80,18 @@ export function UserList() {
                     <Store
                       className={cn('h-5 w-5', {
                         'text-[#ffbb00]': store.status === 'in_progress',
-                        'text-[#039855]': store.status === 'concluded',
-                        'text-[#DE2E21]': store.status === 'failed',
+                        'text-[#039855]':
+                          store.status === 'concluded' ||
+                          store.status === 'already_client',
+                        'text-[#DE2E21]':
+                          store.status === 'failed' ||
+                          store.status === 'not_interested',
                         'text-gray-500': ![
                           'in_progress',
                           'concluded',
+                          'already_client',
                           'failed',
+                          'not_interested',
                         ].includes(store.status),
                       })}
                     />

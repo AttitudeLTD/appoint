@@ -256,7 +256,8 @@ const StorePopup: React.FC<StorePopupProps> = ({
               </Button>
             )}
 
-            {storeStatuses[store.id] === 'concluded' && (
+            {(storeStatuses[store.id] === 'concluded' ||
+              storeStatuses[store.id] === 'already_client') && (
               <Button
                 onClick={() =>
                   window.open('https://appraise.attitudeltd.com', '_blank')

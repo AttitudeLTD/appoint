@@ -9,7 +9,13 @@ export interface Store {
   category: string;
   email: string;
   owner_name: string;
-  status: 'free' | 'in_progress' | 'concluded' | 'failed';
+  status:
+    | 'free'
+    | 'in_progress'
+    | 'concluded'
+    | 'already_client'
+    | 'failed'
+    | 'not_interested';
   tier: 'bronze' | 'silver' | 'gold' | 'gold+';
   modifiedByOtherUser: boolean;
   modifierName?: string; // Optional name of the agent who modified the store

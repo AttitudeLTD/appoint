@@ -561,14 +561,16 @@ const Map = ({ user }: any) => {
                   ? freePinM
                   : store.status === 'in_progress'
                     ? progressPinM
-                    : store.status === 'concluded'
+                    : store.status === 'concluded' ||
+                        store.status === 'already_client'
                       ? closedPinM
                       : failedPinM
                 : store.status === 'free'
                   ? freePin
                   : store.status === 'in_progress'
                     ? progressPin
-                    : store.status === 'concluded'
+                    : store.status === 'concluded' ||
+                        store.status === 'already_client'
                       ? closedPin
                       : failedPin;
 

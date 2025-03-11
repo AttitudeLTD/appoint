@@ -26,12 +26,20 @@ export const statuses = [
     value: 'in_progress',
   },
   {
-    label: 'Già cliente',
+    label: 'Contratto sottoscritto',
     value: 'concluded',
+  },
+  {
+    label: 'Già cliente',
+    value: 'already_client',
   },
   {
     label: 'Bad prospect',
     value: 'failed',
+  },
+  {
+    label: 'Non interessato',
+    value: 'not_interested',
   },
 ];
 
