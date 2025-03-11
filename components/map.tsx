@@ -19,6 +19,8 @@ import { createClient } from '@/utils/supabase/client';
 import { getMyLoc, parseCoords } from '@/utils/navigation';
 import { generateMailBody, statuses } from '@/utils/utils';
 import {
+  alreadyClientPin,
+  alreadyClientPinM,
   closedPin,
   closedPinM,
   failedPin,
@@ -26,6 +28,8 @@ import {
   freePin,
   freePinM,
   navIcon,
+  notInterestedPin,
+  notInterestedPinM,
   progressPin,
   progressPinM,
 } from '@/utils/nav-icons';
@@ -561,18 +565,24 @@ const Map = ({ user }: any) => {
                   ? freePinM
                   : store.status === 'in_progress'
                     ? progressPinM
-                    : store.status === 'concluded' ||
-                        store.status === 'already_client'
+                    : store.status === 'concluded'
                       ? closedPinM
-                      : failedPinM
+                      : store.status === 'already_client'
+                        ? alreadyClientPinM
+                        : store.status === 'not_interested'
+                          ? notInterestedPinM
+                          : failedPinM
                 : store.status === 'free'
                   ? freePin
                   : store.status === 'in_progress'
                     ? progressPin
-                    : store.status === 'concluded' ||
-                        store.status === 'already_client'
+                    : store.status === 'concluded'
                       ? closedPin
-                      : failedPin;
+                      : store.status === 'already_client'
+                        ? alreadyClientPin
+                        : store.status === 'not_interested'
+                          ? notInterestedPin
+                          : failedPin;
 
               return store.modifiedByOtherUser ? (
                 <Marker key={store.id} position={storeCoordinates} icon={icon}>

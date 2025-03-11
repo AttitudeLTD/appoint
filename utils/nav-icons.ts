@@ -62,13 +62,52 @@ export const closedPin = new L.Icon({
   shadowSize: [80, 60],
 });
 
-// Failed Store Icon (Red)
+// Failed Store Icon (Red) - Changed to prohibition symbol
 const failedStoreSvgString = `
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#DE2E21" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-x-inside"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><path d="m14.5 7.5-5 5"/><path d="m9.5 7.5 5 5"/></svg>`;
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#DE2E21" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
+  <circle cx="12" cy="10" r="4" fill="#DE2E21" stroke="white"/>
+  <line x1="9" y1="7" x2="15" y2="13" stroke="white" stroke-width="1.5"/>
+</svg>`;
 const failedStoreIconUrl = svgToDataUrl(failedStoreSvgString);
 export const failedPin = new L.Icon({
   iconUrl: failedStoreIconUrl,
   iconRetinaUrl: failedStoreIconUrl,
+  iconSize: [40, 40],
+  iconAnchor: [24, 50],
+  popupAnchor: [0, -48],
+  shadowUrl: MarkerShadow.src,
+  shadowSize: [80, 60],
+});
+
+// Not Interested Store Icon (Red with X)
+const notInterestedStoreSvgString = `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#DE2E21" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
+  <path d="m14.5 7.5-5 5"/>
+  <path d="m9.5 7.5 5 5"/>
+</svg>`;
+const notInterestedStoreIconUrl = svgToDataUrl(notInterestedStoreSvgString);
+export const notInterestedPin = new L.Icon({
+  iconUrl: notInterestedStoreIconUrl,
+  iconRetinaUrl: notInterestedStoreIconUrl,
+  iconSize: [40, 40],
+  iconAnchor: [24, 50],
+  popupAnchor: [0, -48],
+  shadowUrl: MarkerShadow.src,
+  shadowSize: [80, 60],
+});
+
+// Already Client Store Icon (Green with star)
+const alreadyClientStoreSvgString = `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#039855" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
+  <path d="M12 7l1 2.5h2.5l-2 1.5 1 2.5-2.5-1.5-2.5 1.5 1-2.5-2-1.5h2.5z"/>
+</svg>`;
+const alreadyClientStoreIconUrl = svgToDataUrl(alreadyClientStoreSvgString);
+export const alreadyClientPin = new L.Icon({
+  iconUrl: alreadyClientStoreIconUrl,
+  iconRetinaUrl: alreadyClientStoreIconUrl,
   iconSize: [40, 40],
   iconAnchor: [24, 50],
   popupAnchor: [0, -48],
@@ -119,12 +158,56 @@ export const closedPinM = new L.Icon({
   shadowSize: [60, 40],
 });
 
+// Failed Store Icon Muted (Red - prohibition symbol)
 const failedStoreMutedSvgString = `
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#4b0e0a" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-x-inside"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><path d="m14.5 7.5-5 5"/><path d="m9.5 7.5 5 5"/></svg>`;
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#4b0e0a" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
+  <circle cx="12" cy="10" r="4" fill="#4b0e0a" stroke="white"/>
+  <line x1="9" y1="7" x2="15" y2="13" stroke="white" stroke-width="1.5"/>
+</svg>`;
 const failedStoreMutedIconUrl = svgToDataUrl(failedStoreMutedSvgString);
 export const failedPinM = new L.Icon({
   iconUrl: failedStoreMutedIconUrl,
   iconRetinaUrl: failedStoreMutedIconUrl,
+  iconSize: [30, 30],
+  iconAnchor: [14, 40],
+  popupAnchor: [0, -38],
+  shadowUrl: MarkerShadow.src,
+  shadowSize: [60, 40],
+});
+
+// Not Interested Store Icon Muted (Red with X)
+const notInterestedStoreMutedSvgString = `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#4b0e0a" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
+  <path d="m14.5 7.5-5 5"/>
+  <path d="m9.5 7.5 5 5"/>
+</svg>`;
+const notInterestedStoreMutedIconUrl = svgToDataUrl(
+  notInterestedStoreMutedSvgString
+);
+export const notInterestedPinM = new L.Icon({
+  iconUrl: notInterestedStoreMutedIconUrl,
+  iconRetinaUrl: notInterestedStoreMutedIconUrl,
+  iconSize: [30, 30],
+  iconAnchor: [14, 40],
+  popupAnchor: [0, -38],
+  shadowUrl: MarkerShadow.src,
+  shadowSize: [60, 40],
+});
+
+// Already Client Store Icon Muted (Green with star)
+const alreadyClientStoreMutedSvgString = `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#022919" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
+  <path d="M12 7l1 2.5h2.5l-2 1.5 1 2.5-2.5-1.5-2.5 1.5 1-2.5-2-1.5h2.5z"/>
+</svg>`;
+const alreadyClientStoreMutedIconUrl = svgToDataUrl(
+  alreadyClientStoreMutedSvgString
+);
+export const alreadyClientPinM = new L.Icon({
+  iconUrl: alreadyClientStoreMutedIconUrl,
+  iconRetinaUrl: alreadyClientStoreMutedIconUrl,
   iconSize: [30, 30],
   iconAnchor: [14, 40],
   popupAnchor: [0, -38],
