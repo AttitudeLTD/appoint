@@ -36,14 +36,18 @@ export interface StoreLog {
   modifierName?: string; // Name of the user who made the change
 }
 
-export interface StorePopupProps {
+export type StorePopupProps = {
   store: Store;
-  coord: LatLngExpression;
-  statusLogs: StoreLog[];
-  loadingStatus: boolean;
+  coord: [number, number];
+  statusLogs: { [key: number]: StoreLog[] };
+  loadingStatus: { [key: number]: boolean };
   loadingEmail: boolean;
   storeStatuses: { [key: number]: string };
-  fetchStatusLogs: (storeId: number) => void;
-  handleStatusChangeAttempt: (storeId: number, newStatus: string) => void;
+  fetchStatusLogs: (storeId: number) => Promise<void>;
+  handleStatusChangeAttempt: (
+    storeId: number,
+    newStatus: string,
+    note?: string
+  ) => void;
   handleSendEmail: (store: Store) => void;
-}
+};

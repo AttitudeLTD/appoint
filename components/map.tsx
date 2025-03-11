@@ -110,7 +110,8 @@ const Map = ({ user }: any) => {
   );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedNote, setSelectedNote] = useState('');
   const [loadingConfirm, setLoadingConfirm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -160,9 +161,14 @@ const Map = ({ user }: any) => {
     }
   };
 
-  const handleStatusChangeAttempt = (storeId: number, newStatus: string) => {
+  const handleStatusChangeAttempt = (
+    storeId: number,
+    newStatus: string,
+    note?: string
+  ) => {
     setSelectedStoreId(storeId);
     setSelectedStatus(newStatus || '');
+    setSelectedNote(note || '');
     setDialogOpen(true);
   };
 
@@ -170,7 +176,7 @@ const Map = ({ user }: any) => {
     setLoadingConfirm(true);
 
     if (selectedStoreId && selectedStatus) {
-      await updateStoreStatus(selectedStoreId, selectedStatus);
+      await updateStoreStatus(selectedStoreId, selectedStatus, selectedNote);
 
       setStores(
         (prevStores) =>
@@ -187,6 +193,7 @@ const Map = ({ user }: any) => {
 
     setLoadingConfirm(false);
     setDialogOpen(false);
+    setSelectedNote(''); // Reset the selected note
   };
 
   const fetchStoreStatus = async (storeId: number) => {
@@ -210,7 +217,11 @@ const Map = ({ user }: any) => {
     }
   };
 
-  const updateStoreStatus = async (storeId: number, newStatus: string) => {
+  const updateStoreStatus = async (
+    storeId: number,
+    newStatus: string,
+    note?: string
+  ) => {
     setLoadingStatus((prev) => ({ ...prev, [storeId]: true }));
     try {
       const { error: updateError } = await supabase
@@ -232,6 +243,7 @@ const Map = ({ user }: any) => {
             prev: storeStatuses[storeId] || 'free',
             new: newStatus,
             modifier: user.id,
+            notes: newStatus === 'failed' && note ? note : null,
           },
         ]);
 
@@ -460,6 +472,12 @@ const Map = ({ user }: any) => {
                 {statuses.find((status) => status.value === selectedStatus)
                   ?.label || selectedStatus}
               </strong>
+              {selectedStatus === 'failed' && selectedNote && (
+                <>
+                  {' '}
+                  con motivo <strong>{selectedNote}</strong>
+                </>
+              )}
               .
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -599,9 +617,9 @@ const Map = ({ user }: any) => {
                   <Popup>
                     <StorePopup
                       store={store}
-                      coord={coord}
-                      statusLogs={statusLogs[store.id] || []}
-                      loadingStatus={loadingStatus[store.id]}
+                      coord={storeCoordinates}
+                      statusLogs={{ [store.id]: statusLogs[store.id] || [] }}
+                      loadingStatus={{ [store.id]: !!loadingStatus[store.id] }}
                       loadingEmail={loadingEmail}
                       storeStatuses={storeStatuses}
                       fetchStatusLogs={fetchStatusLogs}

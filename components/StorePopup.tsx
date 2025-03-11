@@ -11,6 +11,7 @@ import {
   Trophy,
   Circle,
 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 
 import { SelectComponent } from './select';
 import { Button } from './ui/button';
@@ -57,12 +58,20 @@ const StorePopup: React.FC<StorePopupProps> = ({
   handleStatusChangeAttempt,
   handleSendEmail,
 }) => {
-  const storeCoordinates = parseCoords(store.location);
+  const [selectedNote, setSelectedNote] = useState('');
+
+  const storeCoordinates: [number, number] | null = parseCoords(store.location);
   // Filter out 'Disponibile' option if the store is in 'in_progress' status
   const filteredStatuses =
     storeStatuses[store.id] === 'in_progress' || store.status === 'in_progress'
       ? statuses.filter((status) => status.value !== 'free')
       : statuses;
+
+  const notesOptions = [
+    { label: 'Fatturato errato', value: 'fatturato errato' },
+    { label: 'Tipologia errata', value: 'tipologia errata' },
+    { label: 'Altro', value: 'altro' },
+  ];
 
   return (
     <div>
@@ -233,12 +242,36 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 value={storeStatuses[store.id] || store.status}
                 onChange={(newStatus) => {
                   if (newStatus) {
-                    handleStatusChangeAttempt(store.id, newStatus);
+                    // Reset selected note when status changes
+                    setSelectedNote('');
+                    handleStatusChangeAttempt(
+                      store.id,
+                      newStatus,
+                      selectedNote
+                    );
                   }
                 }}
                 options={filteredStatuses}
-                disabled={loadingStatus}
+                disabled={!!loadingStatus[store.id]}
               />
+
+              {/* Show notes select only when status is 'failed' (Bad prospect) */}
+              {(storeStatuses[store.id] === 'failed' ||
+                store.status === 'failed') && (
+                <SelectComponent
+                  placeholder='Motivo'
+                  value={selectedNote}
+                  onChange={(note) => {
+                    if (note) {
+                      setSelectedNote(note);
+                      // Update with the new note
+                      handleStatusChangeAttempt(store.id, 'failed', note);
+                    }
+                  }}
+                  options={notesOptions}
+                  disabled={!!loadingStatus[store.id]}
+                />
+              )}
             </div>
 
             {storeStatuses[store.id] === 'in_progress' && (
@@ -267,12 +300,12 @@ const StorePopup: React.FC<StorePopupProps> = ({
               </Button>
             )}
 
-            {statusLogs?.length > 0 && (
+            {statusLogs[store.id]?.length > 0 && (
               <div className='py-3'>
                 <p className='text-lg font-medium text-gray-300 mb-3 border-b border-gray-600 pb-2'>
                   Storico Modifiche
                 </p>
-                {statusLogs.map((log) => (
+                {statusLogs[store.id]?.map((log) => (
                   <div
                     key={log.id}
                     className='mb-3 p-3 bg-gray-800 rounded-lg shadow-md border border-gray-700'
