@@ -372,7 +372,15 @@ const StorePopup: React.FC<StorePopupProps> = ({
                     )}
                     <p className='text-sm text-gray-400'>
                       <strong>Nuovo Stato:</strong>{' '}
-                      <span className='text-gray-200'>
+                      <span className='text-gray-200 inline-flex items-center'>
+                        {statuses.find((s) => s.value === log.new) && (
+                          <span className='mr-1'>
+                            {getIconByType(
+                              statuses.find((s) => s.value === log.new)
+                                ?.iconType || ''
+                            )}
+                          </span>
+                        )}
                         {getStatusLabel(log.new)}
                       </span>
                     </p>
