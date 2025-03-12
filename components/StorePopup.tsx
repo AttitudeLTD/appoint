@@ -145,6 +145,27 @@ const StorePopup: React.FC<StorePopupProps> = ({
     setHasMoreLogs(true);
   }, [store.id]);
 
+  // Function to get current user position
+  const getUserPosition = () => {
+    return new Promise<[number, number]>((resolve, reject) => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve([position.coords.latitude, position.coords.longitude]);
+          },
+          (error) => {
+            console.error('Error getting user position:', error);
+            reject(error);
+          }
+        );
+      } else {
+        const error = new Error('Geolocation not supported by this browser');
+        console.error(error);
+        reject(error);
+      }
+    });
+  };
+
   return (
     <div>
       <div className='flex items-center'>
@@ -191,15 +212,27 @@ const StorePopup: React.FC<StorePopupProps> = ({
         <Button
           variant='secondary'
           className='w-full bg-[#1B304E] hover:bg-[#224677] text-white'
-          onClick={() => {
-            if (
-              Array.isArray(coord) &&
-              coord.length === 2 &&
-              storeCoordinates
-            ) {
-              const [lat, lng] = coord;
-              const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
-              window.open(gmapsUrl, '_blank');
+          onClick={async () => {
+            if (storeCoordinates) {
+              try {
+                // Get current user position
+                const userCoords = await getUserPosition();
+
+                // Open Google Maps with directions
+                const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userCoords[0]},${userCoords[1]}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                window.open(gmapsUrl, '_blank');
+              } catch (error) {
+                // Fallback to using provided coordinates if geolocation fails
+                if (Array.isArray(coord) && coord.length === 2) {
+                  const [lat, lng] = coord;
+                  const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                  window.open(gmapsUrl, '_blank');
+                } else {
+                  // Just open the destination if we don't have user coordinates
+                  const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                  window.open(gmapsUrl, '_blank');
+                }
+              }
             }
           }}
         >
