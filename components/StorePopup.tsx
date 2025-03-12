@@ -92,7 +92,6 @@ const StorePopup: React.FC<StorePopupProps> = ({
   const [logsOffset, setLogsOffset] = useState(0);
   const [loadingMoreLogs, setLoadingMoreLogs] = useState(false);
   const [hasMoreLogs, setHasMoreLogs] = useState(true);
-  const [isLoadingDirections, setIsLoadingDirections] = useState(false);
 
   const storeCoordinates: [number, number] | null = parseCoords(store.location);
   // Create a modified statuses array with actual icon elements
@@ -216,47 +215,28 @@ const StorePopup: React.FC<StorePopupProps> = ({
           onClick={async () => {
             if (storeCoordinates) {
               try {
-                setIsLoadingDirections(true);
-                let userCoords;
-
-                // First check if coord is a valid user position (not the store position)
-                if (
-                  Array.isArray(coord) &&
-                  coord.length === 2 &&
-                  (!storeCoordinates ||
-                    coord[0] !== storeCoordinates[0] ||
-                    coord[1] !== storeCoordinates[1])
-                ) {
-                  // Use the coord prop if it's not the same as store coordinates
-                  userCoords = coord;
-                } else {
-                  // Otherwise get current position using geolocation
-                  userCoords = await getUserPosition();
-                }
+                // Get current user position
+                const userCoords = await getUserPosition();
 
                 // Open Google Maps with directions
                 const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userCoords[0]},${userCoords[1]}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
                 window.open(gmapsUrl, '_blank');
               } catch (error) {
-                console.error('Failed to get directions:', error);
-
-                // Fallback - just show the store location
-                if (storeCoordinates) {
+                // Fallback to using provided coordinates if geolocation fails
+                if (Array.isArray(coord) && coord.length === 2) {
+                  const [lat, lng] = coord;
+                  const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                  window.open(gmapsUrl, '_blank');
+                } else {
+                  // Just open the destination if we don't have user coordinates
                   const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${storeCoordinates[0]},${storeCoordinates[1]}`;
                   window.open(gmapsUrl, '_blank');
                 }
-              } finally {
-                setIsLoadingDirections(false);
               }
             }
           }}
         >
-          {isLoadingDirections ? (
-            <Loader className='mr-2 animate-spin' />
-          ) : (
-            <Navigation className='mr-2' />
-          )}
-          Indicazioni
+          <Navigation className='mr-2' /> Indicazioni
         </Button>
 
         <Button
