@@ -223,6 +223,9 @@ const StorePopup: React.FC<StorePopupProps> = ({
                   /iPad|iPhone|iPod/.test(navigator.userAgent) &&
                   !(window as any).MSStream;
 
+                // Check if the device is Android
+                const isAndroid = /Android/.test(navigator.userAgent);
+
                 if (isIOS) {
                   // First try to open in Google Maps app if installed
                   const googleMapsIOSUrl = `comgooglemaps://?saddr=${userCoords[0]},${userCoords[1]}&daddr=${storeCoordinates[0]},${storeCoordinates[1]}&directionsmode=driving`;
@@ -237,8 +240,22 @@ const StorePopup: React.FC<StorePopupProps> = ({
                   setTimeout(() => {
                     window.location.href = appleMapsUrl;
                   }, 2000);
+                } else if (isAndroid) {
+                  // For Android, use intent URL to open native Google Maps app
+                  const androidGoogleMapsUrl = `google.navigation:q=${storeCoordinates[0]},${storeCoordinates[1]}&mode=d`;
+
+                  // Alternative with origin
+                  const androidGoogleMapsUrlWithOrigin = `https://www.google.com/maps/dir/?api=1&origin=${userCoords[0]},${userCoords[1]}&destination=${storeCoordinates[0]},${storeCoordinates[1]}&travelmode=driving&dir_action=navigate`;
+
+                  // Try native app URL first
+                  window.location.href = androidGoogleMapsUrl;
+
+                  // Fallback to the web URL that will prompt to open in app
+                  setTimeout(() => {
+                    window.location.href = androidGoogleMapsUrlWithOrigin;
+                  }, 1000);
                 } else {
-                  // For non-iOS devices, use web URL
+                  // For non-mobile devices, use web URL
                   const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userCoords[0]},${userCoords[1]}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
                   window.open(gmapsUrl, '_blank');
                 }
@@ -247,6 +264,9 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 const isIOS =
                   /iPad|iPhone|iPod/.test(navigator.userAgent) &&
                   !(window as any).MSStream;
+
+                // Check if the device is Android
+                const isAndroid = /Android/.test(navigator.userAgent);
 
                 if (isIOS) {
                   // Just use the destination coordinates for iOS
@@ -257,8 +277,19 @@ const StorePopup: React.FC<StorePopupProps> = ({
                   setTimeout(() => {
                     window.location.href = appleMapsUrl;
                   }, 2000);
+                } else if (isAndroid) {
+                  // For Android without user coordinates
+                  const androidGoogleMapsUrl = `google.navigation:q=${storeCoordinates[0]},${storeCoordinates[1]}&mode=d`;
+
+                  // Fallback with web URL that will prompt to open in app
+                  const androidGoogleMapsWebUrl = `https://www.google.com/maps/search/?api=1&query=${storeCoordinates[0]},${storeCoordinates[1]}`;
+
+                  window.location.href = androidGoogleMapsUrl;
+                  setTimeout(() => {
+                    window.location.href = androidGoogleMapsWebUrl;
+                  }, 1000);
                 } else {
-                  // For non-iOS, fall back to original behavior
+                  // For non-mobile, fall back to original behavior
                   if (Array.isArray(coord) && coord.length === 2) {
                     const [lat, lng] = coord;
                     const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
