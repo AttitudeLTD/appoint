@@ -337,7 +337,7 @@ const Map = ({ user }: any) => {
     async (lat: number, lng: number) => {
       const { data: storesData } = await supabase.rpc(
         'get_stores_within_radius',
-        { lat, lng, radius: 3000 }
+        { lat, lng, radius: 1000 }
       );
 
       const storesWithLogs = await Promise.all(
