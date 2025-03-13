@@ -218,19 +218,56 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 // Get current user position
                 const userCoords = await getUserPosition();
 
-                // Open Google Maps with directions
-                const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userCoords[0]},${userCoords[1]}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
-                window.open(gmapsUrl, '_blank');
+                // Check if the device is iOS
+                const isIOS =
+                  /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+                  !(window as any).MSStream;
+
+                if (isIOS) {
+                  // First try to open in Google Maps app if installed
+                  const googleMapsIOSUrl = `comgooglemaps://?saddr=${userCoords[0]},${userCoords[1]}&daddr=${storeCoordinates[0]},${storeCoordinates[1]}&directionsmode=driving`;
+
+                  // Fallback to Apple Maps if Google Maps isn't installed
+                  const appleMapsUrl = `maps://maps.apple.com/?saddr=${userCoords[0]},${userCoords[1]}&daddr=${storeCoordinates[0]},${storeCoordinates[1]}&dirflg=d`;
+
+                  // Try to open Google Maps first with a timeout
+                  window.location.href = googleMapsIOSUrl;
+
+                  // If Google Maps doesn't open within 2 seconds, try Apple Maps
+                  setTimeout(() => {
+                    window.location.href = appleMapsUrl;
+                  }, 2000);
+                } else {
+                  // For non-iOS devices, use web URL
+                  const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userCoords[0]},${userCoords[1]}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                  window.open(gmapsUrl, '_blank');
+                }
               } catch (error) {
                 // Fallback to using provided coordinates if geolocation fails
-                if (Array.isArray(coord) && coord.length === 2) {
-                  const [lat, lng] = coord;
-                  const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
-                  window.open(gmapsUrl, '_blank');
+                const isIOS =
+                  /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+                  !(window as any).MSStream;
+
+                if (isIOS) {
+                  // Just use the destination coordinates for iOS
+                  const googleMapsIOSUrl = `comgooglemaps://?daddr=${storeCoordinates[0]},${storeCoordinates[1]}&directionsmode=driving`;
+                  const appleMapsUrl = `maps://maps.apple.com/?daddr=${storeCoordinates[0]},${storeCoordinates[1]}&dirflg=d`;
+
+                  window.location.href = googleMapsIOSUrl;
+                  setTimeout(() => {
+                    window.location.href = appleMapsUrl;
+                  }, 2000);
                 } else {
-                  // Just open the destination if we don't have user coordinates
-                  const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${storeCoordinates[0]},${storeCoordinates[1]}`;
-                  window.open(gmapsUrl, '_blank');
+                  // For non-iOS, fall back to original behavior
+                  if (Array.isArray(coord) && coord.length === 2) {
+                    const [lat, lng] = coord;
+                    const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                    window.open(gmapsUrl, '_blank');
+                  } else {
+                    // Just open the destination if we don't have user coordinates
+                    const gmapsUrl = `https://www.google.com/maps/search/?api=1&query=${storeCoordinates[0]},${storeCoordinates[1]}`;
+                    window.open(gmapsUrl, '_blank');
+                  }
                 }
               }
             }
