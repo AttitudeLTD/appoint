@@ -406,6 +406,23 @@ const StorePopup: React.FC<StorePopupProps> = ({
                     </span>
                   </div>
                 </div>
+                {store.fatturato && (
+                  <div className='mt-3 px-3 py-2 bg-green-50 rounded-lg border border-green-100'>
+                    <p className='text-sm text-green-700 font-medium mb-1'>
+                      Fatturato annuale:
+                    </p>
+                    <div className='flex items-center'>
+                      <CreditCard className='h-5 w-5 text-green-600 mr-2' />
+                      <p className='text-base font-semibold text-green-800'>
+                        {typeof store.fatturato === 'number'
+                          ? `€ ${store.fatturato.toLocaleString('it-IT')}`
+                          : store.fatturato.toString().startsWith('€')
+                            ? store.fatturato
+                            : `€ ${store.fatturato}`}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className='py-3'>
                 <p className='text-base text-gray-400 font-medium'>

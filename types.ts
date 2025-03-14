@@ -17,6 +17,7 @@ export interface Store {
     | 'failed'
     | 'not_interested';
   tier: 'bronze' | 'silver' | 'gold' | 'gold+';
+  fatturato?: number | string; // Annual revenue, optional as it might not be available for all stores
   modifiedByOtherUser: boolean;
   modifierName?: string; // Optional name of the agent who modified the store
 }
