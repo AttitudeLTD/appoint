@@ -353,10 +353,13 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 <p className='text-base text-gray-600'>{store.category}</p>
               </div>
               <div className='py-3 border-b border-gray-200'>
-                <p className='text-base text-gray-400 font-medium'>Tier:</p>
-                <div className='flex items-center gap-2 mt-1'>
+                <p className='text-base text-gray-400 font-medium'>
+                  Fatturato:
+                </p>
+                <div className='mt-2 flex flex-row items-center gap-3'>
+                  {/* Tier Badge */}
                   <div
-                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md ${
+                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md flex-shrink-0 ${
                       !store.tier
                         ? 'bg-gray-100'
                         : store.tier === 'gold+'
@@ -405,14 +408,11 @@ const StorePopup: React.FC<StorePopupProps> = ({
                       {store.tier?.toUpperCase() || 'Sconosciuto'}
                     </span>
                   </div>
-                </div>
-                {store.fatturato && (
-                  <div className='mt-3 px-3 py-2 bg-green-50 rounded-lg border border-green-100'>
-                    <p className='text-sm text-green-700 font-medium mb-1'>
-                      Fatturato annuale:
-                    </p>
-                    <div className='flex items-center'>
-                      <CreditCard className='h-5 w-5 text-green-600 mr-2' />
+
+                  {/* Fatturato Amount */}
+                  {store.fatturato && (
+                    <div className='px-3 py-1.5 bg-green-50 rounded-md border border-green-100 flex items-center flex-1'>
+                      <CreditCard className='h-5 w-5 text-green-600 mr-2 flex-shrink-0' />
                       <p className='text-base font-semibold text-green-800'>
                         {typeof store.fatturato === 'number'
                           ? `€ ${store.fatturato.toLocaleString('it-IT')}`
@@ -421,8 +421,8 @@ const StorePopup: React.FC<StorePopupProps> = ({
                             : `€ ${store.fatturato}`}
                       </p>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
               <div className='py-3'>
                 <p className='text-base text-gray-400 font-medium'>
