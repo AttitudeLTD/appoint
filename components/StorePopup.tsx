@@ -203,6 +203,21 @@ const StorePopup: React.FC<StorePopupProps> = ({
               >
                 {store.tier?.toUpperCase() || 'N/A'}
               </span>
+
+              {/* Add fatturato badge right next to tier badge */}
+              {store.fatturato && (
+                <>
+                  <div className='w-1'></div>
+                  <CreditCard size={14} className='text-green-600' />
+                  <span className='text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-800 border border-green-200'>
+                    {typeof store.fatturato === 'number'
+                      ? `€ ${store.fatturato.toLocaleString('it-IT')}`
+                      : store.fatturato.toString().startsWith('€')
+                        ? store.fatturato
+                        : `€ ${store.fatturato}`}
+                  </span>
+                </>
+              )}
             </div>
           </p>
         </div>
@@ -309,10 +324,18 @@ const StorePopup: React.FC<StorePopupProps> = ({
 
         <Button
           variant='secondary'
-          className='w-full bg-[#1B304E] hover:bg-[#224677] text-white'
+          className={`w-full ${!store.phone ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#1B304E] hover:bg-[#224677]'} text-white`}
           onClick={() => {
-            window.open(`tel:${store.phone}`, '_self');
+            if (store.phone) {
+              window.open(`tel:${store.phone}`, '_self');
+            }
           }}
+          disabled={!store.phone}
+          title={
+            !store.phone
+              ? 'Numero di telefono non disponibile'
+              : `Chiama ${store.phone}`
+          }
         >
           <Phone className='mr-2' /> Chiama
         </Button>
