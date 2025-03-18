@@ -12,6 +12,7 @@ const ALLOWED_USER_IDS = [
   'd29f0c04-fc5d-4fc7-97c8-9c323cc0574f',
   '5e2ee0b4-415d-44b3-ae17-ccad7a7e4675',
   '137a563c-ab13-4844-bcbe-d68130b05a95',
+  '10d8fe9d-7ce5-447b-968f-0cd5fa873278',
 ];
 
 export default async function ProtectedPage() {
