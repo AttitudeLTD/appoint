@@ -471,7 +471,15 @@ const StorePopup: React.FC<StorePopupProps> = ({
                   }
                 }}
                 options={filteredStatuses}
-                disabled={!!loadingStatus[store.id]}
+                disabled={
+                  !!loadingStatus[store.id] ||
+                  [
+                    'concluded',
+                    'already_client',
+                    'failed',
+                    'not_interested',
+                  ].includes(storeStatuses[store.id] || store.status)
+                }
               />
 
               {/* Show notes select only when status is 'failed' (Bad prospect) */}
@@ -488,7 +496,12 @@ const StorePopup: React.FC<StorePopupProps> = ({
                     }
                   }}
                   options={notesOptions}
-                  disabled={!!loadingStatus[store.id]}
+                  disabled={
+                    !!loadingStatus[store.id] ||
+                    ['concluded', 'already_client', 'not_interested'].includes(
+                      storeStatuses[store.id] || store.status
+                    )
+                  }
                 />
               )}
             </div>
