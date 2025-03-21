@@ -521,8 +521,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
               </Button>
             )}
 
-            {(storeStatuses[store.id] === 'concluded' ||
-              storeStatuses[store.id] === 'already_client') && (
+            {storeStatuses[store.id] === 'concluded' && (
               <Button
                 onClick={() =>
                   window.open(
