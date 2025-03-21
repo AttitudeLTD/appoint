@@ -525,7 +525,10 @@ const StorePopup: React.FC<StorePopupProps> = ({
               storeStatuses[store.id] === 'already_client') && (
               <Button
                 onClick={() =>
-                  window.open('https://appraise.attitudeltd.com', '_blank')
+                  window.open(
+                    'https://appraise.attitudeltd.com/ff_acquiring',
+                    '_blank'
+                  )
                 }
               >
                 <FileCheck className='mr-2' /> Compila distinta
