@@ -92,6 +92,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
   const [logsOffset, setLogsOffset] = useState(0);
   const [loadingMoreLogs, setLoadingMoreLogs] = useState(false);
   const [hasMoreLogs, setHasMoreLogs] = useState(true);
+  const [checkingInProgressLimit, setCheckingInProgressLimit] = useState(false);
 
   const storeCoordinates: [number, number] | null = parseCoords(store.location);
   // Create a modified statuses array with actual icon elements
@@ -459,20 +460,46 @@ const StorePopup: React.FC<StorePopupProps> = ({
               <SelectComponent
                 placeholder='Stato avanzamento'
                 value={storeStatuses[store.id] || store.status}
-                onChange={(newStatus) => {
+                onChange={async (newStatus) => {
                   if (newStatus) {
                     // Reset selected note when status changes
                     setSelectedNote('');
-                    handleStatusChangeAttempt(
-                      store.id,
-                      newStatus,
-                      selectedNote
-                    );
+
+                    // If changing to in_progress, apply special handling
+                    if (
+                      newStatus === 'in_progress' &&
+                      storeStatuses[store.id] !== 'in_progress' &&
+                      store.status !== 'in_progress'
+                    ) {
+                      // Set local loading state
+                      setCheckingInProgressLimit(true);
+
+                      // Pass special parameter to parent component for in_progress validation
+                      const success = await handleStatusChangeAttempt(
+                        store.id,
+                        newStatus,
+                        selectedNote,
+                        true
+                      );
+
+                      setCheckingInProgressLimit(false);
+
+                      // If status change failed, we don't need to do anything else
+                      if (!success) return;
+                    } else {
+                      // For other statuses, proceed normally
+                      handleStatusChangeAttempt(
+                        store.id,
+                        newStatus,
+                        selectedNote
+                      );
+                    }
                   }
                 }}
                 options={filteredStatuses}
                 disabled={
                   !!loadingStatus[store.id] ||
+                  checkingInProgressLimit ||
                   [
                     'concluded',
                     'already_client',

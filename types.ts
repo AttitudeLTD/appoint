@@ -48,7 +48,8 @@ export type StorePopupProps = {
   handleStatusChangeAttempt: (
     storeId: number,
     newStatus: string,
-    note?: string
-  ) => void;
+    note?: string,
+    checkInProgressLimit?: boolean
+  ) => Promise<boolean>;
   handleSendEmail: (store: Store) => void;
 };

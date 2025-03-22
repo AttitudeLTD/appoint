@@ -161,15 +161,91 @@ const Map = ({ user }: any) => {
     }
   };
 
-  const handleStatusChangeAttempt = (
+  const handleStatusChangeAttempt = async (
     storeId: number,
     newStatus: string,
-    note?: string
-  ) => {
+    note?: string,
+    checkInProgressLimit?: boolean
+  ): Promise<boolean> => {
+    // Handle in-progress limit check if needed
+    if (checkInProgressLimit && newStatus === 'in_progress') {
+      try {
+        // First get all stores that have a log where this user set them to in_progress
+        const { data: potentialInProgressStores, error: storesError } =
+          await supabase
+            .from('store_status_logs')
+            .select('store_id')
+            .eq('modifier', user.id)
+            .eq('new', 'in_progress');
+
+        if (storesError) throw storesError;
+
+        if (
+          !potentialInProgressStores ||
+          potentialInProgressStores.length === 0
+        ) {
+          // No in-progress stores found, proceed
+        } else {
+          // Get unique store IDs
+          const uniqueStoreIds = [
+            ...new Set(
+              potentialInProgressStores.map((store) => store.store_id)
+            ),
+          ];
+
+          // For each of these stores, check if the latest status log is 'in_progress'
+          let currentInProgressCount = 0;
+
+          // Run these checks in parallel
+          const checkPromises = uniqueStoreIds.map(async (storeId) => {
+            const { data: latestLog, error: logError } = await supabase
+              .from('store_status_logs')
+              .select('*')
+              .eq('store_id', storeId)
+              .order('created_at', { ascending: false })
+              .limit(1);
+
+            if (logError) throw logError;
+
+            // If the latest log for this store shows 'in_progress' and was set by this user, count it
+            if (
+              latestLog &&
+              latestLog.length > 0 &&
+              latestLog[0].new === 'in_progress' &&
+              latestLog[0].modifier === user.id
+            ) {
+              return true; // This counts as an in-progress store
+            }
+
+            return false;
+          });
+
+          // Wait for all checks to complete
+          const results = await Promise.all(checkPromises);
+          currentInProgressCount = results.filter(Boolean).length;
+
+          if (currentInProgressCount >= 10) {
+            // Show an alert or toast notification
+            alert(
+              "Hai già 10 trattative in corso. Concludi o chiudi almeno una trattativa prima di iniziarne un'altra."
+            );
+            return false;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking in-progress store count:', error);
+        alert(
+          'Si è verificato un errore nel controllo delle trattative in corso.'
+        );
+        return false;
+      }
+    }
+
     setSelectedStoreId(storeId);
     setSelectedStatus(newStatus || '');
     setSelectedNote(note || '');
     setDialogOpen(true);
+    return true;
   };
 
   const confirmStatusChange = async () => {
