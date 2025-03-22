@@ -578,8 +578,8 @@ const Map = ({ user }: any) => {
             {/* Marker for the user's current location */}
             <Marker icon={navIcon} position={coord}>
               <Popup>
-                Ciao {agent?.name}, oggi ti mancano 3 attività per raggiungere
-                il tuo obiettivo.
+                Ciao {agent?.name}, utilizza la mappa per trovare le opportunità
+                di vendita più vicine a te.
               </Popup>
             </Marker>
 
