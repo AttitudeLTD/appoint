@@ -187,11 +187,9 @@ const Map = ({ user }: any) => {
           // No in-progress stores found, proceed
         } else {
           // Get unique store IDs
-          const uniqueStoreIds = [
-            ...new Set(
-              potentialInProgressStores.map((store) => store.store_id)
-            ),
-          ];
+          const uniqueStoreIds = Array.from(
+            new Set(potentialInProgressStores.map((store) => store.store_id))
+          );
 
           // For each of these stores, check if the latest status log is 'in_progress'
           let currentInProgressCount = 0;
