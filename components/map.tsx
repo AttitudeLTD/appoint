@@ -109,6 +109,7 @@ const Map = ({ user }: any) => {
     {}
   );
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [limitDialogOpen, setLimitDialogOpen] = useState(false); // For in-progress limit dialog
   const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedNote, setSelectedNote] = useState('');
@@ -222,19 +223,15 @@ const Map = ({ user }: any) => {
           const results = await Promise.all(checkPromises);
           currentInProgressCount = results.filter(Boolean).length;
 
-          if (currentInProgressCount >= 10) {
-            // Show an alert or toast notification
-            alert(
-              "Hai già 10 trattative in corso. Concludi o chiudi almeno una trattativa prima di iniziarne un'altra."
-            );
+          if (currentInProgressCount >= 2) {
+            // Show a dialog instead of alert
+            setLimitDialogOpen(true);
             return false;
           }
         }
       } catch (error) {
         console.error('Error checking in-progress store count:', error);
-        alert(
-          'Si è verificato un errore nel controllo delle trattative in corso.'
-        );
+        setLimitDialogOpen(true);
         return false;
       }
     }
@@ -578,6 +575,23 @@ const Map = ({ user }: any) => {
               ) : (
                 'Conferma'
               )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={limitDialogOpen} onOpenChange={setLimitDialogOpen}>
+        <AlertDialogContent className='z-1000'>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Limite di trattative raggiunto</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hai già 10 trattative in corso. Concludi o chiudi almeno una
+              trattativa prima di iniziarne un&apos;altra.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setLimitDialogOpen(false)}>
+              Ho capito
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
