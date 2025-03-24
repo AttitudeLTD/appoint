@@ -223,7 +223,7 @@ const Map = ({ user }: any) => {
           const results = await Promise.all(checkPromises);
           currentInProgressCount = results.filter(Boolean).length;
 
-          if (currentInProgressCount >= 2) {
+          if (currentInProgressCount >= 10) {
             // Show a dialog instead of alert
             setLimitDialogOpen(true);
             return false;
