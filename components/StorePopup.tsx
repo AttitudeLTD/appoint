@@ -170,13 +170,32 @@ const StorePopup: React.FC<StorePopupProps> = ({
   return (
     <div>
       <div className='flex items-center'>
-        <Image
-          className='rounded-full shadow-md'
-          src='/store.jpeg'
-          alt='Store'
-          width={50}
-          height={50}
-        />
+        <div
+          className={`w-[50px] h-[50px] rounded-full shadow-md flex items-center justify-center text-white font-bold text-xl
+          ${
+            store.category.toLowerCase().includes('ristora')
+              ? 'bg-red-500'
+              : store.category.toLowerCase().includes('negozio')
+                ? 'bg-blue-500'
+                : store.category.toLowerCase().includes('farmacia')
+                  ? 'bg-green-500'
+                  : store.category.toLowerCase().includes('abbigliamento')
+                    ? 'bg-purple-500'
+                    : store.category.toLowerCase().includes('alimentari')
+                      ? 'bg-orange-500'
+                      : store.tier === 'gold+'
+                        ? 'bg-yellow-500'
+                        : store.tier === 'gold'
+                          ? 'bg-yellow-400'
+                          : store.tier === 'silver'
+                            ? 'bg-gray-400'
+                            : store.tier === 'bronze'
+                              ? 'bg-amber-700'
+                              : 'bg-gray-500'
+          }`}
+        >
+          {store.name.substring(0, 1).toUpperCase()}
+        </div>
         <div className='ml-3'>
           <p className='leading-tight'>
             <span className='text-lg font-semibold'>{store.name}</span>
