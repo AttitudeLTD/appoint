@@ -170,76 +170,80 @@ const StorePopup: React.FC<StorePopupProps> = ({
   return (
     <div>
       <div className='flex items-center'>
+        {/* Perfectly circular avatar with color variations */}
         <div
-          className={`w-[50px] h-[50px] rounded-full shadow-md flex items-center justify-center text-white font-bold text-xl
+          className={`w-[48px] h-[48px] rounded-full flex items-center justify-center text-white font-medium text-lg flex-shrink-0
           ${
-            store.category.toLowerCase().includes('ristora')
-              ? 'bg-red-500'
-              : store.category.toLowerCase().includes('negozio')
-                ? 'bg-blue-500'
-                : store.category.toLowerCase().includes('farmacia')
-                  ? 'bg-green-500'
-                  : store.category.toLowerCase().includes('abbigliamento')
-                    ? 'bg-purple-500'
-                    : store.category.toLowerCase().includes('alimentari')
-                      ? 'bg-orange-500'
-                      : store.tier === 'gold+'
-                        ? 'bg-yellow-500'
-                        : store.tier === 'gold'
-                          ? 'bg-yellow-400'
-                          : store.tier === 'silver'
-                            ? 'bg-gray-400'
-                            : store.tier === 'bronze'
-                              ? 'bg-amber-700'
-                              : 'bg-gray-500'
+            store.category.toLowerCase().includes('formazione')
+              ? 'bg-blue-600'
+              : store.category.toLowerCase().includes('commercio')
+                ? 'bg-slate-600'
+                : store.category.toLowerCase().includes('ristora')
+                  ? 'bg-red-600'
+                  : store.category.toLowerCase().includes('negozio')
+                    ? 'bg-indigo-600'
+                    : store.category.toLowerCase().includes('farmacia')
+                      ? 'bg-green-600'
+                      : store.category.toLowerCase().includes('ottic')
+                        ? 'bg-slate-600'
+                        : store.tier === 'gold+'
+                          ? 'bg-yellow-600'
+                          : store.tier === 'gold'
+                            ? 'bg-yellow-600'
+                            : store.tier === 'silver'
+                              ? 'bg-slate-600'
+                              : store.tier === 'bronze'
+                                ? 'bg-amber-700'
+                                : 'bg-slate-600'
           }`}
         >
-          {store.name.substring(0, 1).toUpperCase()}
+          <span>{store.name.substring(0, 1).toUpperCase()}</span>
         </div>
-        <div className='ml-3'>
-          <p className='leading-tight'>
-            <span className='text-lg font-semibold'>{store.name}</span>
-            <br />
-            <span className='text-base text-gray-400'>{store.category}</span>
-            <br />
-            <span className='text-sm text-gray-500'>{store.address}</span>
-            <br />
-            <div className='mt-1 inline-flex items-center gap-1'>
-              {getTierIcon(store.tier)}
-              <span
-                className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                  !store.tier
-                    ? 'bg-gray-100 text-gray-500'
-                    : store.tier === 'gold+'
-                      ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
-                      : store.tier === 'gold'
-                        ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                        : store.tier === 'silver'
-                          ? 'bg-gray-100 text-gray-600 border border-gray-200'
-                          : store.tier === 'bronze'
-                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                            : 'bg-gray-100 text-gray-500'
-                }`}
-              >
-                {store.tier?.toUpperCase() || 'N/A'}
-              </span>
-
-              {/* Add fatturato badge right next to tier badge */}
-              {store.fatturato && (
-                <>
-                  <div className='w-1'></div>
-                  <CreditCard size={14} className='text-green-600' />
-                  <span className='text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-800 border border-green-200'>
-                    {typeof store.fatturato === 'number'
-                      ? `€ ${store.fatturato.toLocaleString('it-IT')}`
-                      : store.fatturato.toString().startsWith('€')
-                        ? store.fatturato
-                        : `€ ${store.fatturato}`}
-                  </span>
-                </>
-              )}
-            </div>
+        <div className='ml-3 flex-1 min-w-0 overflow-hidden'>
+          <h3 className='text-base font-medium text-gray-800 truncate leading-5'>
+            {store.name}
+          </h3>
+          <p className='text-sm text-gray-500 truncate leading-5 mt-0.5'>
+            {store.category}
           </p>
+          <p className='text-xs text-gray-400 truncate leading-4 mt-0.5'>
+            {store.address}
+          </p>
+
+          <div className='mt-1 flex flex-wrap items-center gap-1.5'>
+            {getTierIcon(store.tier)}
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                !store.tier
+                  ? 'bg-gray-100 text-gray-500'
+                  : store.tier === 'gold+'
+                    ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+                    : store.tier === 'gold'
+                      ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                      : store.tier === 'silver'
+                        ? 'bg-gray-100 text-gray-600 border border-gray-200'
+                        : store.tier === 'bronze'
+                          ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                          : 'bg-gray-100 text-gray-500'
+              }`}
+            >
+              {store.tier?.toUpperCase() || 'N/A'}
+            </span>
+
+            {/* Add fatturato badge right next to tier badge */}
+            {store.fatturato && (
+              <>
+                <CreditCard size={14} className='text-green-600' />
+                <span className='text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-800 border border-green-200'>
+                  {typeof store.fatturato === 'number'
+                    ? `€ ${store.fatturato.toLocaleString('it-IT')}`
+                    : store.fatturato.toString().startsWith('€')
+                      ? store.fatturato
+                      : `€ ${store.fatturato}`}
+                </span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
