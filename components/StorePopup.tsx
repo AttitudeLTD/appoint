@@ -204,7 +204,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
               {store.name}
             </h3>
             <p className='text-sm text-gray-500 truncate leading-none pt-1'>
-              {store.category}
+              {store.category.charAt(0).toUpperCase() + store.category.slice(1)}
             </p>
             <p className='text-xs text-gray-400 truncate leading-none pt-2'>
               {store.address}
