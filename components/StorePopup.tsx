@@ -170,7 +170,6 @@ const StorePopup: React.FC<StorePopupProps> = ({
   return (
     <div>
       <div className='flex items-center'>
-        {/* Perfectly circular avatar with color variations */}
         <div
           className={`w-[48px] h-[48px] rounded-full flex items-center justify-center text-white font-medium text-lg flex-shrink-0
           ${
@@ -200,17 +199,19 @@ const StorePopup: React.FC<StorePopupProps> = ({
           <span>{store.name.substring(0, 1).toUpperCase()}</span>
         </div>
         <div className='ml-3 flex-1 min-w-0 overflow-hidden'>
-          <h3 className='text-base font-medium text-gray-800 truncate leading-5'>
-            {store.name}
-          </h3>
-          <p className='text-sm text-gray-500 truncate leading-5 mt-0.5'>
-            {store.category}
-          </p>
-          <p className='text-xs text-gray-400 truncate leading-4 mt-0.5'>
-            {store.address}
-          </p>
+          <div className='space-y-0 flex flex-col'>
+            <h3 className='text-base font-medium text-gray-800 truncate leading-none'>
+              {store.name}
+            </h3>
+            <p className='text-sm text-gray-500 truncate leading-none pt-1'>
+              {store.category}
+            </p>
+            <p className='text-xs text-gray-400 truncate leading-none pt-2'>
+              {store.address}
+            </p>
+          </div>
 
-          <div className='mt-1 flex flex-wrap items-center gap-1.5'>
+          <div className='mt-2 flex flex-wrap items-center gap-1.5'>
             {getTierIcon(store.tier)}
             <span
               className={`text-xs font-medium px-2 py-0.5 rounded-full ${
@@ -247,7 +248,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
         </div>
       </div>
 
-      <div className='flex flex-col gap-2 mt-2'>
+      <div className='flex flex-col gap-2 mt-4'>
         <Button
           variant='secondary'
           className='w-full bg-[#1B304E] hover:bg-[#224677] text-white'
