@@ -120,6 +120,7 @@ const Map = ({ user }: any) => {
   const [selectedLocation, setSelectedLocation] = useState<[number, number]>();
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showSearchResults, setShowSearchResults] = useState(true);
+  const [showGeoMessage, setShowGeoMessage] = useState(false);
 
   function MapClickHandler() {
     const map = useMap();
@@ -461,6 +462,13 @@ const Map = ({ user }: any) => {
       }
     };
 
+    // Set timeout for geolocation message
+    const geoTimeout = setTimeout(() => {
+      if (!coord) {
+        setShowGeoMessage(true);
+      }
+    }, 3000);
+
     getMyLoc((coords: LatLngExpression | null) => {
       if (coords && Array.isArray(coords)) {
         setCoord(coords);
@@ -469,6 +477,8 @@ const Map = ({ user }: any) => {
     });
 
     getUserName();
+
+    return () => clearTimeout(geoTimeout);
   }, [user.id, supabase, fetchStoresAndLogs]);
 
   useEffect(() => {
@@ -736,6 +746,12 @@ const Map = ({ user }: any) => {
             <p className='text-sm mt-2'>
               Attendi mentre recuperiamo la tua posizione
             </p>
+            {showGeoMessage && (
+              <p className='text-sm mt-4 text-muted-foreground max-w-md text-center'>
+                Se la mappa non si carica, verifica di aver dato i permessi di
+                geolocalizzazione al browser e poi aggiorna la pagina.
+              </p>
+            )}
           </div>
         )}
       </div>
