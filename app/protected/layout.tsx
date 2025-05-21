@@ -3,6 +3,7 @@ import HeaderAuth from '@/components/header-auth';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { hasEnvVars } from '@/utils/supabase/check-env-vars';
 import Link from 'next/link';
+import { NewStoreForm } from '@/components/NewStoreForm';
 
 export default async function Layout({
   children,
@@ -15,9 +16,17 @@ export default async function Layout({
         <div className='w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm'>
           <div className='flex gap-5 items-center font-semibold'>
             <Link href={'/'}>Attitude Appoint</Link>
-            <div className='flex items-center gap-2'></div>
           </div>
-          {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
+          <div className='flex items-center gap-4'>
+            {!hasEnvVars ? (
+              <EnvVarWarning />
+            ) : (
+              <>
+                <NewStoreForm />
+                <HeaderAuth />
+              </>
+            )}
+          </div>
         </div>
       </nav>
       <div className='flex flex-col gap-12 items-start'>{children}</div>
