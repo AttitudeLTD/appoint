@@ -15,6 +15,7 @@ import {
 import { Plus } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { Avatar } from './ui/avatar';
+import { Checkbox } from './ui/checkbox';
 
 export function NewStoreForm() {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,11 +30,19 @@ export function NewStoreForm() {
     const storeData = {
       name: formData.get('name') as string,
       address: formData.get('address') as string,
-      location: formData.get('location') as string,
       phone: formData.get('phone') as string,
       category: formData.get('category') as string,
-      email: formData.get('email') as string,
-      owner_name: formData.get('owner_name') as string,
+      type: formData.get('type') as string,
+      codice_ateco: formData.get('codice_ateco') as string,
+      cap: formData.get('cap') as string,
+      regione: formData.get('regione') as string,
+      provincia: formData.get('provincia') as string,
+      comune: formData.get('comune') as string,
+      pi: formData.get('pi') as string,
+      cf_azienda: formData.get('cf_azienda') as string,
+      dipendenti: formData.get('dipendenti') as string,
+      fatturato: formData.get('fatturato') as string,
+      consent: formData.get('consent') === 'on',
       status: 'free',
       tier: 'bronze',
     };
@@ -63,47 +72,109 @@ export function NewStoreForm() {
       <SheetContent className='z-[1000] overflow-y-auto'>
         <div className='h-full flex flex-col'>
           <SheetHeader>
-            <SheetTitle>Nuovo Store</SheetTitle>
+            <SheetTitle>Nuovo Punto Vendita</SheetTitle>
             <SheetDescription>
-              Inserisci i dettagli del nuovo store
+              Inserisci i dettagli del nuovo punto vendita
             </SheetDescription>
           </SheetHeader>
-          <form onSubmit={handleSubmit} className='space-y-4 mt-4 flex-1'>
-            <div className='space-y-2'>
-              <Label htmlFor='name'>Nome</Label>
-              <Input id='name' name='name' required />
+          <form onSubmit={handleSubmit} className='space-y-6 mt-4 flex-1'>
+            {/* Informazioni Base */}
+            <div className='space-y-4'>
+              <h3 className='font-medium text-sm'>Informazioni Base</h3>
+              <div className='space-y-2'>
+                <Label htmlFor='name'>Nome Attività *</Label>
+                <Input id='name' name='name' required />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='category'>Categoria *</Label>
+                <Input id='category' name='category' required />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='type'>Tipo Attività</Label>
+                <Input id='type' name='type' />
+              </div>
             </div>
-            <div className='space-y-2'>
-              <Label htmlFor='address'>Indirizzo</Label>
-              <Input id='address' name='address' required />
+
+            {/* Contatti */}
+            <div className='space-y-4'>
+              <h3 className='font-medium text-sm'>Contatti</h3>
+              <div className='space-y-2'>
+                <Label htmlFor='phone'>Telefono *</Label>
+                <Input id='phone' name='phone' type='tel' required />
+              </div>
             </div>
-            <div className='space-y-2'>
-              <Label htmlFor='location'>Coordinate (lat,lng)</Label>
-              <Input
-                id='location'
-                name='location'
-                placeholder='45.123,9.456'
-                required
-              />
+
+            {/* Indirizzo */}
+            <div className='space-y-4'>
+              <h3 className='font-medium text-sm'>Indirizzo</h3>
+              <div className='space-y-2'>
+                <Label htmlFor='address'>Indirizzo *</Label>
+                <Input id='address' name='address' required />
+              </div>
+              <div className='grid grid-cols-2 gap-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='cap'>CAP</Label>
+                  <Input id='cap' name='cap' maxLength={5} />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='comune'>Comune</Label>
+                  <Input id='comune' name='comune' />
+                </div>
+              </div>
+              <div className='grid grid-cols-2 gap-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='provincia'>Provincia</Label>
+                  <Input id='provincia' name='provincia' maxLength={2} />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='regione'>Regione</Label>
+                  <Input id='regione' name='regione' />
+                </div>
+              </div>
             </div>
-            <div className='space-y-2'>
-              <Label htmlFor='phone'>Telefono</Label>
-              <Input id='phone' name='phone' type='tel' required />
+
+            {/* Informazioni Aziendali */}
+            <div className='space-y-4'>
+              <h3 className='font-medium text-sm'>Informazioni Aziendali</h3>
+              <div className='space-y-2'>
+                <Label htmlFor='codice_ateco'>Codice ATECO</Label>
+                <Input id='codice_ateco' name='codice_ateco' />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='pi'>Partita IVA</Label>
+                <Input id='pi' name='pi' />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='cf_azienda'>Codice Fiscale Azienda</Label>
+                <Input id='cf_azienda' name='cf_azienda' />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='dipendenti'>Numero Dipendenti</Label>
+                <Input
+                  id='dipendenti'
+                  name='dipendenti'
+                  type='number'
+                  min='0'
+                />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='fatturato'>Fatturato Annuale</Label>
+                <Input id='fatturato' name='fatturato' type='number' min='0' />
+              </div>
             </div>
-            <div className='space-y-2'>
-              <Label htmlFor='category'>Categoria</Label>
-              <Input id='category' name='category' required />
+
+            {/* Consenso */}
+            <div className='space-y-4'>
+              <div className='flex items-center space-x-2'>
+                <Checkbox id='consent' name='consent' />
+                <Label htmlFor='consent' className='text-sm'>
+                  Consenso al trattamento dei dati
+                </Label>
+              </div>
             </div>
-            <div className='space-y-2'>
-              <Label htmlFor='email'>Email</Label>
-              <Input id='email' name='email' type='email' required />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='owner_name'>Nome Proprietario</Label>
-              <Input id='owner_name' name='owner_name' required />
-            </div>
+
             <Button type='submit' className='w-full' disabled={loading}>
-              {loading ? 'Creazione...' : 'Crea Store'}
+              {loading ? 'Creazione...' : 'Crea Punto Vendita'}
             </Button>
           </form>
         </div>
