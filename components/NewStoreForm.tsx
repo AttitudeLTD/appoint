@@ -16,14 +16,47 @@ import { Plus } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { Avatar } from './ui/avatar';
 import { Checkbox } from './ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
+import { toast } from 'sonner';
+
+const categories = [
+  { value: 'commercio', label: 'Commercio' },
+  { value: 'ristorazione', label: 'Ristorazione' },
+  { value: 'servizi', label: 'Servizi' },
+  { value: 'formazione', label: 'Formazione' },
+  { value: 'sanita', label: 'Sanità' },
+  { value: 'bellezza', label: 'Bellezza e Benessere' },
+  { value: 'intrattenimento', label: 'Intrattenimento' },
+  { value: 'sport', label: 'Sport e Fitness' },
+  { value: 'artigianato', label: 'Artigianato' },
+  { value: 'agricoltura', label: 'Agricoltura' },
+  { value: 'edilizia', label: 'Edilizia' },
+  { value: 'trasporti', label: 'Trasporti' },
+  { value: 'tecnologia', label: 'Tecnologia' },
+  { value: 'finanza', label: 'Finanza e Assicurazioni' },
+  { value: 'immobiliare', label: 'Immobiliare' },
+  { value: 'altro', label: 'Altro' },
+];
 
 export function NewStoreForm() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [consent, setConsent] = useState(false);
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!consent) {
+      toast.error('È necessario accettare il consenso al trattamento dei dati');
+      return;
+    }
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
@@ -31,7 +64,7 @@ export function NewStoreForm() {
       name: formData.get('name') as string,
       address: formData.get('address') as string,
       phone: formData.get('phone') as string,
-      category: formData.get('category') as string,
+      category: selectedCategory,
       type: formData.get('type') as string,
       codice_ateco: formData.get('codice_ateco') as string,
       cap: formData.get('cap') as string,
@@ -42,7 +75,7 @@ export function NewStoreForm() {
       cf_azienda: formData.get('cf_azienda') as string,
       dipendenti: formData.get('dipendenti') as string,
       fatturato: formData.get('fatturato') as string,
-      consent: formData.get('consent') === 'on',
+      consent: true,
       status: 'free',
       tier: 'bronze',
     };
@@ -50,11 +83,18 @@ export function NewStoreForm() {
     try {
       const { error } = await supabase.from('stores').insert([storeData]);
       if (error) throw error;
+
+      toast.success('Punto vendita creato con successo');
       setIsOpen(false);
       // Reset form
       e.currentTarget.reset();
+      setSelectedCategory('');
+      setConsent(false);
     } catch (error) {
       console.error('Error creating store:', error);
+      toast.error(
+        'Si è verificato un errore durante la creazione del punto vendita'
+      );
     } finally {
       setLoading(false);
     }
@@ -72,9 +112,9 @@ export function NewStoreForm() {
       <SheetContent className='z-[1000] overflow-y-auto'>
         <div className='h-full flex flex-col'>
           <SheetHeader>
-            <SheetTitle>Nuovo Punto Vendita</SheetTitle>
+            <SheetTitle>Nuovo Store</SheetTitle>
             <SheetDescription>
-              Inserisci i dettagli del nuovo punto vendita
+              Inserisci i dettagli del nuovo store
             </SheetDescription>
           </SheetHeader>
           <form onSubmit={handleSubmit} className='space-y-6 mt-4 flex-1'>
@@ -87,7 +127,22 @@ export function NewStoreForm() {
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='category'>Categoria *</Label>
-                <Input id='category' name='category' required />
+                <Select
+                  value={selectedCategory}
+                  onValueChange={setSelectedCategory}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Seleziona una categoria' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='type'>Tipo Attività</Label>
@@ -141,8 +196,8 @@ export function NewStoreForm() {
                 <Input id='codice_ateco' name='codice_ateco' />
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='pi'>Partita IVA</Label>
-                <Input id='pi' name='pi' />
+                <Label htmlFor='pi'>Partita IVA *</Label>
+                <Input id='pi' name='pi' required />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='cf_azienda'>Codice Fiscale Azienda</Label>
@@ -166,16 +221,23 @@ export function NewStoreForm() {
             {/* Consenso */}
             <div className='space-y-4'>
               <div className='flex items-center space-x-2'>
-                <Checkbox id='consent' name='consent' />
+                <Checkbox
+                  id='consent'
+                  checked={consent}
+                  onCheckedChange={(checked) => setConsent(checked as boolean)}
+                  required
+                />
                 <Label htmlFor='consent' className='text-sm'>
-                  Consenso al trattamento dei dati
+                  Consenso al trattamento dei dati *
                 </Label>
               </div>
             </div>
 
-            <Button type='submit' className='w-full' disabled={loading}>
-              {loading ? 'Creazione...' : 'Crea Punto Vendita'}
-            </Button>
+            <div className='pt-4 pb-8'>
+              <Button type='submit' className='w-full' disabled={loading}>
+                {loading ? 'Creazione...' : 'Crea Punto Vendita'}
+              </Button>
+            </div>
           </form>
         </div>
       </SheetContent>
