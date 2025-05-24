@@ -16,13 +16,7 @@ import { Plus } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { Avatar } from './ui/avatar';
 import { Checkbox } from './ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './ui/select';
+import { SelectComponent } from './select';
 import { toast } from 'sonner';
 
 const categories = [
@@ -55,6 +49,10 @@ export function NewStoreForm() {
     e.preventDefault();
     if (!consent) {
       toast.error('È necessario accettare il consenso al trattamento dei dati');
+      return;
+    }
+    if (!selectedCategory) {
+      toast.error('È necessario selezionare una categoria');
       return;
     }
     setLoading(true);
@@ -127,22 +125,12 @@ export function NewStoreForm() {
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='category'>Categoria *</Label>
-                <Select
+                <SelectComponent
+                  placeholder='Seleziona una categoria'
                   value={selectedCategory}
-                  onValueChange={setSelectedCategory}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Seleziona una categoria' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.value} value={category.value}>
-                        {category.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(value) => setSelectedCategory(value || '')}
+                  options={categories}
+                />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='type'>Tipo Attività</Label>
