@@ -83,13 +83,16 @@ export function NewStoreForm() {
       if (error) throw error;
 
       toast.success('Punto vendita creato con successo');
-      setIsOpen(false);
-      // Reset form
-      e.currentTarget.reset();
+      // Reset states and close modal
       setSelectedCategory('');
       setConsent(false);
+      setIsOpen(false);
     } catch (error) {
-      console.error('Error creating store:', error);
+      console.error('Error creating store:', {
+        error,
+        storeData,
+        details: error instanceof Error ? error.message : 'Unknown error',
+      });
       toast.error(
         'Si è verificato un errore durante la creazione del punto vendita'
       );
