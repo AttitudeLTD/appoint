@@ -113,9 +113,9 @@ export function NewStoreForm() {
       <SheetContent className='z-[1000] overflow-y-auto'>
         <div className='h-full flex flex-col'>
           <SheetHeader>
-            <SheetTitle>Nuovo Store</SheetTitle>
+            <SheetTitle>Nuovo Punto Vendita</SheetTitle>
             <SheetDescription>
-              Inserisci i dettagli del nuovo store
+              Inserisci i dettagli del nuovo punto vendita
             </SheetDescription>
           </SheetHeader>
           <form onSubmit={handleSubmit} className='space-y-6 mt-4 flex-1'>
