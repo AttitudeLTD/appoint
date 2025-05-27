@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -43,6 +43,7 @@ export function NewStoreForm() {
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [consent, setConsent] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -57,28 +58,47 @@ export function NewStoreForm() {
     }
     setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    const storeData = {
-      name: formData.get('name') as string,
-      address: formData.get('address') as string,
-      phone: formData.get('phone') as string,
-      category: selectedCategory,
-      type: formData.get('type') as string,
-      codice_ateco: formData.get('codice_ateco') as string,
-      cap: formData.get('cap') as string,
-      regione: formData.get('regione') as string,
-      provincia: formData.get('provincia') as string,
-      comune: formData.get('comune') as string,
-      pi: formData.get('pi') as string,
-      cf_azienda: formData.get('cf_azienda') as string,
-      dipendenti: formData.get('dipendenti') as string,
-      fatturato: formData.get('fatturato') as string,
-      consent: true,
-      status: 'free',
-      tier: 'bronze',
-    };
-
     try {
+      // Check daily limit
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { count, error: countError } = await supabase
+        .from('stores')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', today.toISOString());
+
+      if (countError) throw countError;
+
+      if (count && count >= 100) {
+        toast.error(
+          'Raggiunto il limite giornaliero di punti vendita (100). Prova domani.'
+        );
+        setLoading(false);
+        return;
+      }
+
+      if (!formRef.current) throw new Error('Form not found');
+      const formData = new FormData(formRef.current);
+      const storeData = {
+        name: formData.get('name') as string,
+        address: formData.get('address') as string,
+        phone: formData.get('phone') as string,
+        category: selectedCategory,
+        type: formData.get('type') as string,
+        codice_ateco: formData.get('codice_ateco') as string,
+        cap: formData.get('cap') as string,
+        regione: formData.get('regione') as string,
+        provincia: formData.get('provincia') as string,
+        comune: formData.get('comune') as string,
+        pi: formData.get('pi') as string,
+        cf_azienda: formData.get('cf_azienda') as string,
+        dipendenti: formData.get('dipendenti') as string,
+        fatturato: formData.get('fatturato') as string,
+        consent: true,
+        status: 'free',
+        tier: 'bronze',
+      };
+
       const { error } = await supabase.from('stores').insert([storeData]);
       if (error) throw error;
 
@@ -90,7 +110,6 @@ export function NewStoreForm() {
     } catch (error) {
       console.error('Error creating store:', {
         error,
-        storeData,
         details: error instanceof Error ? error.message : 'Unknown error',
       });
       toast.error(
@@ -118,7 +137,11 @@ export function NewStoreForm() {
               Inserisci i dettagli del nuovo punto vendita
             </SheetDescription>
           </SheetHeader>
-          <form onSubmit={handleSubmit} className='space-y-6 mt-4 flex-1'>
+          <form
+            ref={formRef}
+            onSubmit={handleSubmit}
+            className='space-y-6 mt-4 flex-1'
+          >
             {/* Informazioni Base */}
             <div className='space-y-4'>
               <h3 className='font-medium text-sm'>Informazioni Base</h3>
