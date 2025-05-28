@@ -18,6 +18,7 @@ import { Avatar } from './ui/avatar';
 import { Checkbox } from './ui/checkbox';
 import { SelectComponent } from './select';
 import { toast } from 'sonner';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 const categories = [
   { value: 'commercio', label: 'Commercio' },
@@ -43,6 +44,7 @@ export function NewStoreForm() {
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [consent, setConsent] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const supabase = createClient();
 
@@ -54,6 +56,10 @@ export function NewStoreForm() {
     }
     if (!selectedCategory) {
       toast.error('È necessario selezionare una categoria');
+      return;
+    }
+    if (!token) {
+      toast.error('Per favore completa la verifica');
       return;
     }
     setLoading(true);
@@ -106,6 +112,7 @@ export function NewStoreForm() {
       // Reset states and close modal
       setSelectedCategory('');
       setConsent(false);
+      setToken(null);
       setIsOpen(false);
     } catch (error) {
       console.error('Error creating store:', {
@@ -247,8 +254,32 @@ export function NewStoreForm() {
               </div>
             </div>
 
+            {/* Turnstile */}
+            <div className='flex justify-center'>
+              {process.env.NODE_ENV !== 'development' ? (
+                <Turnstile
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''}
+                  onSuccess={setToken}
+                  onError={() => {
+                    toast.error('Errore nella verifica. Riprova.');
+                    setToken(null);
+                  }}
+                />
+              ) : (
+                <div className='text-sm text-muted-foreground'>
+                  Turnstile disabilitato in sviluppo
+                </div>
+              )}
+            </div>
+
             <div className='pt-4 pb-8'>
-              <Button type='submit' className='w-full' disabled={loading}>
+              <Button
+                type='submit'
+                className='w-full'
+                disabled={
+                  loading || (process.env.NODE_ENV !== 'development' && !token)
+                }
+              >
                 {loading ? 'Creazione...' : 'Crea Punto Vendita'}
               </Button>
             </div>
