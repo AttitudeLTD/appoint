@@ -19,6 +19,7 @@ import { Checkbox } from './ui/checkbox';
 import { SelectComponent } from './select';
 import { toast } from 'sonner';
 import { Turnstile } from '@marsidev/react-turnstile';
+import { Loader } from '@googlemaps/js-api-loader';
 
 const categories = [
   { value: 'commercio', label: 'Commercio' },
@@ -48,6 +49,40 @@ export function NewStoreForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const supabase = createClient();
 
+  const geocodeAddress = async (
+    address: string
+  ): Promise<[number, number] | null> => {
+    try {
+      const loader = new Loader({
+        apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+        version: 'weekly',
+      });
+
+      const google = await loader.load();
+      const geocoder = new google.maps.Geocoder();
+
+      return new Promise((resolve, reject) => {
+        geocoder.geocode(
+          { address },
+          (
+            results: google.maps.GeocoderResult[] | null,
+            status: google.maps.GeocoderStatus
+          ) => {
+            if (status === 'OK' && results && results[0]) {
+              const location = results[0].geometry.location;
+              resolve([location.lat(), location.lng()]);
+            } else {
+              reject(new Error('Geocoding failed'));
+            }
+          }
+        );
+      });
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!consent) {
@@ -58,7 +93,7 @@ export function NewStoreForm() {
       toast.error('È necessario selezionare una categoria');
       return;
     }
-    if (!token) {
+    if (!token && process.env.NODE_ENV !== 'development') {
       toast.error('Per favore completa la verifica');
       return;
     }
@@ -85,9 +120,32 @@ export function NewStoreForm() {
 
       if (!formRef.current) throw new Error('Form not found');
       const formData = new FormData(formRef.current);
+
+      // Get full address
+      const address = [
+        formData.get('address'),
+        formData.get('cap'),
+        formData.get('comune'),
+        formData.get('provincia'),
+        formData.get('regione'),
+      ]
+        .filter(Boolean)
+        .join(', ');
+
+      // Geocode address
+      const coordinates = await geocodeAddress(address);
+      if (!coordinates) {
+        toast.error(
+          "Impossibile geocodificare l'indirizzo. Verifica i dati inseriti."
+        );
+        setLoading(false);
+        return;
+      }
+
       const storeData = {
         name: formData.get('name') as string,
         address: formData.get('address') as string,
+        coordinates,
         phone: formData.get('phone') as string,
         category: selectedCategory,
         type: formData.get('type') as string,
@@ -109,7 +167,6 @@ export function NewStoreForm() {
       if (error) throw error;
 
       toast.success('Punto vendita creato con successo');
-      // Reset states and close modal
       setSelectedCategory('');
       setConsent(false);
       setToken(null);
