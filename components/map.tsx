@@ -481,6 +481,28 @@ const Map = ({ user }: any) => {
     return () => clearTimeout(geoTimeout);
   }, [user.id, supabase, fetchStoresAndLogs]);
 
+  // Listener per il refresh quando viene creato un nuovo store
+  useEffect(() => {
+    const handleStoreCreated = (event: CustomEvent) => {
+      if (coord && Array.isArray(coord)) {
+        // Refresh immediato dei punti vendita nella zona corrente
+        fetchStoresAndLogs(coord[0], coord[1]);
+      }
+    };
+
+    window.addEventListener(
+      'storeCreated',
+      handleStoreCreated as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        'storeCreated',
+        handleStoreCreated as EventListener
+      );
+    };
+  }, [coord, fetchStoresAndLogs]);
+
   useEffect(() => {
     // Fetch status for all stores once they are loaded
     stores.forEach((store) => {

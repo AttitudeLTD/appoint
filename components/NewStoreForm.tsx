@@ -167,6 +167,14 @@ export function NewStoreForm() {
       if (error) throw error;
 
       toast.success('Punto vendita creato con successo');
+
+      // Trigger refresh della mappa tramite evento personalizzato
+      window.dispatchEvent(
+        new CustomEvent('storeCreated', {
+          detail: { coordinates },
+        })
+      );
+
       setSelectedCategory('');
       setConsent(false);
       setToken(null);
