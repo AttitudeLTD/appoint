@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
+import { isEmailDomainAllowed } from '@/utils/auth';
 
 export const updateSession = async (request: NextRequest) => {
   // This `try/catch` block is only here for the interactive tutorial.
@@ -39,11 +40,27 @@ export const updateSession = async (request: NextRequest) => {
     // https://supabase.com/docs/guides/auth/server-side/nextjs
     const user = await supabase.auth.getUser();
 
-    // protected routes
+    // Skip middleware logic for unauthorized page to prevent redirect loops
+    if (request.nextUrl.pathname === '/unauthorized') {
+      return response;
+    }
+
+    // Check if user is authenticated and has valid email domain for protected routes
+    if (request.nextUrl.pathname.startsWith('/protected') && user.data.user) {
+      const userEmail = user.data.user.email;
+      
+      // If user doesn't have valid email domain, redirect to unauthorized page
+      if (!isEmailDomainAllowed(userEmail)) {
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
+      }
+    }
+
+    // protected routes - redirect to home if not authenticated
     if (request.nextUrl.pathname.startsWith('/protected') && user.error) {
       return NextResponse.redirect(new URL('/', request.url));
     }
 
+    // redirect authenticated users from home to protected
     if (request.nextUrl.pathname === '/' && !user.error) {
       return NextResponse.redirect(new URL('/protected', request.url));
     }
