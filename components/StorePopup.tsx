@@ -21,6 +21,7 @@ import {
   Plus,
   CheckCircle,
   XCircle,
+  FileX,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
@@ -120,6 +121,11 @@ const StorePopup: React.FC<StorePopupProps> = ({
       label: 'Tipologia errata',
       value: 'tipologia errata',
       icon: <StoreIcon size={16} className='text-purple-500' />,
+    },
+    {
+      label: 'Non contrattualizzabile',
+      value: 'non contrattualizzabile',
+      icon: <FileX size={16} className='text-red-500' />,
     },
     {
       label: 'Altro',
