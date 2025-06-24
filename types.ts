@@ -15,7 +15,8 @@ export interface Store {
     | 'concluded'
     | 'already_client'
     | 'failed'
-    | 'not_interested';
+    | 'not_interested'
+    | 'non_existent';
   tier: 'bronze' | 'silver' | 'gold' | 'gold+';
   fatturato?: number | string; // Annual revenue, optional as it might not be available for all stores
   modifiedByOtherUser: boolean;

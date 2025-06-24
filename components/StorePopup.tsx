@@ -20,6 +20,7 @@ import {
   Star,
   Plus,
   CheckCircle,
+  XCircle,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
@@ -72,6 +73,8 @@ const getIconByType = (iconType: string) => {
       return <Ban size={16} className='text-red-600' />;
     case 'x':
       return <X size={16} className='text-red-600' />;
+    case 'x-circle':
+      return <XCircle size={16} className='text-gray-600' />;
     default:
       return null;
   }
@@ -529,6 +532,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
                     'already_client',
                     'failed',
                     'not_interested',
+                    'non_existent',
                   ].includes(storeStatuses[store.id] || store.status)
                 }
               />
@@ -549,7 +553,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
                   options={notesOptions}
                   disabled={
                     !!loadingStatus[store.id] ||
-                    ['concluded', 'already_client', 'not_interested'].includes(
+                    ['concluded', 'already_client', 'not_interested', 'non_existent'].includes(
                       storeStatuses[store.id] || store.status
                     )
                   }

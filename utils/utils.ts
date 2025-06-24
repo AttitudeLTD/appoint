@@ -54,6 +54,11 @@ export const statuses: StatusItem[] = [
     value: 'not_interested',
     iconType: 'x',
   },
+  {
+    label: 'Inesistente',
+    value: 'non_existent',
+    iconType: 'x-circle',
+  },
 ];
 
 export const getStatusLabel = (value: string) => {

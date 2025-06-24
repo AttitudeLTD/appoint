@@ -86,13 +86,16 @@ export function UserList() {
                         'text-[#DE2E21]':
                           store.status === 'failed' ||
                           store.status === 'not_interested',
-                        'text-gray-500': ![
-                          'in_progress',
-                          'concluded',
-                          'already_client',
-                          'failed',
-                          'not_interested',
-                        ].includes(store.status),
+                        'text-gray-500': 
+                          store.status === 'non_existent' ||
+                          ![
+                            'in_progress',
+                            'concluded',
+                            'already_client',
+                            'failed',
+                            'not_interested',
+                            'non_existent',
+                          ].includes(store.status),
                       })}
                     />
                     <div>

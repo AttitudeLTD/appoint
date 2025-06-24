@@ -32,6 +32,8 @@ import {
   notInterestedPinM,
   progressPin,
   progressPinM,
+  nonExistentPin,
+  nonExistentPinM,
 } from '@/utils/nav-icons';
 
 import {
@@ -719,7 +721,9 @@ const Map = ({ user }: any) => {
                         ? alreadyClientPinM
                         : store.status === 'not_interested'
                           ? notInterestedPinM
-                          : failedPinM
+                          : store.status === 'non_existent'
+                            ? nonExistentPinM
+                            : failedPinM
                 : store.status === 'free'
                   ? freePin
                   : store.status === 'in_progress'
@@ -730,7 +734,9 @@ const Map = ({ user }: any) => {
                         ? alreadyClientPin
                         : store.status === 'not_interested'
                           ? notInterestedPin
-                          : failedPin;
+                          : store.status === 'non_existent'
+                            ? nonExistentPin
+                            : failedPin;
 
               return store.modifiedByOtherUser ? (
                 <Marker key={store.id} position={storeCoordinates} icon={icon}>

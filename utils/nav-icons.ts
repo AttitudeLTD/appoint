@@ -202,12 +202,48 @@ const alreadyClientStoreMutedSvgString = `
   <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
   <path d="M12 7l1 2.5h2.5l-2 1.5 1 2.5-2.5-1.5-2.5 1.5 1-2.5-2-1.5h2.5z"/>
 </svg>`;
-const alreadyClientStoreMutedIconUrl = svgToDataUrl(
-  alreadyClientStoreMutedSvgString
-);
+const alreadyClientStoreMutedIconUrl = svgToDataUrl(alreadyClientStoreMutedSvgString);
 export const alreadyClientPinM = new L.Icon({
   iconUrl: alreadyClientStoreMutedIconUrl,
   iconRetinaUrl: alreadyClientStoreMutedIconUrl,
+  iconSize: [30, 30],
+  iconAnchor: [14, 40],
+  popupAnchor: [0, -38],
+  shadowUrl: MarkerShadow.src,
+  shadowSize: [60, 40],
+});
+
+// Non Existent Store Icon (Gray with X-circle)
+const nonExistentStoreSvgString = `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#6b7280" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
+  <circle cx="12" cy="10" r="4" fill="#6b7280" stroke="white"/>
+  <path d="m9 7 6 6"/>
+  <path d="m15 7-6 6"/>
+</svg>`;
+const nonExistentStoreIconUrl = svgToDataUrl(nonExistentStoreSvgString);
+export const nonExistentPin = new L.Icon({
+  iconUrl: nonExistentStoreIconUrl,
+  iconRetinaUrl: nonExistentStoreIconUrl,
+  iconSize: [40, 40],
+  iconAnchor: [24, 50],
+  popupAnchor: [0, -48],
+  shadowUrl: MarkerShadow.src,
+  shadowSize: [80, 60],
+});
+
+// Non Existent Store Icon Muted (Gray with X-circle)
+const nonExistentStoreMutedSvgString = `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#374151" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
+  <circle cx="12" cy="10" r="4" fill="#374151" stroke="white"/>
+  <path d="m9 7 6 6"/>
+  <path d="m15 7-6 6"/>
+</svg>`;
+const nonExistentStoreMutedIconUrl = svgToDataUrl(nonExistentStoreMutedSvgString);
+export const nonExistentPinM = new L.Icon({
+  iconUrl: nonExistentStoreMutedIconUrl,
+  iconRetinaUrl: nonExistentStoreMutedIconUrl,
   iconSize: [30, 30],
   iconAnchor: [14, 40],
   popupAnchor: [0, -38],
