@@ -471,6 +471,16 @@ const Map = ({ user }: any) => {
       }
     }, 3000);
 
+    // Fallback timeout: se dopo 10 secondi non abbiamo coordinate, usa Roma
+    const fallbackTimeout = setTimeout(() => {
+      if (!coord) {
+        // Coordinate di default: Roma
+        const defaultCoords: LatLngExpression = [41.90914449596167, 12.524449000864948];
+        setCoord(defaultCoords);
+        fetchStoresAndLogs(defaultCoords[0], defaultCoords[1]);
+      }
+    }, 10000); // 10 secondi
+
     getMyLoc((coords: LatLngExpression | null) => {
       if (coords && Array.isArray(coords)) {
         setCoord(coords);
@@ -480,7 +490,10 @@ const Map = ({ user }: any) => {
 
     getUserName();
 
-    return () => clearTimeout(geoTimeout);
+    return () => {
+      clearTimeout(geoTimeout);
+      clearTimeout(fallbackTimeout);
+    };
   }, [user.id, supabase, fetchStoresAndLogs]);
 
   // Listener per il refresh quando viene creato un nuovo store
