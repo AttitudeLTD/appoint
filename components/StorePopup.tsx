@@ -710,9 +710,9 @@ const StorePopup: React.FC<StorePopupProps> = ({
                       <Button
                         onClick={capturePhoto}
                         size='lg'
-                        className='rounded-full h-16 w-16 bg-white hover:bg-gray-200'
+                        className='rounded-full h-16 w-16 bg-white hover:bg-gray-200 flex items-center justify-center'
                       >
-                        <div className='h-12 w-12 rounded-full border-4 border-gray-800 bg-white' />
+                        <Camera className='h-8 w-8 text-gray-800' />
                       </Button>
                     </div>
                   </div>
