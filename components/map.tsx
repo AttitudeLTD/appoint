@@ -789,7 +789,7 @@ const Map = ({ user }: any) => {
             </p>
             {showGeoMessage && (
               <p className='text-sm mt-4 text-muted-foreground max-w-md text-center'>
-                Se la mappa non si carica, verifica di aver dato i permessi di
+                Se la mappa non carica, verifica di aver dato i permessi di
                 geolocalizzazione al browser e poi aggiorna la pagina.
               </p>
             )}
