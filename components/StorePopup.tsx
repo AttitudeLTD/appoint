@@ -22,6 +22,7 @@ import {
   CheckCircle,
   XCircle,
   FileX,
+  Camera,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
@@ -41,6 +42,7 @@ import {
 import { StorePopupProps } from '@/types';
 import { getStatusLabel, statuses, StatusItem } from '@/utils/utils';
 import { parseCoords } from '@/utils/navigation';
+import { createClient } from '@/utils/supabase/client';
 
 // Function to get tier icon
 const getTierIcon = (tier?: string) => {
@@ -97,6 +99,8 @@ const StorePopup: React.FC<StorePopupProps> = ({
   const [loadingMoreLogs, setLoadingMoreLogs] = useState(false);
   const [hasMoreLogs, setHasMoreLogs] = useState(true);
   const [checkingInProgressLimit, setCheckingInProgressLimit] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const supabase = createClient();
 
   const storeCoordinates: [number, number] | null = parseCoords(store.location);
   // Create a modified statuses array with actual icon elements
@@ -174,6 +178,86 @@ const StorePopup: React.FC<StorePopupProps> = ({
         reject(error);
       }
     });
+  };
+
+  // Function to handle photo upload
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Per favore seleziona un file immagine');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Il file è troppo grande. Dimensione massima: 5MB');
+      return;
+    }
+
+    setUploadingPhoto(true);
+
+    try {
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        throw new Error('Utente non autenticato');
+      }
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${store.id}_${user.id}_${timestamp}_${randomString}.${fileExt}`;
+
+      // Upload to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('store-photos')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('store-photos')
+        .getPublicUrl(fileName);
+
+      if (!urlData?.publicUrl) {
+        throw new Error('Impossibile ottenere l\'URL pubblico della foto');
+      }
+
+      // Insert record in database
+      const { error: insertError } = await supabase
+        .from('store_photos')
+        .insert({
+          store_id: store.id,
+          user_id: user.id,
+          photo_url: urlData.publicUrl,
+          created_at: new Date().toISOString(),
+        });
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      alert('Foto caricata con successo!');
+      
+      // Reset input
+      event.target.value = '';
+    } catch (error: any) {
+      console.error('Error uploading photo:', error);
+      alert(`Errore durante il caricamento: ${error.message || 'Errore sconosciuto'}`);
+    } finally {
+      setUploadingPhoto(false);
+    }
   };
 
   return (
@@ -490,6 +574,38 @@ const StorePopup: React.FC<StorePopupProps> = ({
             </div>
 
             <div className='flex flex-col gap-3 mb-4'>
+              {/* Photo Upload Button */}
+              <input
+                type='file'
+                accept='image/*'
+                capture='environment'
+                onChange={handlePhotoUpload}
+                disabled={uploadingPhoto}
+                className='hidden'
+                id={`photo-upload-${store.id}`}
+              />
+              <Button
+                type='button'
+                variant='outline'
+                className='w-full'
+                disabled={uploadingPhoto}
+                onClick={() => {
+                  document.getElementById(`photo-upload-${store.id}`)?.click();
+                }}
+              >
+                {uploadingPhoto ? (
+                  <>
+                    <Loader className='mr-2 h-4 w-4 animate-spin' />
+                    Caricamento...
+                  </>
+                ) : (
+                  <>
+                    <Camera className='mr-2' />
+                    Mi trovo qui
+                  </>
+                )}
+              </Button>
+
               <SelectComponent
                 placeholder='Stato avanzamento'
                 value={storeStatuses[store.id] || store.status}
