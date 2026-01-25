@@ -24,7 +24,7 @@ import {
   FileX,
   Camera,
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { SelectComponent } from './select';
 import { Button } from './ui/button';
@@ -100,6 +100,9 @@ const StorePopup: React.FC<StorePopupProps> = ({
   const [hasMoreLogs, setHasMoreLogs] = useState(true);
   const [checkingInProgressLimit, setCheckingInProgressLimit] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = createClient();
 
   const storeCoordinates: [number, number] | null = parseCoords(store.location);
@@ -180,11 +183,8 @@ const StorePopup: React.FC<StorePopupProps> = ({
     });
   };
 
-  // Function to handle photo upload
-  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  // Function to upload photo file
+  const uploadPhotoFile = async (file: File) => {
     // Validate file type
     if (!file.type.startsWith('image/')) {
       alert('Per favore seleziona un file immagine');
@@ -210,7 +210,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
       // Generate unique filename
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 15);
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${store.id}_${user.id}_${timestamp}_${randomString}.${fileExt}`;
 
       // Upload to Supabase Storage
@@ -249,9 +249,6 @@ const StorePopup: React.FC<StorePopupProps> = ({
       }
 
       alert('Foto caricata con successo!');
-      
-      // Reset input
-      event.target.value = '';
     } catch (error: any) {
       console.error('Error uploading photo:', error);
       alert(`Errore durante il caricamento: ${error.message || 'Errore sconosciuto'}`);
@@ -259,6 +256,75 @@ const StorePopup: React.FC<StorePopupProps> = ({
       setUploadingPhoto(false);
     }
   };
+
+  // Function to handle photo upload from file input
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await uploadPhotoFile(file);
+    // Reset input
+    event.target.value = '';
+  };
+
+  // Function to open camera
+  const openCamera = async () => {
+    try {
+      // Try to access camera using getUserMedia
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }, // Prefer rear camera on mobile
+        audio: false,
+      });
+      setStream(mediaStream);
+      setShowCamera(true);
+    } catch (error: any) {
+      console.error('Error accessing camera:', error);
+      // Fallback to file input if camera access fails
+      document.getElementById(`photo-upload-${store.id}`)?.click();
+    }
+  };
+
+  // Function to capture photo from camera
+  const capturePhoto = () => {
+    if (!videoRef.current || !stream) return;
+
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      ctx.drawImage(video, 0, 0);
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          // Stop camera stream
+          stream.getTracks().forEach(track => track.stop());
+          setStream(null);
+          setShowCamera(false);
+
+          // Create File from blob
+          const file = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+          await uploadPhotoFile(file);
+        }
+      }, 'image/jpeg', 0.9);
+    }
+  };
+
+  // Function to close camera
+  const closeCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setShowCamera(false);
+  };
+
+  // Setup video stream when camera opens
+  useEffect(() => {
+    if (showCamera && videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [showCamera, stream]);
 
   return (
     <div>
@@ -589,9 +655,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 variant='outline'
                 className='w-full'
                 disabled={uploadingPhoto}
-                onClick={() => {
-                  document.getElementById(`photo-upload-${store.id}`)?.click();
-                }}
+                onClick={openCamera}
               >
                 {uploadingPhoto ? (
                   <>
@@ -605,6 +669,38 @@ const StorePopup: React.FC<StorePopupProps> = ({
                   </>
                 )}
               </Button>
+
+              {/* Camera Modal */}
+              {showCamera && (
+                <div className='fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center'>
+                  <div className='relative w-full max-w-2xl mx-4'>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      className='w-full rounded-lg'
+                      style={{ transform: 'scaleX(-1)' }} // Mirror effect
+                    />
+                    <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4'>
+                      <Button
+                        onClick={closeCamera}
+                        variant='destructive'
+                        size='lg'
+                        className='rounded-full h-16 w-16'
+                      >
+                        <X className='h-6 w-6' />
+                      </Button>
+                      <Button
+                        onClick={capturePhoto}
+                        size='lg'
+                        className='rounded-full h-16 w-16 bg-white hover:bg-gray-200'
+                      >
+                        <div className='h-12 w-12 rounded-full border-4 border-gray-800 bg-white' />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <SelectComponent
                 placeholder='Stato avanzamento'
