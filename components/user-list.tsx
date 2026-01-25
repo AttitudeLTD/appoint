@@ -10,7 +10,7 @@ import {
 import { Button } from './ui/button';
 import { Avatar } from './ui/avatar';
 import { Info, List, Navigation, Store, Camera } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores } from '@/utils/stores';
@@ -21,17 +21,14 @@ export function UserList() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [stores, setStores] = useState<any[]>([]);
   const [coord, setCoord] = useState<[number, number] | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const supabase = createClient();
 
-  useEffect(() => {
-    // Get user location
-    getMyLoc((coords) => {
-      if (coords) {
-        setCoord(coords as [number, number]);
-      }
-    });
-
-    async function loadStores() {
+  // Load stores function
+  const loadStores = useCallback(async () => {
+    setLoading(true);
+    try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -39,13 +36,32 @@ export function UserList() {
         const storesData = await fetchUserStores(user.id);
         setStores(storesData);
       }
+    } catch (error) {
+      console.error('Error loading stores:', error);
+    } finally {
+      setLoading(false);
     }
+  }, [supabase]);
 
-    loadStores();
+  // Initial load and location
+  useEffect(() => {
+    // Get user location
+    getMyLoc((coords) => {
+      if (coords) {
+        setCoord(coords as [number, number]);
+      }
+    });
   }, []);
 
+  // Reload stores when sheet opens
+  useEffect(() => {
+    if (isOpen) {
+      loadStores();
+    }
+  }, [isOpen, loadStores]);
+
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button variant='ghost' className='p-0 h-8 w-8 rounded-full'>
           <Avatar className='h-8 w-8 flex items-center justify-center'>
@@ -68,7 +84,12 @@ export function UserList() {
           <SheetTitle className='relative z-10'>Attività in corso</SheetTitle>
         </SheetHeader>
         <div className='mt-6 p-6 overflow-y-auto'>
-          {stores.map((entry, index) => {
+          {loading && (
+            <div className='text-center text-gray-500 mt-4'>
+              Caricamento...
+            </div>
+          )}
+          {!loading && stores.map((entry, index) => {
             // Generate unique key for each entry
             const entryKey = entry.type === 'photo' 
               ? `photo-${entry.store_id}-${entry.created_at}-${index}`
@@ -162,7 +183,7 @@ export function UserList() {
               </div>
             );
           })}
-          {stores.length === 0 && (
+          {!loading && stores.length === 0 && (
             <div className='text-center text-gray-500 mt-4'>
               Nessuna attività in corso
             </div>
