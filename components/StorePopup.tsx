@@ -43,6 +43,7 @@ import { StorePopupProps } from '@/types';
 import { getStatusLabel, statuses, StatusItem } from '@/utils/utils';
 import { parseCoords } from '@/utils/navigation';
 import { createClient } from '@/utils/supabase/client';
+import { cn } from '@/lib/utils';
 
 // Function to get tier icon
 const getTierIcon = (tier?: string) => {
@@ -100,6 +101,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
   const [hasMoreLogs, setHasMoreLogs] = useState(true);
   const [checkingInProgressLimit, setCheckingInProgressLimit] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoUploaded, setPhotoUploaded] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -160,6 +162,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
   useEffect(() => {
     setLogsOffset(0);
     setHasMoreLogs(true);
+    setPhotoUploaded(false); // Reset photo success state when store changes
   }, [store.id]);
 
   // Function to get current user position
@@ -248,7 +251,13 @@ const StorePopup: React.FC<StorePopupProps> = ({
         throw insertError;
       }
 
-      alert('Foto caricata con successo!');
+      // Show success state instead of alert
+      setPhotoUploaded(true);
+      
+      // Reset success state after 3 seconds
+      setTimeout(() => {
+        setPhotoUploaded(false);
+      }, 3000);
     } catch (error: any) {
       console.error('Error uploading photo:', error);
       alert(`Errore durante il caricamento: ${error.message || 'Errore sconosciuto'}`);
@@ -653,7 +662,10 @@ const StorePopup: React.FC<StorePopupProps> = ({
               <Button
                 type='button'
                 variant='outline'
-                className='w-full'
+                className={cn(
+                  'w-full transition-all duration-300',
+                  photoUploaded && 'bg-green-500 hover:bg-green-600 text-white border-green-600'
+                )}
                 disabled={uploadingPhoto}
                 onClick={openCamera}
               >
@@ -661,6 +673,11 @@ const StorePopup: React.FC<StorePopupProps> = ({
                   <>
                     <Loader className='mr-2 h-4 w-4 animate-spin' />
                     Caricamento...
+                  </>
+                ) : photoUploaded ? (
+                  <>
+                    <CheckCircle className='mr-2 h-4 w-4' />
+                    Foto caricata!
                   </>
                 ) : (
                   <>
