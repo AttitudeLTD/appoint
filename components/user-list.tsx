@@ -9,7 +9,7 @@ import {
 } from './ui/sheet';
 import { Button } from './ui/button';
 import { Avatar } from './ui/avatar';
-import { Info, List, Navigation, Store, Camera } from 'lucide-react';
+import { Info, List, Navigation, Store, Camera, Loader } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
@@ -23,6 +23,7 @@ export function UserList() {
   const [coord, setCoord] = useState<[number, number] | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
   const supabase = createClient();
 
   // Load stores function
@@ -35,6 +36,7 @@ export function UserList() {
       if (user) {
         const storesData = await fetchUserStores(user.id);
         setStores(storesData);
+        setIsFirstLoad(false);
       }
     } catch (error) {
       console.error('Error loading stores:', error);
@@ -81,15 +83,15 @@ export function UserList() {
       >
         <SheetHeader className='sticky top-0 bg-background p-4 border-b backdrop-blur-sm'>
           <div className='absolute inset-0 bg-background/80' />
-          <SheetTitle className='relative z-10'>Attività in corso</SheetTitle>
+          <SheetTitle className='relative z-10 flex items-center gap-2'>
+            Attività in corso
+            {loading && (
+              <Loader className='h-4 w-4 animate-spin text-gray-500' />
+            )}
+          </SheetTitle>
         </SheetHeader>
         <div className='mt-6 p-6 overflow-y-auto'>
-          {loading && (
-            <div className='text-center text-gray-500 mt-4'>
-              Caricamento...
-            </div>
-          )}
-          {!loading && stores.map((entry, index) => {
+          {stores.map((entry, index) => {
             // Generate unique key for each entry
             const entryKey = entry.type === 'photo' 
               ? `photo-${entry.store_id}-${entry.created_at}-${index}`
@@ -128,7 +130,12 @@ export function UserList() {
                   )}
                   <div className='flex-1 min-w-0'>
                     <h3 className='font-medium'>{entry.store_name}</h3>
-                    <p className='text-sm text-gray-500'>{entry.address}</p>
+                    <p className='text-sm text-gray-500'>
+                      {entry.address}
+                      {entry.cap && `, ${entry.cap}`}
+                      {entry.comune && ` ${entry.comune}`}
+                      {entry.provincia && ` (${entry.provincia})`}
+                    </p>
                     {entry.type === 'photo' ? (
                       <p className='text-sm text-blue-600 font-medium mt-1'>
                         Foto scattata il{' '}
@@ -186,6 +193,11 @@ export function UserList() {
           {!loading && stores.length === 0 && (
             <div className='text-center text-gray-500 mt-4'>
               Nessuna attività in corso
+            </div>
+          )}
+          {loading && isFirstLoad && stores.length === 0 && (
+            <div className='text-center text-gray-500 mt-4'>
+              Caricamento...
             </div>
           )}
         </div>
