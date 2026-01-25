@@ -9,7 +9,7 @@ import {
 } from './ui/sheet';
 import { Button } from './ui/button';
 import { Avatar } from './ui/avatar';
-import { Info, List, Navigation, Store } from 'lucide-react';
+import { Info, List, Navigation, Store, Camera } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
@@ -68,26 +68,32 @@ export function UserList() {
           <SheetTitle className='relative z-10'>Attività in corso</SheetTitle>
         </SheetHeader>
         <div className='mt-6 p-6 overflow-y-auto'>
-          {stores.map(
-            (store) => (
-              console.log(store.coordinates),
-              (
-                <div
-                  key={store.store_id}
-                  className='flex items-center justify-between p-4 mb-3 border rounded-lg'
-                >
-                  <div className='flex items-center gap-3'>
+          {stores.map((entry, index) => {
+            // Generate unique key for each entry
+            const entryKey = entry.type === 'photo' 
+              ? `photo-${entry.store_id}-${entry.created_at}-${index}`
+              : `status-${entry.store_id}-${entry.created_at}-${index}`;
+
+            return (
+              <div
+                key={entryKey}
+                className='flex items-center justify-between p-4 mb-3 border rounded-lg'
+              >
+                <div className='flex items-center gap-3 flex-1'>
+                  {entry.type === 'photo' ? (
+                    <Camera className='h-5 w-5 text-blue-500' />
+                  ) : (
                     <Store
                       className={cn('h-5 w-5', {
-                        'text-[#ffbb00]': store.status === 'in_progress',
+                        'text-[#ffbb00]': entry.status === 'in_progress',
                         'text-[#039855]':
-                          store.status === 'concluded' ||
-                          store.status === 'already_client',
+                          entry.status === 'concluded' ||
+                          entry.status === 'already_client',
                         'text-[#DE2E21]':
-                          store.status === 'failed' ||
-                          store.status === 'not_interested',
+                          entry.status === 'failed' ||
+                          entry.status === 'not_interested',
                         'text-gray-500': 
-                          store.status === 'non_existent' ||
+                          entry.status === 'non_existent' ||
                           ![
                             'in_progress',
                             'concluded',
@@ -95,44 +101,67 @@ export function UserList() {
                             'failed',
                             'not_interested',
                             'non_existent',
-                          ].includes(store.status),
+                          ].includes(entry.status),
                       })}
                     />
-                    <div>
-                      <h3 className='font-medium'>{store.store_name}</h3>
-                      <p className='text-sm text-gray-500'>{store.address}</p>
-                      <p className='text-sm text-gray-500'>
-                        {getStatusLabel(store.status)}
+                  )}
+                  <div className='flex-1 min-w-0'>
+                    <h3 className='font-medium'>{entry.store_name}</h3>
+                    <p className='text-sm text-gray-500'>{entry.address}</p>
+                    {entry.type === 'photo' ? (
+                      <p className='text-sm text-blue-600 font-medium mt-1'>
+                        Foto scattata il{' '}
+                        {new Date(entry.created_at).toLocaleDateString('it-IT', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </p>
-                    </div>
+                    ) : (
+                      <p className='text-sm text-gray-500'>
+                        {getStatusLabel(entry.status)}
+                      </p>
+                    )}
                   </div>
-                  <div className='flex gap-2'>
-                    <Button variant='outline' size='icon' className='h-8 w-8'>
-                      <Info className='h-4 w-4' />
-                    </Button>
+                </div>
+                <div className='flex gap-2'>
+                  {entry.type === 'photo' && entry.photo_url && (
                     <Button
                       variant='outline'
                       size='icon'
                       className='h-8 w-8'
                       onClick={() => {
-                        if (
-                          Array.isArray(coord) &&
-                          coord.length === 2 &&
-                          store.coordinates
-                        ) {
-                          const [lat, lng] = coord;
-                          const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${store.coordinates[0]},${store.coordinates[1]}`;
-                          window.open(gmapsUrl, '_blank');
-                        }
+                        window.open(entry.photo_url, '_blank');
                       }}
+                      title='Visualizza foto'
                     >
-                      <Navigation className='h-4 w-4' />
+                      <Camera className='h-4 w-4' />
                     </Button>
-                  </div>
+                  )}
+                  <Button
+                    variant='outline'
+                    size='icon'
+                    className='h-8 w-8'
+                    onClick={() => {
+                      if (
+                        Array.isArray(coord) &&
+                        coord.length === 2 &&
+                        entry.coordinates
+                      ) {
+                        const [lat, lng] = coord;
+                        const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${entry.coordinates[0]},${entry.coordinates[1]}`;
+                        window.open(gmapsUrl, '_blank');
+                      }
+                    }}
+                  >
+                    <Navigation className='h-4 w-4' />
+                  </Button>
                 </div>
-              )
-            )
-          )}
+              </div>
+            );
+          })}
           {stores.length === 0 && (
             <div className='text-center text-gray-500 mt-4'>
               Nessuna attività in corso
