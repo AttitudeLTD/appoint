@@ -151,10 +151,10 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className='container mx-auto px-4 py-8 max-w-7xl'>
+    <div className='container mx-auto px-4 py-8 max-w-7xl' style={{ backgroundColor: '#224677', minHeight: '100vh' }}>
       {/* Header */}
       <div className='mb-8'>
-        <h1 className='text-3xl font-bold'>Dashboard</h1>
+        <h1 className='text-3xl font-bold text-white'>Dashboard</h1>
       </div>
 
       {/* KPI Section */}
@@ -183,36 +183,36 @@ export default function DashboardPage() {
       {/* Due riquadri affiancati */}
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
         {/* Riquadro Ultime Attività */}
-        <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm'>
+        <div className='bg-white/10 rounded-lg border border-white/20 p-6 shadow-sm'>
           <div className='flex items-center gap-2 mb-4'>
-            <TrendingUp className='h-5 w-5 text-blue-500' />
-            <h2 className='text-xl font-semibold'>Ultime Attività</h2>
+            <TrendingUp className='h-5 w-5 text-blue-300' />
+            <h2 className='text-xl font-semibold text-white'>Ultime Attività</h2>
           </div>
           {loading ? (
-            <div className='text-center text-gray-500 py-8'>Caricamento...</div>
+            <div className='text-center text-white/80 py-8'>Caricamento...</div>
           ) : recentActivities.length > 0 ? (
             <div className='space-y-3'>
               {recentActivities.map((activity, index) => (
                 <div
                   key={index}
-                  className='flex items-start gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors'
+                  className='flex items-start gap-3 p-3 rounded-lg border border-white/20 hover:bg-white/10 transition-colors'
                 >
                   {activity.type === 'photo' ? (
-                    <Camera className='h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0' />
+                    <Camera className='h-4 w-4 text-blue-300 mt-0.5 flex-shrink-0' />
                   ) : (
-                    <Store className='h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0' />
+                    <Store className='h-4 w-4 text-white/80 mt-0.5 flex-shrink-0' />
                   )}
                   <div className='flex-1 min-w-0'>
-                    <p className='font-medium text-sm truncate'>
+                    <p className='font-medium text-sm truncate text-white'>
                       {activity.store_name}
                     </p>
-                    <p className='text-xs text-gray-500 truncate'>
+                    <p className='text-xs text-white/80 truncate'>
                       {activity.address}
                       {activity.cap && `, ${activity.cap}`}
                       {activity.comune && ` ${activity.comune}`}
                     </p>
                     {activity.type === 'photo' ? (
-                      <p className='text-xs text-blue-600 mt-1'>
+                      <p className='text-xs text-blue-300 mt-1'>
                         Foto scattata{' '}
                         {new Date(activity.created_at).toLocaleDateString('it-IT', {
                           day: 'numeric',
@@ -220,7 +220,7 @@ export default function DashboardPage() {
                         })}
                       </p>
                     ) : (
-                      <p className='text-xs text-gray-600 mt-1'>
+                      <p className='text-xs text-white/80 mt-1'>
                         {getStatusLabel(activity.status)}
                       </p>
                     )}
@@ -229,49 +229,49 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (
-            <div className='text-center text-gray-500 py-8'>
+            <div className='text-center text-white/80 py-8'>
               Nessuna attività recente
             </div>
           )}
         </div>
 
         {/* Riquadro Prospect Consigliati */}
-        <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm'>
+        <div className='bg-white/10 rounded-lg border border-white/20 p-6 shadow-sm'>
           <div className='flex items-center gap-2 mb-4'>
-            <MapPin className='h-5 w-5 text-green-500' />
-            <h2 className='text-xl font-semibold'>Prospect Consigliati</h2>
+            <MapPin className='h-5 w-5 text-green-300' />
+            <h2 className='text-xl font-semibold text-white'>Prospect Consigliati</h2>
           </div>
           <div className='space-y-3'>
             {recommendedProspects.map((prospect) => (
               <div
                 key={prospect.id}
-                className='flex items-start gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors'
+                className='flex items-start gap-3 p-3 rounded-lg border border-white/20 hover:bg-white/10 transition-colors'
               >
-                <Store className='h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0' />
+                <Store className='h-4 w-4 text-white/80 mt-0.5 flex-shrink-0' />
                 <div className='flex-1 min-w-0'>
                   <div className='flex items-center gap-2 mb-1'>
-                    <p className='font-medium text-sm truncate'>
+                    <p className='font-medium text-sm truncate text-white'>
                       {prospect.name}
                     </p>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${
                         prospect.tier === 'gold'
-                          ? 'bg-yellow-100 text-yellow-800'
+                          ? 'bg-yellow-500/30 text-yellow-200'
                           : prospect.tier === 'silver'
-                            ? 'bg-gray-100 text-gray-800'
-                            : 'bg-amber-100 text-amber-800'
+                            ? 'bg-gray-500/30 text-gray-200'
+                            : 'bg-amber-500/30 text-amber-200'
                       }`}
                     >
                       {prospect.tier.toUpperCase()}
                     </span>
                   </div>
-                  <p className='text-xs text-gray-500 truncate'>
+                  <p className='text-xs text-white/80 truncate'>
                     {prospect.category}
                   </p>
-                  <p className='text-xs text-gray-500 truncate'>
+                  <p className='text-xs text-white/80 truncate'>
                     {prospect.address}, {prospect.cap} {prospect.comune} ({prospect.provincia})
                   </p>
-                  <p className='text-xs text-green-600 font-medium mt-1'>
+                  <p className='text-xs text-green-300 font-medium mt-1'>
                     {prospect.fatturato}
                   </p>
                 </div>

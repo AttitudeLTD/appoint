@@ -33,9 +33,9 @@ export default async function AuthButton() {
     <div className='flex items-center gap-4'>
       <UserList />
       <form action={signOutAction}>
-        <Button variant='ghost' className='p-0 h-8 w-8 rounded-full'>
-          <Avatar className='h-8 w-8 flex items-center justify-center'>
-            <LogOut className='h-4 w-4' />
+        <Button variant='ghost' className='p-0 h-8 w-8 rounded-full hover:bg-white/20 transition-colors'>
+          <Avatar className='h-8 w-8 flex items-center justify-center bg-transparent'>
+            <LogOut className='h-4 w-4 text-white' />
           </Avatar>
         </Button>
       </form>

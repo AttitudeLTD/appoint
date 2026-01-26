@@ -31,7 +31,7 @@ export const freePin = new L.Icon({
   iconAnchor: [24, 50],
   popupAnchor: [0, -48],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [80, 60],
+  shadowSize: [60, 45],
 });
 
 // In Progress Store Icon (Yellow)
@@ -45,7 +45,7 @@ export const progressPin = new L.Icon({
   iconAnchor: [24, 50],
   popupAnchor: [0, -48],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [80, 60],
+  shadowSize: [60, 45],
 });
 
 // Concluded Store Icon (Blue)
@@ -59,7 +59,7 @@ export const closedPin = new L.Icon({
   iconAnchor: [24, 50],
   popupAnchor: [0, -48],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [80, 60],
+  shadowSize: [60, 45],
 });
 
 // Failed Store Icon (Red) - Changed to prohibition symbol
@@ -77,7 +77,7 @@ export const failedPin = new L.Icon({
   iconAnchor: [24, 50],
   popupAnchor: [0, -48],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [80, 60],
+  shadowSize: [60, 45],
 });
 
 // Not Interested Store Icon (Red with X)
@@ -95,7 +95,7 @@ export const notInterestedPin = new L.Icon({
   iconAnchor: [24, 50],
   popupAnchor: [0, -48],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [80, 60],
+  shadowSize: [60, 45],
 });
 
 // Already Client Store Icon (Green with star)
@@ -112,7 +112,7 @@ export const alreadyClientPin = new L.Icon({
   iconAnchor: [24, 50],
   popupAnchor: [0, -48],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [80, 60],
+  shadowSize: [60, 45],
 });
 
 const freeStoreMutedSvgString = `
@@ -129,7 +129,7 @@ export const freePinM = new L.Icon({
   iconAnchor: [14, 40],
   popupAnchor: [0, -38],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [60, 40],
+  shadowSize: [45, 30],
 });
 
 const inProgressStoreMutedSvgString = `
@@ -142,7 +142,7 @@ export const progressPinM = new L.Icon({
   iconAnchor: [14, 40],
   popupAnchor: [0, -38],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [60, 40],
+  shadowSize: [45, 30],
 });
 
 const concludedStoreMutedSvgString = `
@@ -155,7 +155,7 @@ export const closedPinM = new L.Icon({
   iconAnchor: [14, 40],
   popupAnchor: [0, -38],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [60, 40],
+  shadowSize: [45, 30],
 });
 
 // Failed Store Icon Muted (Red - prohibition symbol)
@@ -173,7 +173,7 @@ export const failedPinM = new L.Icon({
   iconAnchor: [14, 40],
   popupAnchor: [0, -38],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [60, 40],
+  shadowSize: [45, 30],
 });
 
 // Not Interested Store Icon Muted (Red with X)
@@ -193,7 +193,7 @@ export const notInterestedPinM = new L.Icon({
   iconAnchor: [14, 40],
   popupAnchor: [0, -38],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [60, 40],
+  shadowSize: [45, 30],
 });
 
 // Already Client Store Icon Muted (Green with star)
@@ -210,7 +210,7 @@ export const alreadyClientPinM = new L.Icon({
   iconAnchor: [14, 40],
   popupAnchor: [0, -38],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [60, 40],
+  shadowSize: [45, 30],
 });
 
 // Non Existent Store Icon (Gray with X-circle)
@@ -229,7 +229,7 @@ export const nonExistentPin = new L.Icon({
   iconAnchor: [24, 50],
   popupAnchor: [0, -48],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [80, 60],
+  shadowSize: [60, 45],
 });
 
 // Non Existent Store Icon Muted (Gray with X-circle)
@@ -248,5 +248,5 @@ export const nonExistentPinM = new L.Icon({
   iconAnchor: [14, 40],
   popupAnchor: [0, -38],
   shadowUrl: MarkerShadow.src,
-  shadowSize: [60, 40],
+  shadowSize: [45, 30],
 });

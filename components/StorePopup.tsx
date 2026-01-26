@@ -548,12 +548,12 @@ const StorePopup: React.FC<StorePopupProps> = ({
               <Settings className='mr-2' /> Gestisci
             </Button>
           </SheetTrigger>
-          <SheetContent className='z-1000 flex flex-col h-screen overflow-y-auto p-4'>
+          <SheetContent className='z-1000 flex flex-col h-screen overflow-y-auto p-4' style={{ backgroundColor: '#224677' }}>
             <SheetHeader>
-              <SheetTitle className='text-xl font-bold'>
+              <SheetTitle className='text-xl font-bold text-white'>
                 Info punto vendita
               </SheetTitle>
-              <SheetDescription>
+              <SheetDescription className='text-white/80'>
                 Qui trovi i dettagli dell'attività.
               </SheetDescription>
             </SheetHeader>

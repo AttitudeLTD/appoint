@@ -195,9 +195,9 @@ export function NewStoreForm() {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant='ghost' className='p-0 h-8 w-8 rounded-full'>
-          <Avatar className='h-8 w-8 flex items-center justify-center'>
-            <Plus className='h-4 w-4' />
+        <Button variant='ghost' className='p-0 h-8 w-8 rounded-full hover:bg-white/20 transition-colors'>
+          <Avatar className='h-8 w-8 flex items-center justify-center bg-transparent'>
+            <Plus className='h-4 w-4 text-white' />
           </Avatar>
         </Button>
       </SheetTrigger>

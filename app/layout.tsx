@@ -20,14 +20,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang='en' className={GeistSans.className} suppressHydrationWarning>
-      <body className='bg-background text-foreground'>
+      <body style={{ backgroundColor: '#224677' }} className='text-foreground'>
         <ThemeProvider
           attribute='class'
           defaultTheme='system'
           enableSystem
           disableTransitionOnChange
         >
-          <div>{children}</div>
+          <div style={{ backgroundColor: '#224677' }}>{children}</div>
           <Toaster />
         </ThemeProvider>
       </body>

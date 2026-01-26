@@ -691,12 +691,13 @@ const Map = ({ user }: any) => {
                   <Button
                     type='button'
                     variant='outline'
-                    className='h-10 w-10 rounded-full p-0 justify-center shadow-md border border-gray-200 dark:border-gray-700 min-w-[40px] cursor-pointer pointer-events-auto'
+                    className='h-10 w-10 rounded-full p-0 justify-center shadow-md min-w-[40px] cursor-pointer pointer-events-auto'
+                    style={{ backgroundColor: '#224677', borderColor: '#224677', color: 'white' }}
                     onClick={(e) => {
                       e.stopPropagation();
                     }}
                   >
-                    <span className='text-[11px] font-semibold pointer-events-none'>
+                    <span className='text-[11px] font-semibold pointer-events-none text-white'>
                       {governanceLevel === 'agent'
                         ? 'A'
                         : governanceLevel === 'am'
@@ -705,7 +706,7 @@ const Map = ({ user }: any) => {
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align='start' className='z-[10000]'>
+                <DropdownMenuContent align='start' className='z-[10000]' style={{ backgroundColor: '#224677' }}>
                   <DropdownMenuRadioGroup
                     value={governanceLevel}
                     onValueChange={(value) => {
@@ -718,11 +719,11 @@ const Map = ({ user }: any) => {
                       }
                     }}
                   >
-                    <DropdownMenuRadioItem value='agent'>
+                    <DropdownMenuRadioItem value='agent' className='text-white hover:bg-[#1a3560]'>
                       Agente
                     </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value='am'>AM</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value='supervisor'>
+                    <DropdownMenuRadioItem value='am' className='text-white hover:bg-[#1a3560]'>AM</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value='supervisor' className='text-white hover:bg-[#1a3560]'>
                       Supervisor
                     </DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
@@ -740,7 +741,8 @@ const Map = ({ user }: any) => {
                   }}
                   onKeyDown={handleKeyDown}
                   placeholder='Cerca indirizzo...'
-                  className='w-full px-4 py-2 pl-10 border rounded-full shadow-md'
+                  className='w-full px-4 py-2 pl-10 border rounded-full shadow-md bg-white text-black'
+                  style={{ backgroundColor: 'white', color: 'black' }}
                 />
                 <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
 

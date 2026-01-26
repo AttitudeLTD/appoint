@@ -42,12 +42,12 @@ export function DashboardToggleButton() {
 
   return (
     <Link href={isDashboard ? '/protected' : '/protected/dashboard'}>
-      <Button variant='ghost' className='p-0 h-8 w-8 rounded-full'>
-        <Avatar className='h-8 w-8 flex items-center justify-center'>
+      <Button variant='ghost' className='p-0 h-8 w-8 rounded-full hover:bg-white/20 transition-colors'>
+        <Avatar className='h-8 w-8 flex items-center justify-center bg-transparent'>
           {isDashboard ? (
-            <Map className='h-4 w-4' />
+            <Map className='h-4 w-4 text-white' />
           ) : (
-            <LayoutDashboard className='h-4 w-4' />
+            <LayoutDashboard className='h-4 w-4 text-white' />
           )}
         </Avatar>
       </Button>

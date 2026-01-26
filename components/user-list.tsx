@@ -65,9 +65,9 @@ export function UserList() {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant='ghost' className='p-0 h-8 w-8 rounded-full'>
-          <Avatar className='h-8 w-8 flex items-center justify-center'>
-            <List className='h-4 w-4' />
+        <Button variant='ghost' className='p-0 h-8 w-8 rounded-full hover:bg-white/20 transition-colors'>
+          <Avatar className='h-8 w-8 flex items-center justify-center bg-transparent'>
+            <List className='h-4 w-4 text-white' />
           </Avatar>
         </Button>
       </SheetTrigger>
@@ -80,17 +80,18 @@ export function UserList() {
           'h-[96%] sm:h-[385px] sm:rounded-t-[10px] z-[1000] overflow-y-auto p-0 transition-[height]',
           isExpanded && 'h-[75vh] sm:h-[75vh]'
         )}
+        style={{ backgroundColor: '#224677' }}
       >
-        <SheetHeader className='sticky top-0 bg-background p-4 border-b backdrop-blur-sm'>
-          <div className='absolute inset-0 bg-background/80' />
-          <SheetTitle className='relative z-10 flex items-center gap-2'>
+        <SheetHeader className='sticky top-0 p-4 border-b border-white/20 backdrop-blur-sm' style={{ backgroundColor: '#224677' }}>
+          <div className='absolute inset-0' style={{ backgroundColor: '#224677' }} />
+          <SheetTitle className='relative z-10 flex items-center gap-2 text-white'>
             Attività in corso
             {loading && (
-              <Loader className='h-4 w-4 animate-spin text-gray-500' />
+              <Loader className='h-4 w-4 animate-spin text-white' />
             )}
           </SheetTitle>
         </SheetHeader>
-        <div className='mt-6 p-6 overflow-y-auto'>
+        <div className='mt-6 p-6 overflow-y-auto' style={{ backgroundColor: '#224677' }}>
           {stores.map((entry, index) => {
             // Generate unique key for each entry
             const entryKey = entry.type === 'photo' 
@@ -100,7 +101,7 @@ export function UserList() {
             return (
               <div
                 key={entryKey}
-                className='flex items-center justify-between p-4 mb-3 border rounded-lg'
+                className='flex items-center justify-between p-4 mb-3 border border-white/20 rounded-lg bg-white/10'
               >
                 <div className='flex items-center gap-3 flex-1'>
                   {entry.type === 'photo' ? (
@@ -129,15 +130,15 @@ export function UserList() {
                     />
                   )}
                   <div className='flex-1 min-w-0'>
-                    <h3 className='font-medium'>{entry.store_name}</h3>
-                    <p className='text-sm text-gray-500'>
+                    <h3 className='font-medium text-white'>{entry.store_name}</h3>
+                    <p className='text-sm text-white/80'>
                       {entry.address}
                       {entry.cap && `, ${entry.cap}`}
                       {entry.comune && ` ${entry.comune}`}
                       {entry.provincia && ` (${entry.provincia})`}
                     </p>
                     {entry.type === 'photo' ? (
-                      <p className='text-sm text-blue-600 font-medium mt-1'>
+                      <p className='text-sm text-blue-300 font-medium mt-1'>
                         Foto scattata il{' '}
                         {new Date(entry.created_at).toLocaleDateString('it-IT', {
                           day: 'numeric',
@@ -148,7 +149,7 @@ export function UserList() {
                         })}
                       </p>
                     ) : (
-                      <p className='text-sm text-gray-500'>
+                      <p className='text-sm text-white/80'>
                         {getStatusLabel(entry.status)}
                       </p>
                     )}
@@ -191,7 +192,7 @@ export function UserList() {
             );
           })}
           {!loading && stores.length === 0 && (
-            <div className='text-center text-gray-500 mt-4'>
+            <div className='text-center text-white/80 mt-4'>
               Nessuna attività in corso
             </div>
           )}
