@@ -9,7 +9,7 @@ import {
 } from './ui/sheet';
 import { Button } from './ui/button';
 import { Avatar } from './ui/avatar';
-import { Info, List, Navigation, Store, Camera, Loader, X } from 'lucide-react';
+import { Info, List, Navigation, Store, Camera, Loader, X, Download } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
@@ -44,6 +44,74 @@ export function UserList() {
       setLoading(false);
     }
   }, [supabase]);
+
+  // Download CSV function
+  const handleDownloadCSV = () => {
+    if (stores.length === 0) {
+      return;
+    }
+
+    // CSV Headers
+    const headers = [
+      'Tipo',
+      'Nome Attività',
+      'Indirizzo',
+      'CAP',
+      'Comune',
+      'Provincia',
+      'Stato',
+      'Data',
+      'URL Foto'
+    ];
+
+    // Convert stores to CSV rows
+    const csvRows = stores.map((entry) => {
+      const fullAddress = [
+        entry.address,
+        entry.cap,
+        entry.comune,
+        entry.provincia ? `(${entry.provincia})` : null,
+      ].filter(Boolean).join(', ');
+
+      return [
+        entry.type === 'photo' ? 'Foto' : 'Stato',
+        entry.store_name || '',
+        entry.address || '',
+        entry.cap || '',
+        entry.comune || '',
+        entry.provincia || '',
+        entry.type === 'photo' ? 'Foto scattata' : getStatusLabel(entry.status),
+        new Date(entry.created_at).toLocaleString('it-IT'),
+        entry.type === 'photo' ? (entry.photo_url || '') : ''
+      ];
+    });
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...csvRows.map(row => 
+        row.map(cell => {
+          // Escape commas and quotes in CSV
+          const cellStr = String(cell || '');
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        }).join(',')
+      )
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `attivita-in-corso-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Initial load and location
   useEffect(() => {
@@ -91,14 +159,25 @@ export function UserList() {
                 <Loader className='h-4 w-4 animate-spin text-white' />
               )}
             </SheetTitle>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='h-8 w-8 text-white hover:bg-white/20'
-              onClick={() => setIsOpen(false)}
-            >
-              <X className='h-4 w-4' />
-            </Button>
+            <div className='flex items-center gap-2'>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='h-8 w-8 text-white hover:bg-white/20'
+                onClick={handleDownloadCSV}
+                title='Scarica CSV'
+              >
+                <Download className='h-4 w-4' />
+              </Button>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='h-8 w-8 text-white hover:bg-white/20'
+                onClick={() => setIsOpen(false)}
+              >
+                <X className='h-4 w-4' />
+              </Button>
+            </div>
           </div>
         </SheetHeader>
         <div className='mt-6 p-6 overflow-y-auto' style={{ backgroundColor: '#224677' }}>
