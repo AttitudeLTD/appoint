@@ -21,7 +21,7 @@
 
 - Works across the entire [Next.js](https://nextjs.org) stack
   - App Router
-  - Pages Router.
+  - Pages Router
   - Middleware
   - Client
   - Server
