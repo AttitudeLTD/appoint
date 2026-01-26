@@ -1,7 +1,21 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Store, Camera, TrendingUp, MapPin } from 'lucide-react';
+import {
+  ArrowLeft,
+  Store,
+  Camera,
+  TrendingUp,
+  MapPin,
+  Users,
+  CheckCircle,
+  RefreshCw,
+  XCircle,
+  FileText,
+  Sticker,
+  CreditCard,
+  Building2,
+} from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores } from '@/utils/stores';
@@ -71,6 +85,74 @@ export default function DashboardPage() {
     },
   ];
 
+  // Mock KPI data
+  const kpis = [
+    {
+      id: 'visite',
+      label: 'Numero Visite',
+      value: '24',
+      icon: Store,
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+    },
+    {
+      id: 'accettano',
+      label: 'Clienti che Accettano',
+      value: '8',
+      icon: CheckCircle,
+      color: 'text-green-500',
+      bgColor: 'bg-green-50 dark:bg-green-900/20',
+    },
+    {
+      id: 'estensioni',
+      label: 'Estensioni',
+      value: '5',
+      icon: RefreshCw,
+      color: 'text-purple-500',
+      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+    },
+    {
+      id: 'annullati',
+      label: 'Clienti Annullati',
+      value: '3',
+      icon: XCircle,
+      color: 'text-red-500',
+      bgColor: 'bg-red-50 dark:bg-red-900/20',
+    },
+    {
+      id: 'ricontrattualizzati',
+      label: 'Ricontrattualizzati',
+      value: '12',
+      icon: FileText,
+      color: 'text-amber-500',
+      bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+    },
+    {
+      id: 'vetrofania',
+      label: 'Vetrofania',
+      value: '6',
+      icon: Sticker,
+      color: 'text-indigo-500',
+      bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
+    },
+    {
+      id: 'non-transante',
+      label: 'Cliente Non Transante',
+      value: '4',
+      icon: CreditCard,
+      color: 'text-orange-500',
+      bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+    },
+    {
+      id: 'altro-gestore',
+      label: 'Altro Gestore',
+      value: '2',
+      icon: Building2,
+      color: 'text-gray-500',
+      bgColor: 'bg-gray-50 dark:bg-gray-900/20',
+    },
+  ];
+
   return (
     <div className='container mx-auto px-4 py-8 max-w-7xl'>
       {/* Header con tasto torna alla mappa */}
@@ -82,6 +164,29 @@ export default function DashboardPage() {
             Torna alla mappa
           </Button>
         </Link>
+      </div>
+
+      {/* KPI Section */}
+      <div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-8'>
+        {kpis.map((kpi) => {
+          const Icon = kpi.icon;
+          return (
+            <div
+              key={kpi.id}
+              className={`${kpi.bgColor} rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm`}
+            >
+              <div className='flex items-center justify-between mb-2'>
+                <Icon className={`h-5 w-5 ${kpi.color}`} />
+              </div>
+              <p className='text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1'>
+                {kpi.value}
+              </p>
+              <p className='text-xs text-gray-600 dark:text-gray-400 leading-tight'>
+                {kpi.label}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Due riquadri affiancati */}
