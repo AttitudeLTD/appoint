@@ -45,17 +45,17 @@ export const SelectComponent = ({
     return {
       control: (base: any, state: any) => ({
         ...base,
-        backgroundColor: 'hsl(var(--card))',
+        backgroundColor: '#ffffff',
         borderColor: state.isFocused
-          ? 'hsl(var(--primary))'
-          : 'hsl(var(--border))',
+          ? '#224677'
+          : '#e5e7eb',
         borderRadius: 'var(--radius)',
-        color: 'hsl(var(--foreground))',
-        boxShadow: state.isFocused ? '0 0 0 1px hsl(var(--primary))' : 'none',
+        color: '#224677',
+        boxShadow: state.isFocused ? '0 0 0 1px #224677' : 'none',
         ':hover': {
           borderColor: state.isFocused
-            ? 'hsl(var(--primary))'
-            : 'hsl(var(--border-hover, var(--border)))',
+            ? '#224677'
+            : '#d1d5db',
         },
         padding: '2px 8px',
         cursor: 'pointer',
@@ -67,9 +67,9 @@ export const SelectComponent = ({
       }),
       menu: (base: any) => ({
         ...base,
-        backgroundColor: 'hsl(var(--popover))',
-        color: 'hsl(var(--popover-foreground))',
-        border: '1px solid hsl(var(--border))',
+        backgroundColor: '#ffffff',
+        color: '#224677',
+        border: '1px solid #e5e7eb',
         borderRadius: 'var(--radius)',
         boxShadow:
           'var(--shadow, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06))',
@@ -79,38 +79,38 @@ export const SelectComponent = ({
       option: (base: any, { isFocused, isSelected }: any) => ({
         ...base,
         backgroundColor: isSelected
-          ? 'hsl(var(--primary))'
+          ? '#224677'
           : isFocused
-            ? 'hsl(var(--accent))'
-            : 'hsl(var(--popover))',
+            ? '#f3f4f6'
+            : '#ffffff',
         color: isSelected
-          ? 'hsl(var(--primary-foreground))'
-          : 'hsl(var(--foreground))',
+          ? '#ffffff'
+          : '#224677',
         padding: '10px 12px',
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
         ':active': {
-          backgroundColor: 'hsl(var(--accent))',
+          backgroundColor: '#f3f4f6',
         },
       }),
       singleValue: (base: any) => ({
         ...base,
-        color: 'hsl(var(--foreground))',
+        color: '#224677',
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
       }),
       placeholder: (base: any) => ({
         ...base,
-        color: 'hsl(var(--muted-foreground))',
+        color: '#9ca3af',
       }),
       dropdownIndicator: (base: any) => ({
         ...base,
-        color: 'hsl(var(--muted-foreground))',
+        color: '#6b7280',
         ':hover': {
-          color: 'hsl(var(--foreground))',
+          color: '#224677',
         },
         padding: '0 8px',
       }),

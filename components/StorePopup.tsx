@@ -559,17 +559,17 @@ const StorePopup: React.FC<StorePopupProps> = ({
             </SheetHeader>
 
             <div className='py-4'>
-              <div className='py-3 border-b border-gray-200'>
-                <strong className='text-lg font-semibold'>{store.name}</strong>
+              <div className='py-3 border-b border-white/20'>
+                <strong className='text-lg font-semibold text-white'>{store.name}</strong>
               </div>
-              <div className='py-3 border-b border-gray-200'>
-                <p className='text-base text-gray-400 font-medium'>
+              <div className='py-3 border-b border-white/20'>
+                <p className='text-base text-white/80 font-medium'>
                   Categoria:
                 </p>
-                <p className='text-base text-gray-600'>{store.category}</p>
+                <p className='text-base text-white'>{store.category}</p>
               </div>
-              <div className='py-3 border-b border-gray-200'>
-                <p className='text-base text-gray-400 font-medium'>
+              <div className='py-3 border-b border-white/20'>
+                <p className='text-base text-white/80 font-medium'>
                   Fatturato:
                 </p>
                 <div className='mt-2 flex flex-row items-center gap-3'>
@@ -577,48 +577,48 @@ const StorePopup: React.FC<StorePopupProps> = ({
                   <div
                     className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md flex-shrink-0 ${
                       !store.tier
-                        ? 'bg-gray-100'
+                        ? 'bg-white/20 border border-white/30'
                         : store.tier === 'gold+'
-                          ? 'bg-yellow-50 border border-yellow-200'
+                          ? 'bg-yellow-500/30 border border-yellow-400/50'
                           : store.tier === 'gold'
-                            ? 'bg-yellow-50 border border-yellow-100'
+                            ? 'bg-yellow-400/30 border border-yellow-300/50'
                             : store.tier === 'silver'
-                              ? 'bg-gray-100 border border-gray-200'
+                              ? 'bg-gray-300/30 border border-gray-200/50'
                               : store.tier === 'bronze'
-                                ? 'bg-amber-50 border border-amber-200'
-                                : 'bg-gray-100'
+                                ? 'bg-amber-500/30 border border-amber-400/50'
+                                : 'bg-white/20 border border-white/30'
                     }`}
                   >
                     <span className='mr-1'>
                       {store.tier === 'gold+' && (
-                        <Trophy size={18} className='text-yellow-500' />
+                        <Trophy size={18} className='text-yellow-300' />
                       )}
                       {store.tier === 'gold' && (
-                        <Award size={18} className='text-yellow-400' />
+                        <Award size={18} className='text-yellow-200' />
                       )}
                       {store.tier === 'silver' && (
-                        <Medal size={18} className='text-gray-500' />
+                        <Medal size={18} className='text-gray-200' />
                       )}
                       {store.tier === 'bronze' && (
-                        <Circle size={18} className='text-amber-700' />
+                        <Circle size={18} className='text-amber-300' />
                       )}
                       {!store.tier && (
-                        <Circle size={18} className='text-gray-400' />
+                        <Circle size={18} className='text-white/60' />
                       )}
                     </span>
                     <span
                       className={`text-base font-medium ${
                         !store.tier
-                          ? 'text-gray-500'
+                          ? 'text-white/80'
                           : store.tier === 'gold+'
-                            ? 'text-yellow-700'
+                            ? 'text-yellow-200'
                             : store.tier === 'gold'
-                              ? 'text-yellow-600'
+                              ? 'text-yellow-100'
                               : store.tier === 'silver'
-                                ? 'text-gray-600'
+                                ? 'text-gray-100'
                                 : store.tier === 'bronze'
-                                  ? 'text-amber-700'
-                                  : 'text-gray-500'
+                                  ? 'text-amber-200'
+                                  : 'text-white/80'
                       }`}
                     >
                       {store.tier?.toUpperCase() || 'Sconosciuto'}
@@ -627,9 +627,9 @@ const StorePopup: React.FC<StorePopupProps> = ({
 
                   {/* Fatturato Amount */}
                   {store.fatturato && (
-                    <div className='px-3 py-1.5 bg-green-50 rounded-md border border-green-100 flex items-center flex-1'>
-                      <CreditCard className='h-5 w-5 text-green-600 mr-2 flex-shrink-0' />
-                      <p className='text-base font-semibold text-green-800'>
+                    <div className='px-3 py-1.5 bg-green-500/30 rounded-md border border-green-400/50 flex items-center flex-1'>
+                      <CreditCard className='h-5 w-5 text-green-200 mr-2 flex-shrink-0' />
+                      <p className='text-base font-semibold text-green-100'>
                         {typeof store.fatturato === 'number'
                           ? `€ ${store.fatturato.toLocaleString('it-IT')}`
                           : store.fatturato.toString().startsWith('€')
@@ -641,10 +641,10 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 </div>
               </div>
               <div className='py-3'>
-                <p className='text-base text-gray-400 font-medium'>
+                <p className='text-base text-white/80 font-medium'>
                   Indirizzo:
                 </p>
-                <p className='text-base text-gray-600'>{store.address}</p>
+                <p className='text-base text-white'>{store.address}</p>
               </div>
             </div>
 
@@ -663,7 +663,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 type='button'
                 variant='outline'
                 className={cn(
-                  'w-full transition-all duration-300',
+                  'w-full transition-all duration-300 bg-white text-[#224677] border-white hover:bg-gray-100',
                   photoUploaded && 'bg-green-500 hover:bg-green-600 text-white border-green-600'
                 )}
                 disabled={uploadingPhoto}
@@ -826,29 +826,29 @@ const StorePopup: React.FC<StorePopupProps> = ({
 
             {statusLogs[store.id]?.length > 0 && (
               <div className='py-3'>
-                <p className='text-lg font-medium text-gray-300 mb-3 border-b border-gray-600 pb-2'>
+                <p className='text-lg font-medium text-white mb-3 border-b border-white/20 pb-2'>
                   Storico Modifiche
                 </p>
                 {statusLogs[store.id]?.map((log) => (
                   <div
                     key={log.id}
-                    className='mb-3 p-3 bg-gray-800 rounded-lg shadow-md border border-gray-700'
+                    className='mb-3 p-3 bg-white/10 rounded-lg shadow-md border border-white/20'
                   >
-                    <p className='text-sm text-gray-400 mb-1'>
+                    <p className='text-sm text-white/80 mb-1'>
                       <strong>Data:</strong>{' '}
                       {new Date(log.created_at).toLocaleString()}
                     </p>
                     {log.modifierName && (
-                      <p className='text-sm text-gray-400 mb-1'>
+                      <p className='text-sm text-white/80 mb-1'>
                         <strong>Modificato da:</strong>{' '}
-                        <span className='text-gray-200'>
+                        <span className='text-white'>
                           {log.modifierName}
                         </span>
                       </p>
                     )}
-                    <p className='text-sm text-gray-400'>
+                    <p className='text-sm text-white/80'>
                       <strong>Nuovo Stato:</strong>{' '}
-                      <span className='text-gray-200 inline-flex items-center'>
+                      <span className='text-white inline-flex items-center'>
                         {statuses.find((s) => s.value === log.new) && (
                           <span className='mr-1'>
                             {getIconByType(
@@ -866,7 +866,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 {hasMoreLogs && (
                   <Button
                     variant='outline'
-                    className='w-full mt-2 text-gray-300 border-gray-600 hover:bg-gray-700'
+                    className='w-full mt-2 text-white border-white/20 hover:bg-white/20 bg-white/10'
                     onClick={handleLoadMoreLogs}
                     disabled={loadingMoreLogs}
                   >

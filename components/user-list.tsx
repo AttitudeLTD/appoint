@@ -9,7 +9,7 @@ import {
 } from './ui/sheet';
 import { Button } from './ui/button';
 import { Avatar } from './ui/avatar';
-import { Info, List, Navigation, Store, Camera, Loader } from 'lucide-react';
+import { Info, List, Navigation, Store, Camera, Loader, X } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
@@ -84,12 +84,22 @@ export function UserList() {
       >
         <SheetHeader className='sticky top-0 p-4 border-b border-white/20 backdrop-blur-sm' style={{ backgroundColor: '#224677' }}>
           <div className='absolute inset-0' style={{ backgroundColor: '#224677' }} />
-          <SheetTitle className='relative z-10 flex items-center gap-2 text-white'>
-            Attività in corso
-            {loading && (
-              <Loader className='h-4 w-4 animate-spin text-white' />
-            )}
-          </SheetTitle>
+          <div className='relative z-10 flex items-center justify-between'>
+            <SheetTitle className='flex items-center gap-2 text-white'>
+              Attività in corso
+              {loading && (
+                <Loader className='h-4 w-4 animate-spin text-white' />
+              )}
+            </SheetTitle>
+            <Button
+              variant='ghost'
+              size='icon'
+              className='h-8 w-8 text-white hover:bg-white/20'
+              onClick={() => setIsOpen(false)}
+            >
+              <X className='h-4 w-4' />
+            </Button>
+          </div>
         </SheetHeader>
         <div className='mt-6 p-6 overflow-y-auto' style={{ backgroundColor: '#224677' }}>
           {stores.map((entry, index) => {

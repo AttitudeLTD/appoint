@@ -18,10 +18,9 @@ export const navIcon = new L.Icon({
 
 // Free Store Icon (Green)
 const freeStoreSvgString = `
-<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="#205188" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="#1B304E">
   <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
-  <path d="M36 21v18"/>
-  <path d="M27 30h18"/>
+  <circle cx="36" cy="30" r="6" fill="#FF00FF" stroke="none"/>
 </svg>`;
 const freeStoreIconUrl = svgToDataUrl(freeStoreSvgString);
 export const freePin = new L.Icon({
@@ -116,10 +115,9 @@ export const alreadyClientPin = new L.Icon({
 });
 
 const freeStoreMutedSvgString = `
-<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="#0d2031" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="#0d2031">
   <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
-  <path d="M36 21v18"/>
-  <path d="M27 30h18"/>
+  <circle cx="36" cy="30" r="6" fill="#FF00FF" stroke="none"/>
 </svg>`;
 const freeStoreMutedIconUrl = svgToDataUrl(freeStoreMutedSvgString);
 export const freePinM = new L.Icon({

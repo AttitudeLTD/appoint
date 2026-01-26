@@ -90,7 +90,7 @@ export default function DashboardPage() {
       value: '24',
       icon: Store,
       color: 'text-blue-500',
-      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+      bgColor: 'bg-blue-500/20',
     },
     {
       id: 'accettano',
@@ -98,7 +98,7 @@ export default function DashboardPage() {
       value: '8',
       icon: CheckCircle,
       color: 'text-green-500',
-      bgColor: 'bg-green-50 dark:bg-green-900/20',
+      bgColor: 'bg-green-500/20',
     },
     {
       id: 'estensioni',
@@ -106,7 +106,7 @@ export default function DashboardPage() {
       value: '5',
       icon: RefreshCw,
       color: 'text-purple-500',
-      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+      bgColor: 'bg-purple-500/20',
     },
     {
       id: 'annullati',
@@ -114,7 +114,7 @@ export default function DashboardPage() {
       value: '3',
       icon: XCircle,
       color: 'text-red-500',
-      bgColor: 'bg-red-50 dark:bg-red-900/20',
+      bgColor: 'bg-red-500/20',
     },
     {
       id: 'ricontrattualizzati',
@@ -122,7 +122,7 @@ export default function DashboardPage() {
       value: '12',
       icon: FileText,
       color: 'text-amber-500',
-      bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+      bgColor: 'bg-amber-500/20',
     },
     {
       id: 'vetrofania',
@@ -130,7 +130,7 @@ export default function DashboardPage() {
       value: '6',
       icon: Sticker,
       color: 'text-indigo-500',
-      bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
+      bgColor: 'bg-indigo-500/20',
     },
     {
       id: 'non-transante',
@@ -138,7 +138,7 @@ export default function DashboardPage() {
       value: '4',
       icon: CreditCard,
       color: 'text-orange-500',
-      bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+      bgColor: 'bg-orange-500/20',
     },
     {
       id: 'altro-gestore',
@@ -146,7 +146,7 @@ export default function DashboardPage() {
       value: '2',
       icon: Building2,
       color: 'text-gray-500',
-      bgColor: 'bg-gray-50 dark:bg-gray-900/20',
+      bgColor: 'bg-gray-500/20',
     },
   ];
 
@@ -164,15 +164,15 @@ export default function DashboardPage() {
           return (
             <div
               key={kpi.id}
-              className={`${kpi.bgColor} rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm`}
+              className={`${kpi.bgColor} rounded-lg border border-white/20 p-4 shadow-sm`}
             >
               <div className='flex items-center justify-between mb-2'>
                 <Icon className={`h-5 w-5 ${kpi.color}`} />
               </div>
-              <p className='text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1'>
+              <p className='text-2xl font-bold text-white mb-1'>
                 {kpi.value}
               </p>
-              <p className='text-xs text-gray-600 dark:text-gray-400 leading-tight'>
+              <p className='text-xs text-white/80 leading-tight'>
                 {kpi.label}
               </p>
             </div>
