@@ -4,9 +4,7 @@ import { ThemeSwitcher } from '@/components/theme-switcher';
 import { hasEnvVars } from '@/utils/supabase/check-env-vars';
 import Link from 'next/link';
 import { NewStoreForm } from '@/components/NewStoreForm';
-import { Button } from '@/components/ui/button';
-import { Avatar } from '@/components/ui/avatar';
-import { LayoutDashboard } from 'lucide-react';
+import { DashboardToggleButton } from '@/components/dashboard-toggle-button';
 
 export default async function Layout({
   children,
@@ -25,13 +23,7 @@ export default async function Layout({
               <EnvVarWarning />
             ) : (
               <>
-                <Link href='/protected/dashboard'>
-                  <Button variant='ghost' className='p-0 h-8 w-8 rounded-full'>
-                    <Avatar className='h-8 w-8 flex items-center justify-center'>
-                      <LayoutDashboard className='h-4 w-4' />
-                    </Avatar>
-                  </Button>
-                </Link>
+                <DashboardToggleButton />
                 <NewStoreForm />
                 <HeaderAuth />
               </>

@@ -1,8 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import {
-  ArrowLeft,
   Store,
   Camera,
   TrendingUp,
@@ -16,7 +14,6 @@ import {
   CreditCard,
   Building2,
 } from 'lucide-react';
-import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores } from '@/utils/stores';
 import { useEffect, useState } from 'react';
@@ -155,15 +152,9 @@ export default function DashboardPage() {
 
   return (
     <div className='container mx-auto px-4 py-8 max-w-7xl'>
-      {/* Header con tasto torna alla mappa */}
-      <div className='flex items-center justify-between mb-8'>
+      {/* Header */}
+      <div className='mb-8'>
         <h1 className='text-3xl font-bold'>Dashboard</h1>
-        <Link href='/protected'>
-          <Button variant='outline'>
-            <ArrowLeft className='mr-2 h-4 w-4' />
-            Torna alla mappa
-          </Button>
-        </Link>
       </div>
 
       {/* KPI Section */}

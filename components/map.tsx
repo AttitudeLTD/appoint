@@ -47,9 +47,19 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import { Input } from './ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 
 import StorePopup from './StorePopup';
 import { Button } from './ui/button';
+
+type GovernanceLevel = 'agent' | 'am' | 'supervisor';
+const GOVERNANCE_STORAGE_KEY = 'appoint_governance_level';
 
 // Create a new component to handle map movements
 function MapEventHandler({
@@ -123,6 +133,33 @@ const Map = ({ user }: any) => {
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showSearchResults, setShowSearchResults] = useState(true);
   const [showGeoMessage, setShowGeoMessage] = useState(false);
+  const [governanceLevel, setGovernanceLevel] = useState<GovernanceLevel>('am');
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(GOVERNANCE_STORAGE_KEY) as
+        | GovernanceLevel
+        | null;
+      if (saved === 'agent' || saved === 'am' || saved === 'supervisor') {
+        setGovernanceLevel(saved);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(GOVERNANCE_STORAGE_KEY, governanceLevel);
+    } catch {
+      // ignore
+    }
+
+    // Notify other UI (header) to react (e.g., hide dashboard button for agent)
+    window.dispatchEvent(
+      new CustomEvent('governanceChange', { detail: { level: governanceLevel } })
+    );
+  }, [governanceLevel]);
 
   function MapClickHandler() {
     const map = useMap();
@@ -646,49 +683,96 @@ const Map = ({ user }: any) => {
 
       <div className='relative w-full h-full'>
         {coord && (
-          <div className='absolute top-4 left-4 z-[1000] w-[400px]'>
-            <div className='relative'>
-              <Input
-                type='text'
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setShowSearchResults(true);
-                }}
-                onKeyDown={handleKeyDown}
-                placeholder='Cerca indirizzo...'
-                className='w-full px-4 py-2 pl-10 border rounded-full shadow-md'
-              />
-              <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
+          <div className='absolute top-4 left-4 z-[1000] w-[calc(100vw-2rem)] max-w-[420px] pointer-events-auto'>
+            <div className='flex items-center gap-2'>
+              {/* Governance visibility selector */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    className='h-10 w-10 rounded-full p-0 justify-center shadow-md border border-gray-200 dark:border-gray-700 min-w-[40px] cursor-pointer pointer-events-auto'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <span className='text-[11px] font-semibold pointer-events-none'>
+                      {governanceLevel === 'agent'
+                        ? 'A'
+                        : governanceLevel === 'am'
+                          ? 'AM'
+                          : 'S'}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='start' className='z-[10000]'>
+                  <DropdownMenuRadioGroup
+                    value={governanceLevel}
+                    onValueChange={(value) => {
+                      if (
+                        value === 'agent' ||
+                        value === 'am' ||
+                        value === 'supervisor'
+                      ) {
+                        setGovernanceLevel(value);
+                      }
+                    }}
+                  >
+                    <DropdownMenuRadioItem value='agent'>
+                      Agente
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value='am'>AM</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value='supervisor'>
+                      Supervisor
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-              {searchResults.length > 0 && showSearchResults && (
-                <div className='absolute w-full mt-2 shadow-lg max-h-60 overflow-auto'>
-                  {searchResults.map((result, index) => (
-                    <Button
-                      key={index}
-                      variant={'outline'}
-                      className={`w-full px-4 py-1 text-left flex justify-start border-none focus:outline-none ${
-                        index === 0
-                          ? 'rounded-md rounded-b-none'
-                          : index === searchResults.length - 1
-                            ? 'rounded-md rounded-t-none'
-                            : 'rounded-none'
-                      } ${focusedIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
-                      onClick={() => handleSelectLocation(result)}
-                    >
-                      <MapPin className='h-4 w-4 text-gray-400 flex-shrink-0' />
-                      <p className='text-sm truncate'>{result.display_name}</p>
-                    </Button>
-                  ))}
-                </div>
-              )}
+              {/* Address search */}
+              <div className='relative flex-1'>
+                <Input
+                  type='text'
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowSearchResults(true);
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder='Cerca indirizzo...'
+                  className='w-full px-4 py-2 pl-10 border rounded-full shadow-md'
+                />
+                <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
 
-              {/* Loading indicator */}
-              {isSearching && (
-                <div className='absolute right-3 top-2.5'>
-                  <Loader className='h-5 w-5 animate-spin text-gray-400' />
-                </div>
-              )}
+                {searchResults.length > 0 && showSearchResults && (
+                  <div className='absolute w-full mt-2 shadow-lg max-h-60 overflow-auto'>
+                    {searchResults.map((result, index) => (
+                      <Button
+                        key={index}
+                        variant={'outline'}
+                        className={`w-full px-4 py-1 text-left flex justify-start border-none focus:outline-none ${
+                          index === 0
+                            ? 'rounded-md rounded-b-none'
+                            : index === searchResults.length - 1
+                              ? 'rounded-md rounded-t-none'
+                              : 'rounded-none'
+                        } ${focusedIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
+                        onClick={() => handleSelectLocation(result)}
+                      >
+                        <MapPin className='h-4 w-4 text-gray-400 flex-shrink-0' />
+                        <p className='text-sm truncate'>{result.display_name}</p>
+                      </Button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Loading indicator */}
+                {isSearching && (
+                  <div className='absolute right-3 top-2.5'>
+                    <Loader className='h-5 w-5 animate-spin text-gray-400' />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -754,11 +838,18 @@ const Map = ({ user }: any) => {
               return store.modifiedByOtherUser ? (
                 <Marker key={store.id} position={storeCoordinates} icon={icon}>
                   <Popup>
-                    In questo punto vendita è in corso una trattativa gestita da
-                    {store.modifierName
-                      ? ` ${store.modifierName}`
-                      : ' un altro agente'}
-                    .
+                    {governanceLevel === 'agent' ? (
+                      <>In questo punto vendita è in corso una trattativa.</>
+                    ) : (
+                      <>
+                        In questo punto vendita è in corso una trattativa gestita
+                        da
+                        {store.modifierName
+                          ? ` ${store.modifierName}`
+                          : ' un altro agente'}
+                        .
+                      </>
+                    )}
                   </Popup>
                 </Marker>
               ) : (
