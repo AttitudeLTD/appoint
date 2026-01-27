@@ -105,6 +105,11 @@ const StorePopup: React.FC<StorePopupProps> = ({
   const [showCamera, setShowCamera] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [uploadingGenericPhoto, setUploadingGenericPhoto] = useState(false);
+  const [genericPhotoUploaded, setGenericPhotoUploaded] = useState(false);
+  const [showGenericCamera, setShowGenericCamera] = useState(false);
+  const [genericStream, setGenericStream] = useState<MediaStream | null>(null);
+  const genericVideoRef = useRef<HTMLVideoElement>(null);
   const supabase = createClient();
 
   const storeCoordinates: [number, number] | null = parseCoords(store.location);
@@ -252,12 +257,8 @@ const StorePopup: React.FC<StorePopupProps> = ({
       }
 
       // Show success state instead of alert
+      // Keep it green until page refresh
       setPhotoUploaded(true);
-      
-      // Reset success state after 3 seconds
-      setTimeout(() => {
-        setPhotoUploaded(false);
-      }, 3000);
     } catch (error: any) {
       console.error('Error uploading photo:', error);
       alert(`Errore durante il caricamento: ${error.message || 'Errore sconosciuto'}`);
@@ -334,6 +335,146 @@ const StorePopup: React.FC<StorePopupProps> = ({
       videoRef.current.srcObject = stream;
     }
   }, [showCamera, stream]);
+
+  // Function to upload generic photo file
+  const uploadGenericPhotoFile = async (file: File) => {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Per favore seleziona un file immagine');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Il file è troppo grande. Dimensione massima: 5MB');
+      return;
+    }
+
+    setUploadingGenericPhoto(true);
+
+    try {
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        throw new Error('Utente non autenticato');
+      }
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `${store.id}_${user.id}_${timestamp}_${randomString}.${fileExt}`;
+
+      // Upload to Supabase Storage - generic-photos bucket
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('generic-photos')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('generic-photos')
+        .getPublicUrl(fileName);
+
+      if (!urlData?.publicUrl) {
+        throw new Error('Impossibile ottenere l\'URL pubblico della foto');
+      }
+
+      // Insert record in database - generic_photos table
+      const { error: insertError } = await supabase
+        .from('generic_photos')
+        .insert({
+          store_id: store.id,
+          user_id: user.id,
+          photo_url: urlData.publicUrl,
+          created_at: new Date().toISOString(),
+        });
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      // Show success state instead of alert
+      setGenericPhotoUploaded(true);
+      
+      // Reset success state after 3 seconds
+      setTimeout(() => {
+        setGenericPhotoUploaded(false);
+      }, 3000);
+    } catch (error: any) {
+      console.error('Error uploading generic photo:', error);
+      alert(`Errore durante il caricamento: ${error.message || 'Errore sconosciuto'}`);
+    } finally {
+      setUploadingGenericPhoto(false);
+    }
+  };
+
+  // Function to open generic camera
+  const openGenericCamera = async () => {
+    try {
+      // Try to access camera using getUserMedia
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }, // Prefer rear camera on mobile
+        audio: false,
+      });
+      setGenericStream(mediaStream);
+      setShowGenericCamera(true);
+    } catch (error: any) {
+      console.error('Error accessing camera:', error);
+      // Fallback to file input if camera access fails
+      document.getElementById(`generic-photo-upload-${store.id}`)?.click();
+    }
+  };
+
+  // Function to capture generic photo from camera
+  const captureGenericPhoto = () => {
+    if (!genericVideoRef.current || !genericStream) return;
+
+    const video = genericVideoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      ctx.drawImage(video, 0, 0);
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          // Stop camera stream
+          genericStream.getTracks().forEach(track => track.stop());
+          setGenericStream(null);
+          setShowGenericCamera(false);
+
+          // Create File from blob
+          const file = new File([blob], `generic-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+          await uploadGenericPhotoFile(file);
+        }
+      }, 'image/jpeg', 0.9);
+    }
+  };
+
+  // Function to close generic camera
+  const closeGenericCamera = () => {
+    if (genericStream) {
+      genericStream.getTracks().forEach(track => track.stop());
+      setGenericStream(null);
+    }
+    setShowGenericCamera(false);
+  };
+
+  // Setup generic video stream when camera opens
+  useEffect(() => {
+    if (showGenericCamera && genericVideoRef.current && genericStream) {
+      genericVideoRef.current.srcObject = genericStream;
+    }
+  }, [showGenericCamera, genericStream]);
 
   return (
     <div>
@@ -664,9 +805,9 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 variant='outline'
                 className={cn(
                   'w-full transition-all duration-300 bg-white text-[#224677] border-white hover:bg-gray-100',
-                  photoUploaded && 'bg-green-500 hover:bg-green-600 text-white border-green-600'
+                  photoUploaded && 'bg-green-500 text-white border-green-600 cursor-default hover:bg-green-500'
                 )}
-                disabled={uploadingPhoto}
+                disabled={uploadingPhoto || photoUploaded}
                 onClick={openCamera}
               >
                 {uploadingPhoto ? (
@@ -762,6 +903,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 disabled={
                   !!loadingStatus[store.id] ||
                   checkingInProgressLimit ||
+                  !photoUploaded ||
                   [
                     'concluded',
                     'already_client',
@@ -793,6 +935,81 @@ const StorePopup: React.FC<StorePopupProps> = ({
                     )
                   }
                 />
+              )}
+
+              {/* Generic Photo Upload Button */}
+              <input
+                type='file'
+                accept='image/*'
+                capture='environment'
+                onChange={async (event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) return;
+                  await uploadGenericPhotoFile(file);
+                  event.target.value = '';
+                }}
+                disabled={uploadingGenericPhoto}
+                className='hidden'
+                id={`generic-photo-upload-${store.id}`}
+              />
+              <Button
+                type='button'
+                variant='outline'
+                className={cn(
+                  'w-full transition-all duration-300 bg-white text-[#224677] border-white hover:bg-gray-100',
+                  genericPhotoUploaded && 'bg-green-500 hover:bg-green-600 text-white border-green-600'
+                )}
+                disabled={uploadingGenericPhoto}
+                onClick={openGenericCamera}
+              >
+                {uploadingGenericPhoto ? (
+                  <>
+                    <Loader className='mr-2 h-4 w-4 animate-spin' />
+                    Caricamento...
+                  </>
+                ) : genericPhotoUploaded ? (
+                  <>
+                    <CheckCircle className='mr-2 h-4 w-4' />
+                    Foto caricata!
+                  </>
+                ) : (
+                  <>
+                    <Camera className='mr-2' />
+                    Inserisci foto
+                  </>
+                )}
+              </Button>
+
+              {/* Generic Camera Modal */}
+              {showGenericCamera && (
+                <div className='fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center'>
+                  <div className='relative w-full max-w-2xl mx-4'>
+                    <video
+                      ref={genericVideoRef}
+                      autoPlay
+                      playsInline
+                      className='w-full rounded-lg'
+                      style={{ transform: 'scaleX(-1)' }} // Mirror effect
+                    />
+                    <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4'>
+                      <Button
+                        onClick={closeGenericCamera}
+                        variant='destructive'
+                        size='lg'
+                        className='rounded-full h-16 w-16'
+                      >
+                        <X className='h-6 w-6' />
+                      </Button>
+                      <Button
+                        onClick={captureGenericPhoto}
+                        size='lg'
+                        className='rounded-full h-16 w-16 bg-white hover:bg-gray-200 flex items-center justify-center'
+                      >
+                        <Camera className='h-8 w-8 text-gray-800' />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
 

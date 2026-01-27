@@ -19,7 +19,7 @@ export async function fetchUserStores(userId: string) {
     return [];
   }
 
-  // Get photos for this user
+  // Get photos for this user (from "Mi trovo qui")
   const { data: storePhotos, error: photosError } = await supabase
     .from('store_photos')
     .select('*')
@@ -30,6 +30,17 @@ export async function fetchUserStores(userId: string) {
     console.error('Error fetching store photos:', photosError);
   }
 
+  // Get generic photos for this user (from "Inserisci foto")
+  const { data: genericPhotos, error: genericPhotosError } = await supabase
+    .from('generic_photos')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (genericPhotosError) {
+    console.error('Error fetching generic photos:', genericPhotosError);
+  }
+
   // Filter to keep only the latest status for each store
   const storeMap = new Map();
   storeStatuses?.forEach((status) => {
@@ -38,10 +49,11 @@ export async function fetchUserStores(userId: string) {
     }
   });
 
-  // Get unique store IDs from both status logs and photos
+  // Get unique store IDs from status logs, store photos, and generic photos
   const photoStoreIds = storePhotos?.map((photo) => photo.store_id) || [];
+  const genericPhotoStoreIds = genericPhotos?.map((photo) => photo.store_id) || [];
   const statusStoreIds = Array.from(storeMap.keys());
-  const uniqueStoreIds = Array.from(new Set([...statusStoreIds, ...photoStoreIds]));
+  const uniqueStoreIds = Array.from(new Set([...statusStoreIds, ...photoStoreIds, ...genericPhotoStoreIds]));
 
   // Fetch store details for these IDs
   const { data: storeDetails, error: storeError } = await supabase
@@ -82,7 +94,7 @@ export async function fetchUserStores(userId: string) {
     })
     .filter((store) => store.status !== 'free');
 
-  // Add photo entries
+  // Add photo entries (from "Mi trovo qui")
   const photoEntries = (storePhotos || []).map((photo) => {
     const store = storeDetailsMap.get(photo.store_id);
     return {
@@ -104,8 +116,30 @@ export async function fetchUserStores(userId: string) {
     };
   });
 
+  // Add generic photo entries (from "Inserisci foto")
+  const genericPhotoEntries = (genericPhotos || []).map((photo) => {
+    const store = storeDetailsMap.get(photo.store_id);
+    return {
+      type: 'photo' as const,
+      store_id: photo.store_id,
+      store_name: store?.name,
+      address: store?.address,
+      cap: store?.cap,
+      comune: store?.comune,
+      provincia: store?.provincia,
+      status: store?.status || '',
+      created_at: photo.created_at,
+      owner_name: store?.owner_name,
+      phone: store?.phone,
+      category: store?.category,
+      location: store?.location,
+      coordinates: store?.coordinates,
+      photo_url: photo.photo_url,
+    };
+  });
+
   // Combine and sort by created_at (most recent first)
-  const allEntries = [...statusEntries, ...photoEntries].sort(
+  const allEntries = [...statusEntries, ...photoEntries, ...genericPhotoEntries].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
