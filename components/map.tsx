@@ -134,6 +134,8 @@ const Map = ({ user }: any) => {
   const [showSearchResults, setShowSearchResults] = useState(true);
   const [showGeoMessage, setShowGeoMessage] = useState(false);
   const [governanceLevel, setGovernanceLevel] = useState<GovernanceLevel>('am');
+  const [clients, setClients] = useState<{ id: number; name: string }[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
 
   useEffect(() => {
     try {
@@ -147,6 +149,17 @@ const Map = ({ user }: any) => {
       // ignore
     }
   }, []);
+
+  useEffect(() => {
+    const loadClients = async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, name')
+        .order('id', { ascending: true });
+      if (!error && data) setClients(data);
+    };
+    loadClients();
+  }, [supabase]);
 
   useEffect(() => {
     try {
@@ -446,9 +459,17 @@ const Map = ({ user }: any) => {
 
   const fetchStoresAndLogs = useCallback(
     async (lat: number, lng: number) => {
+      const rpcParams: { lat: number; lng: number; radius: number; p_client_id?: number } = {
+        lat,
+        lng,
+        radius: 800,
+      };
+      if (selectedClientId != null) {
+        rpcParams.p_client_id = selectedClientId;
+      }
       const { data: storesData } = await supabase.rpc(
         'get_stores_within_radius',
-        { lat, lng, radius: 800 }
+        rpcParams
       );
 
       const storesWithLogs = await Promise.all(
@@ -482,7 +503,7 @@ const Map = ({ user }: any) => {
 
       setStores(storesWithLogs);
     },
-    [supabase, user.id]
+    [supabase, user.id, selectedClientId]
   );
 
   useEffect(() => {
@@ -532,6 +553,12 @@ const Map = ({ user }: any) => {
       clearTimeout(fallbackTimeout);
     };
   }, [user.id, supabase, fetchStoresAndLogs]);
+
+  useEffect(() => {
+    if (coord && Array.isArray(coord)) {
+      fetchStoresAndLogs(coord[0], coord[1]);
+    }
+  }, [selectedClientId]);
 
   // Listener per il refresh quando viene creato un nuovo store
   useEffect(() => {
@@ -683,7 +710,41 @@ const Map = ({ user }: any) => {
 
       <div className='relative w-full h-full'>
         {coord && (
-          <div className='absolute top-4 left-4 z-[1000] w-[calc(100vw-2rem)] max-w-[420px] pointer-events-auto'>
+          <div className='absolute top-4 left-4 z-[1000] w-[calc(100vw-2rem)] max-w-[420px] pointer-events-auto space-y-2'>
+            {/* Client filter */}
+            <div className='flex flex-wrap items-center gap-2'>
+              <Button
+                type='button'
+                size='sm'
+                variant='outline'
+                className='rounded-full text-xs'
+                style={{
+                  backgroundColor: selectedClientId == null ? '#224677' : 'white',
+                  borderColor: '#224677',
+                  color: selectedClientId == null ? 'white' : '#224677',
+                }}
+                onClick={() => setSelectedClientId(null)}
+              >
+                Tutti
+              </Button>
+              {clients.map((c) => (
+                <Button
+                  key={c.id}
+                  type='button'
+                  size='sm'
+                  variant='outline'
+                  className='rounded-full text-xs'
+                  style={{
+                    backgroundColor: selectedClientId === c.id ? '#224677' : 'white',
+                    borderColor: '#224677',
+                    color: selectedClientId === c.id ? 'white' : '#224677',
+                  }}
+                  onClick={() => setSelectedClientId(c.id)}
+                >
+                  {c.name}
+                </Button>
+              ))}
+            </div>
             <div className='flex items-center gap-2'>
               {/* Governance visibility selector */}
               <DropdownMenu>

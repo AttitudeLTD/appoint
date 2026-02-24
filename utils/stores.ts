@@ -55,10 +55,10 @@ export async function fetchUserStores(userId: string) {
   const statusStoreIds = Array.from(storeMap.keys());
   const uniqueStoreIds = Array.from(new Set([...statusStoreIds, ...photoStoreIds, ...genericPhotoStoreIds]));
 
-  // Fetch store details for these IDs
+  // Fetch store details for these IDs (with client name)
   const { data: storeDetails, error: storeError } = await supabase
     .from('stores')
-    .select('*')
+    .select('*, client:clients(id, name)')
     .in('id', uniqueStoreIds);
 
   if (storeError) {
@@ -70,6 +70,11 @@ export async function fetchUserStores(userId: string) {
   const storeDetailsMap = new Map(
     storeDetails?.map((store) => [store.id, store])
   );
+
+  const getClientName = (store: (typeof storeDetails)[0]) =>
+    store?.client && typeof store.client === 'object' && 'name' in store.client
+      ? (store.client as { name: string }).name
+      : null;
 
   // Combine status logs and photos into a unified array
   const statusEntries = Array.from(storeMap.values())
@@ -90,6 +95,8 @@ export async function fetchUserStores(userId: string) {
         category: store?.category,
         location: store?.location,
         coordinates: store?.coordinates,
+        client_id: store?.client_id ?? null,
+        client_name: getClientName(store),
       };
     })
     .filter((store) => store.status !== 'free');
@@ -113,6 +120,8 @@ export async function fetchUserStores(userId: string) {
       location: store?.location,
       coordinates: store?.coordinates,
       photo_url: photo.photo_url,
+      client_id: store?.client_id ?? null,
+      client_name: getClientName(store),
     };
   });
 
@@ -135,6 +144,8 @@ export async function fetchUserStores(userId: string) {
       location: store?.location,
       coordinates: store?.coordinates,
       photo_url: photo.photo_url,
+      client_id: store?.client_id ?? null,
+      client_name: getClientName(store),
     };
   });
 

@@ -19,6 +19,8 @@ export interface Store {
     | 'non_existent';
   tier: 'bronze' | 'silver' | 'gold' | 'gold+';
   fatturato?: number | string; // Annual revenue, optional as it might not be available for all stores
+  client_id?: number | null;
+  client_name?: string | null;
   modifiedByOtherUser: boolean;
   modifierName?: string; // Optional name of the agent who modified the store
 }

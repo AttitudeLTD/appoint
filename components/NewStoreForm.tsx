@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -44,10 +44,23 @@ export function NewStoreForm() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
+  const [clients, setClients] = useState<{ id: number; name: string }[]>([]);
   const [consent, setConsent] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const supabase = createClient();
+
+  useEffect(() => {
+    const loadClients = async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, name')
+        .order('id', { ascending: true });
+      if (!error && data) setClients(data);
+    };
+    if (isOpen) loadClients();
+  }, [isOpen, supabase]);
 
   const geocodeAddress = async (
     address: string
@@ -91,6 +104,10 @@ export function NewStoreForm() {
     }
     if (!selectedCategory) {
       toast.error('È necessario selezionare una categoria');
+      return;
+    }
+    if (!selectedClientId) {
+      toast.error('È necessario selezionare un cliente');
       return;
     }
     if (!token && process.env.NODE_ENV !== 'development') {
@@ -148,6 +165,7 @@ export function NewStoreForm() {
         coordinates,
         phone: formData.get('phone') as string,
         category: selectedCategory,
+        client_id: parseInt(selectedClientId, 10),
         type: formData.get('type') as string,
         codice_ateco: formData.get('codice_ateco') as string,
         cap: formData.get('cap') as string,
@@ -217,6 +235,15 @@ export function NewStoreForm() {
             {/* Informazioni Base */}
             <div className='space-y-4'>
               <h3 className='font-medium text-sm'>Informazioni Base</h3>
+              <div className='space-y-2'>
+                <Label htmlFor='client'>Cliente *</Label>
+                <SelectComponent
+                  placeholder='Seleziona un cliente'
+                  value={selectedClientId}
+                  onChange={(value) => setSelectedClientId(value || '')}
+                  options={clients.map((c) => ({ value: String(c.id), label: c.name }))}
+                />
+              </div>
               <div className='space-y-2'>
                 <Label htmlFor='name'>Nome Attività *</Label>
                 <Input id='name' name='name' required />
