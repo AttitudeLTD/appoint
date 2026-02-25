@@ -549,40 +549,43 @@ const StorePopup: React.FC<StorePopupProps> = ({
             ) : null}
           </div>
 
-          <div className='mt-2 flex flex-wrap items-center gap-1.5'>
-            {getTierIcon(store.tier)}
-            <span
-              className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                !store.tier
-                  ? 'bg-gray-100 text-gray-500'
-                  : store.tier === 'gold+'
-                    ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
-                    : store.tier === 'gold'
-                      ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                      : store.tier === 'silver'
-                        ? 'bg-gray-100 text-gray-600 border border-gray-200'
-                        : store.tier === 'bronze'
-                          ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                          : 'bg-gray-100 text-gray-500'
-              }`}
-            >
-              {store.tier?.toUpperCase() || 'N/A'}
-            </span>
+          {(store.tier || store.fatturato) && (
+            <div className='mt-2 flex flex-wrap items-center gap-1.5'>
+              {store.tier && (
+                <>
+                  {getTierIcon(store.tier)}
+                  <span
+                    className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                      store.tier === 'gold+'
+                        ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+                        : store.tier === 'gold'
+                          ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                          : store.tier === 'silver'
+                            ? 'bg-gray-100 text-gray-600 border border-gray-200'
+                            : store.tier === 'bronze'
+                              ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                              : 'bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    {store.tier.toUpperCase()}
+                  </span>
+                </>
+              )}
 
-            {/* Add fatturato badge right next to tier badge */}
-            {store.fatturato && (
-              <>
-                <CreditCard size={14} className='text-green-600' />
-                <span className='text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-800 border border-green-200'>
-                  {typeof store.fatturato === 'number'
-                    ? `€ ${store.fatturato.toLocaleString('it-IT')}`
-                    : store.fatturato.toString().startsWith('€')
-                      ? store.fatturato
-                      : `€ ${store.fatturato}`}
-                </span>
-              </>
-            )}
-          </div>
+              {store.fatturato && (
+                <>
+                  <CreditCard size={14} className='text-green-600' />
+                  <span className='text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-800 border border-green-200'>
+                    {typeof store.fatturato === 'number'
+                      ? `€ ${store.fatturato.toLocaleString('it-IT')}`
+                      : store.fatturato.toString().startsWith('€')
+                        ? store.fatturato
+                        : `€ ${store.fatturato}`}
+                  </span>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -767,78 +770,63 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 </p>
                 <p className='text-base text-white'>{store.category}</p>
               </div>
-              <div className='py-3 border-b border-white/20'>
-                <p className='text-base text-white/80 font-medium'>
-                  Fatturato:
-                </p>
-                <div className='mt-2 flex flex-row items-center gap-3'>
-                  {/* Tier Badge */}
-                  <div
-                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md flex-shrink-0 ${
-                      !store.tier
-                        ? 'bg-white/20 border border-white/30'
-                        : store.tier === 'gold+'
-                          ? 'bg-yellow-500/30 border border-yellow-400/50'
-                          : store.tier === 'gold'
-                            ? 'bg-yellow-400/30 border border-yellow-300/50'
-                            : store.tier === 'silver'
-                              ? 'bg-gray-300/30 border border-gray-200/50'
-                              : store.tier === 'bronze'
-                                ? 'bg-amber-500/30 border border-amber-400/50'
-                                : 'bg-white/20 border border-white/30'
-                    }`}
-                  >
-                    <span className='mr-1'>
-                      {store.tier === 'gold+' && (
-                        <Trophy size={18} className='text-yellow-300' />
-                      )}
-                      {store.tier === 'gold' && (
-                        <Award size={18} className='text-yellow-200' />
-                      )}
-                      {store.tier === 'silver' && (
-                        <Medal size={18} className='text-gray-200' />
-                      )}
-                      {store.tier === 'bronze' && (
-                        <Circle size={18} className='text-amber-300' />
-                      )}
-                      {!store.tier && (
-                        <Circle size={18} className='text-white/60' />
-                      )}
-                    </span>
-                    <span
-                      className={`text-base font-medium ${
-                        !store.tier
-                          ? 'text-white/80'
-                          : store.tier === 'gold+'
-                            ? 'text-yellow-200'
+              {(store.tier || store.fatturato) && (
+                <div className='py-3 border-b border-white/20'>
+                  <p className='text-base text-white/80 font-medium'>
+                    Fatturato:
+                  </p>
+                  <div className='mt-2 flex flex-row items-center gap-3'>
+                    {/* Tier Badge – solo se presente */}
+                    {store.tier && (
+                      <div
+                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md flex-shrink-0 ${
+                          store.tier === 'gold+'
+                            ? 'bg-yellow-500/30 border border-yellow-400/50'
                             : store.tier === 'gold'
-                              ? 'text-yellow-100'
+                              ? 'bg-yellow-400/30 border border-yellow-300/50'
                               : store.tier === 'silver'
-                                ? 'text-gray-100'
+                                ? 'bg-gray-300/30 border border-gray-200/50'
                                 : store.tier === 'bronze'
-                                  ? 'text-amber-200'
-                                  : 'text-white/80'
-                      }`}
-                    >
-                      {store.tier?.toUpperCase() || 'Sconosciuto'}
-                    </span>
-                  </div>
+                                  ? 'bg-amber-500/30 border border-amber-400/50'
+                                  : 'bg-white/20 border border-white/30'
+                        }`}
+                      >
+                        <span className='mr-1'>
+                          {store.tier === 'gold+' && <Trophy size={18} className='text-yellow-300' />}
+                          {store.tier === 'gold'  && <Award  size={18} className='text-yellow-200' />}
+                          {store.tier === 'silver' && <Medal  size={18} className='text-gray-200'  />}
+                          {store.tier === 'bronze' && <Circle size={18} className='text-amber-300' />}
+                        </span>
+                        <span
+                          className={`text-base font-medium ${
+                            store.tier === 'gold+'  ? 'text-yellow-200'
+                            : store.tier === 'gold'   ? 'text-yellow-100'
+                            : store.tier === 'silver' ? 'text-gray-100'
+                            : store.tier === 'bronze' ? 'text-amber-200'
+                            : 'text-white/80'
+                          }`}
+                        >
+                          {store.tier.toUpperCase()}
+                        </span>
+                      </div>
+                    )}
 
-                  {/* Fatturato Amount */}
-                  {store.fatturato && (
-                    <div className='px-3 py-1.5 bg-green-500/30 rounded-md border border-green-400/50 flex items-center flex-1'>
-                      <CreditCard className='h-5 w-5 text-green-200 mr-2 flex-shrink-0' />
-                      <p className='text-base font-semibold text-green-100'>
-                        {typeof store.fatturato === 'number'
-                          ? `€ ${store.fatturato.toLocaleString('it-IT')}`
-                          : store.fatturato.toString().startsWith('€')
-                            ? store.fatturato
-                            : `€ ${store.fatturato}`}
-                      </p>
-                    </div>
-                  )}
+                    {/* Fatturato Amount */}
+                    {store.fatturato && (
+                      <div className='px-3 py-1.5 bg-green-500/30 rounded-md border border-green-400/50 flex items-center flex-1'>
+                        <CreditCard className='h-5 w-5 text-green-200 mr-2 flex-shrink-0' />
+                        <p className='text-base font-semibold text-green-100'>
+                          {typeof store.fatturato === 'number'
+                            ? `€ ${store.fatturato.toLocaleString('it-IT')}`
+                            : store.fatturato.toString().startsWith('€')
+                              ? store.fatturato
+                              : `€ ${store.fatturato}`}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
               <div className='py-3'>
                 <p className='text-base text-white/80 font-medium'>
                   Indirizzo:
