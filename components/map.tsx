@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Loader, MapPin, Search } from 'lucide-react';
 
 import { LatLngExpression } from 'leaflet';
@@ -137,6 +137,13 @@ const Map = ({ user }: any) => {
   const [governanceLevel, setGovernanceLevel] = useState<GovernanceLevel>('am');
   const [clients, setClients] = useState<{ id: number; name: string; logo?: string | null }[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
+
+  // Ref per il filtro client: si legge dentro fetchStoresAndLogs senza metterlo nelle deps
+  const selectedClientIdRef = useRef<number | null>(null);
+  selectedClientIdRef.current = selectedClientId; // aggiornato ad ogni render, prima degli effetti
+
+  // Ultimo centro usato per la fetch dei pin (aggiornato dentro fetchStoresAndLogs)
+  const lastFetchCenter = useRef<[number, number] | null>(null);
 
   useEffect(() => {
     try {
@@ -460,21 +467,32 @@ const Map = ({ user }: any) => {
 
   const fetchStoresAndLogs = useCallback(
     async (lat: number, lng: number) => {
-      const rpcParams: { lat: number; lng: number; radius: number; p_client_id?: number } = {
+      // Memorizza il centro usato per questa fetch
+      lastFetchCenter.current = [lat, lng];
+
+      // Legge il filtro client dal ref (non nelle deps → questa funzione non si ricrea al cambio filtro)
+      const rpcParams: { lat: number; lng: number; radius: number; p_client_id?: number; p_limit?: number } = {
         lat,
         lng,
         radius: 800,
+        p_limit: 80,
       };
-      if (selectedClientId != null) {
-        rpcParams.p_client_id = selectedClientId;
+      if (selectedClientIdRef.current != null) {
+        rpcParams.p_client_id = selectedClientIdRef.current;
       }
-      const { data: storesData } = await supabase.rpc(
+
+      const { data: storesData, error: rpcError } = await supabase.rpc(
         'get_stores_within_radius',
         rpcParams
       );
 
+      if (rpcError) {
+        console.error('get_stores_within_radius error:', rpcError);
+        return;
+      }
+
       const storesWithLogs = await Promise.all(
-        storesData.map(async (store: any) => {
+        (storesData ?? []).map(async (store: any) => {
           const { data: logs } = await supabase
             .from('store_status_logs')
             .select('modifier, created_at')
@@ -504,7 +522,7 @@ const Map = ({ user }: any) => {
 
       setStores(storesWithLogs);
     },
-    [supabase, user.id, selectedClientId]
+    [supabase, user.id] // selectedClientId RIMOSSO: si legge dal ref → questa callback non si ricrea al cambio filtro
   );
 
   useEffect(() => {
@@ -555,11 +573,12 @@ const Map = ({ user }: any) => {
     };
   }, [user.id, supabase, fetchStoresAndLogs]);
 
+  // Al cambio filtro richiama la fetch con l'ultimo centro usato (non con coord che è la posizione persona)
   useEffect(() => {
-    if (coord && Array.isArray(coord)) {
-      fetchStoresAndLogs(coord[0], coord[1]);
+    if (lastFetchCenter.current) {
+      fetchStoresAndLogs(lastFetchCenter.current[0], lastFetchCenter.current[1]);
     }
-  }, [selectedClientId]);
+  }, [selectedClientId, fetchStoresAndLogs]);
 
   // Listener per il refresh quando viene creato un nuovo store
   useEffect(() => {
