@@ -20,7 +20,7 @@ export const navIcon = new L.Icon({
 const freeStoreSvgString = `
 <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="#1B304E">
   <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
-  <circle cx="36" cy="30" r="6" fill="#FF00FF" stroke="none"/>
+  <circle cx="36" cy="30" r="6" fill="white" stroke="none"/>
 </svg>`;
 const freeStoreIconUrl = svgToDataUrl(freeStoreSvgString);
 export const freePin = new L.Icon({
@@ -117,7 +117,7 @@ export const alreadyClientPin = new L.Icon({
 const freeStoreMutedSvgString = `
 <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" fill="#0d2031">
   <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0"/>
-  <circle cx="36" cy="30" r="6" fill="#FF00FF" stroke="none"/>
+  <circle cx="36" cy="30" r="6" fill="white" stroke="none"/>
 </svg>`;
 const freeStoreMutedIconUrl = svgToDataUrl(freeStoreMutedSvgString);
 export const freePinM = new L.Icon({
@@ -229,6 +229,50 @@ export const nonExistentPin = new L.Icon({
   shadowUrl: MarkerShadow.src,
   shadowSize: [60, 45],
 });
+
+/**
+ * Crea un pin "free" con il logo del cliente al posto del pallino colorato.
+ * Usa L.DivIcon in modo da poter usare un <img> normale (nessuna codifica base64).
+ */
+export function createFreePinWithLogo(logoUrl: string): L.DivIcon {
+  // circle cx=36 cy=30 r=14 in viewBox 0 0 72 72 → rendered 52x52:
+  // center pixel (26, 21.7), radius 10.1 → logo 18x18 at top≈13 left≈17
+  const html = `
+    <div style="position:relative;width:52px;height:52px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" width="52" height="52" style="display:block">
+        <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0" fill="#1B304E"/>
+        <circle cx="36" cy="30" r="14" fill="white" stroke="none"/>
+      </svg>
+      <img src="${logoUrl}" style="position:absolute;top:13px;left:17px;width:18px;height:18px;border-radius:50%;object-fit:cover;pointer-events:none" />
+    </div>`;
+  return new L.DivIcon({
+    html,
+    className: '',
+    iconSize: [52, 52],
+    iconAnchor: [26, 47],
+    popupAnchor: [0, -48],
+  });
+}
+
+/** Versione attenuata (store gestito da altro agente). */
+export function createFreePinMutedWithLogo(logoUrl: string): L.DivIcon {
+  // rendered 38x38, circle center ~(19, 15.8), radius ~7.4 → logo 14x14 at top≈9 left≈12
+  const html = `
+    <div style="position:relative;width:38px;height:38px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" width="38" height="38" style="display:block">
+        <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0" fill="#0d2031"/>
+        <circle cx="36" cy="30" r="14" fill="white" stroke="none"/>
+      </svg>
+      <img src="${logoUrl}" style="position:absolute;top:9px;left:12px;width:14px;height:14px;border-radius:50%;object-fit:cover;pointer-events:none" />
+    </div>`;
+  return new L.DivIcon({
+    html,
+    className: '',
+    iconSize: [38, 38],
+    iconAnchor: [19, 34],
+    popupAnchor: [0, -36],
+  });
+}
 
 // Non Existent Store Icon Muted (Gray with X-circle)
 const nonExistentStoreMutedSvgString = `

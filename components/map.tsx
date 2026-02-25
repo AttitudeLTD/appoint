@@ -35,6 +35,8 @@ import {
   progressPinM,
   nonExistentPin,
   nonExistentPinM,
+  createFreePinWithLogo,
+  createFreePinMutedWithLogo,
 } from '@/utils/nav-icons';
 
 import {
@@ -904,9 +906,14 @@ const Map = ({ user }: any) => {
               const storeCoordinates = parseCoords(store.location);
               if (!storeCoordinates) return null; // Skip rendering if coordinates are invalid
 
+              const clientLogoUrl =
+                store.status === 'free' ? getClientLogoUrl(store.client_logo) : null;
+
               const icon = store.modifiedByOtherUser
                 ? store.status === 'free'
-                  ? freePinM
+                  ? clientLogoUrl
+                    ? createFreePinMutedWithLogo(clientLogoUrl)
+                    : freePinM
                   : store.status === 'in_progress'
                     ? progressPinM
                     : store.status === 'concluded'
@@ -919,7 +926,9 @@ const Map = ({ user }: any) => {
                             ? nonExistentPinM
                             : failedPinM
                 : store.status === 'free'
-                  ? freePin
+                  ? clientLogoUrl
+                    ? createFreePinWithLogo(clientLogoUrl)
+                    : freePin
                   : store.status === 'in_progress'
                     ? progressPin
                     : store.status === 'concluded'
