@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import {
   Phone,
   Navigation,
@@ -41,6 +40,7 @@ import {
 
 import { StorePopupProps } from '@/types';
 import { getStatusLabel, statuses, StatusItem } from '@/utils/utils';
+import { getClientLogoUrl } from '@/utils/client-logo';
 import { parseCoords } from '@/utils/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { cn } from '@/lib/utils';
@@ -113,6 +113,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
   const supabase = createClient();
 
   const storeCoordinates: [number, number] | null = parseCoords(store.location);
+  const clientLogoUrl = getClientLogoUrl(store.client_logo);
   // Create a modified statuses array with actual icon elements
   const statusesWithIcons = statuses.map((status) => ({
     label: status.label,
@@ -480,32 +481,44 @@ const StorePopup: React.FC<StorePopupProps> = ({
     <div>
       <div className='flex items-center'>
         <div
-          className={`w-[48px] h-[48px] rounded-full flex items-center justify-center text-white font-medium text-lg flex-shrink-0
+          className={`w-[48px] h-[48px] rounded-full flex items-center justify-center text-white font-medium text-lg flex-shrink-0 overflow-hidden
           ${
-            store.category.toLowerCase().includes('formazione')
-              ? 'bg-blue-600'
-              : store.category.toLowerCase().includes('commercio')
-                ? 'bg-slate-600'
-                : store.category.toLowerCase().includes('ristora')
-                  ? 'bg-red-600'
-                  : store.category.toLowerCase().includes('negozio')
-                    ? 'bg-indigo-600'
-                    : store.category.toLowerCase().includes('farmacia')
-                      ? 'bg-green-600'
-                      : store.category.toLowerCase().includes('ottic')
-                        ? 'bg-slate-600'
-                        : store.tier === 'gold+'
-                          ? 'bg-yellow-600'
-                          : store.tier === 'gold'
+            clientLogoUrl
+              ? 'bg-gray-100 p-0'
+              : store.category.toLowerCase().includes('formazione')
+                ? 'bg-blue-600'
+                : store.category.toLowerCase().includes('commercio')
+                  ? 'bg-slate-600'
+                  : store.category.toLowerCase().includes('ristora')
+                    ? 'bg-red-600'
+                    : store.category.toLowerCase().includes('negozio')
+                      ? 'bg-indigo-600'
+                      : store.category.toLowerCase().includes('farmacia')
+                        ? 'bg-green-600'
+                        : store.category.toLowerCase().includes('ottic')
+                          ? 'bg-slate-600'
+                          : store.tier === 'gold+'
                             ? 'bg-yellow-600'
-                            : store.tier === 'silver'
-                              ? 'bg-slate-600'
-                              : store.tier === 'bronze'
-                                ? 'bg-amber-700'
-                                : 'bg-slate-600'
+                            : store.tier === 'gold'
+                              ? 'bg-yellow-600'
+                              : store.tier === 'silver'
+                                ? 'bg-slate-600'
+                                : store.tier === 'bronze'
+                                  ? 'bg-amber-700'
+                                  : 'bg-slate-600'
           }`}
         >
-          <span>{store.name.substring(0, 1).toUpperCase()}</span>
+          {clientLogoUrl ? (
+            <img
+              src={clientLogoUrl}
+              alt=''
+              width={48}
+              height={48}
+              className='w-full h-full object-cover'
+            />
+          ) : (
+            <span>{store.name.substring(0, 1).toUpperCase()}</span>
+          )}
         </div>
         <div className='ml-3 flex-1 min-w-0 overflow-hidden'>
           <div className='space-y-0 flex flex-col'>
@@ -518,6 +531,22 @@ const StorePopup: React.FC<StorePopupProps> = ({
             <p className='text-xs text-gray-400 truncate leading-none pt-2'>
               {store.address}
             </p>
+            {store.client_name ? (
+              <div className='flex items-center gap-1.5 pt-1.5'>
+                {clientLogoUrl ? (
+                  <span className='relative w-3.5 h-3.5 rounded-full overflow-hidden flex-shrink-0 bg-gray-200'>
+                    <img
+                      src={clientLogoUrl}
+                      alt=''
+                      width={14}
+                      height={14}
+                      className='w-full h-full object-cover'
+                    />
+                  </span>
+                ) : null}
+                <span className='text-xs text-gray-500 truncate'>{store.client_name}</span>
+              </div>
+            ) : null}
           </div>
 
           <div className='mt-2 flex flex-wrap items-center gap-1.5'>
@@ -700,8 +729,37 @@ const StorePopup: React.FC<StorePopupProps> = ({
             </SheetHeader>
 
             <div className='py-4'>
-              <div className='py-3 border-b border-white/20'>
-                <strong className='text-lg font-semibold text-white'>{store.name}</strong>
+              <div className='py-3 border-b border-white/20 flex items-center gap-3'>
+                {clientLogoUrl ? (
+                  <span className='relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-white/20'>
+                    <img
+                      src={clientLogoUrl}
+                      alt=''
+                      width={48}
+                      height={48}
+                      className='w-full h-full object-cover'
+                    />
+                  </span>
+                ) : null}
+                <div>
+                  <strong className='text-lg font-semibold text-white'>{store.name}</strong>
+                  {store.client_name ? (
+                    <p className='text-sm text-white/80 mt-0.5 flex items-center gap-2'>
+                      {clientLogoUrl ? (
+                        <span className='relative w-4 h-4 rounded-full overflow-hidden flex-shrink-0 inline-block bg-white/20'>
+                          <img
+                            src={clientLogoUrl}
+                            alt=''
+                            width={16}
+                            height={16}
+                            className='w-full h-full object-cover'
+                          />
+                        </span>
+                      ) : null}
+                      {store.client_name}
+                    </p>
+                  ) : null}
+                </div>
               </div>
               <div className='py-3 border-b border-white/20'>
                 <p className='text-base text-white/80 font-medium'>

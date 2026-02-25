@@ -21,6 +21,7 @@ export interface Store {
   fatturato?: number | string; // Annual revenue, optional as it might not be available for all stores
   client_id?: number | null;
   client_name?: string | null;
+  client_logo?: string | null; // storage path in bucket client-logos
   modifiedByOtherUser: boolean;
   modifierName?: string; // Optional name of the agent who modified the store
 }

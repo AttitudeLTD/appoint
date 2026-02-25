@@ -16,6 +16,7 @@ import 'leaflet/dist/leaflet.css';
 
 import { Agent, Store, StoreLog } from '@/types';
 import { createClient } from '@/utils/supabase/client';
+import { getClientLogoUrl } from '@/utils/client-logo';
 import { getMyLoc, parseCoords } from '@/utils/navigation';
 import { generateMailBody, statuses } from '@/utils/utils';
 import {
@@ -134,7 +135,7 @@ const Map = ({ user }: any) => {
   const [showSearchResults, setShowSearchResults] = useState(true);
   const [showGeoMessage, setShowGeoMessage] = useState(false);
   const [governanceLevel, setGovernanceLevel] = useState<GovernanceLevel>('am');
-  const [clients, setClients] = useState<{ id: number; name: string }[]>([]);
+  const [clients, setClients] = useState<{ id: number; name: string; logo?: string | null }[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -154,7 +155,7 @@ const Map = ({ user }: any) => {
     const loadClients = async () => {
       const { data, error } = await supabase
         .from('clients')
-        .select('id, name')
+        .select('id, name, logo')
         .order('id', { ascending: true });
       if (!error && data) setClients(data);
     };
@@ -727,23 +728,37 @@ const Map = ({ user }: any) => {
               >
                 Tutti
               </Button>
-              {clients.map((c) => (
-                <Button
-                  key={c.id}
-                  type='button'
-                  size='sm'
-                  variant='outline'
-                  className='rounded-full text-xs'
-                  style={{
-                    backgroundColor: selectedClientId === c.id ? '#224677' : 'white',
-                    borderColor: '#224677',
-                    color: selectedClientId === c.id ? 'white' : '#224677',
-                  }}
-                  onClick={() => setSelectedClientId(c.id)}
-                >
-                  {c.name}
-                </Button>
-              ))}
+              {clients.map((c) => {
+                const logoUrl = getClientLogoUrl(c.logo);
+                return (
+                  <Button
+                    key={c.id}
+                    type='button'
+                    size='sm'
+                    variant='outline'
+                    className='rounded-full text-xs flex items-center gap-1.5'
+                    style={{
+                      backgroundColor: selectedClientId === c.id ? '#224677' : 'white',
+                      borderColor: '#224677',
+                      color: selectedClientId === c.id ? 'white' : '#224677',
+                    }}
+                    onClick={() => setSelectedClientId(c.id)}
+                  >
+                    {logoUrl ? (
+                      <span className='relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0 bg-gray-200'>
+                        <img
+                          src={logoUrl}
+                          alt=''
+                          className='w-full h-full object-cover'
+                          width={20}
+                          height={20}
+                        />
+                      </span>
+                    ) : null}
+                    {c.name}
+                  </Button>
+                );
+              })}
             </div>
             <div className='flex items-center gap-2'>
               {/* Governance visibility selector */}
