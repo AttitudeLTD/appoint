@@ -22,6 +22,7 @@ import {
   XCircle,
   FileX,
   Camera,
+  ExternalLink,
 } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 
@@ -37,8 +38,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from './ui/sheet';
+import { WorkflowRunner } from './WorkflowRunner';
 
-import { StorePopupProps } from '@/types';
+import { StorePopupProps, ClientWorkflow } from '@/types';
 import { getStatusLabel, statuses, StatusItem } from '@/utils/utils';
 import { getClientLogoUrl } from '@/utils/client-logo';
 import { parseCoords } from '@/utils/navigation';
@@ -110,6 +112,14 @@ const StorePopup: React.FC<StorePopupProps> = ({
   const [showGenericCamera, setShowGenericCamera] = useState(false);
   const [genericStream, setGenericStream] = useState<MediaStream | null>(null);
   const genericVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Workflow (Amex-specific or other client-specific flows)
+  const [clientWorkflow, setClientWorkflow] = useState<ClientWorkflow | null>(null);
+  const [nonExistentReason, setNonExistentReason] = useState('');
+  const [nonExistentText, setNonExistentText] = useState('');
+  const [existingOutcome, setExistingOutcome] = useState<any>(null);
+  const [currentUserId, setCurrentUserId] = useState('');
+
   const supabase = createClient();
 
   const storeCoordinates: [number, number] | null = parseCoords(store.location);
@@ -121,33 +131,55 @@ const StorePopup: React.FC<StorePopupProps> = ({
     icon: getIconByType(status.iconType),
   }));
 
-  const filteredStatuses =
-    storeStatuses[store.id] === 'in_progress' || store.status === 'in_progress'
-      ? statusesWithIcons.filter((status) => status.value !== 'free')
-      : statusesWithIcons;
+  // Statuses hidden per workflow (e.g. Amex hides 'not_interested')
+  const hiddenStatuses = clientWorkflow ? ['not_interested'] : [];
 
-  const notesOptions = [
-    {
-      label: 'Fatturato errato',
-      value: 'fatturato errato',
-      icon: <CreditCard size={16} className='text-amber-500' />,
-    },
-    {
-      label: 'Tipologia errata',
-      value: 'tipologia errata',
-      icon: <StoreIcon size={16} className='text-purple-500' />,
-    },
-    {
-      label: 'Non contrattualizzabile',
-      value: 'non contrattualizzabile',
-      icon: <FileX size={16} className='text-red-500' />,
-    },
-    {
-      label: 'Altro',
-      value: 'altro',
-      icon: <AlertCircle size={16} className='text-gray-500' />,
-    },
-  ];
+  const filteredStatuses = (
+    storeStatuses[store.id] === 'in_progress' || store.status === 'in_progress'
+      ? statusesWithIcons.filter((s) => s.value !== 'free')
+      : statusesWithIcons
+  ).filter((s) => !hiddenStatuses.includes(s.value));
+
+  // Use workflow-specific reasons for 'failed' if available, otherwise use default
+  const notesOptions = clientWorkflow?.failed_reasons
+    ? clientWorkflow.failed_reasons.map((r) => ({
+        label: r.label,
+        value: r.value,
+        icon: <Ban size={16} className='text-red-500' />,
+      }))
+    : [
+        {
+          label: 'Fatturato errato',
+          value: 'fatturato errato',
+          icon: <CreditCard size={16} className='text-amber-500' />,
+        },
+        {
+          label: 'Tipologia errata',
+          value: 'tipologia errata',
+          icon: <StoreIcon size={16} className='text-purple-500' />,
+        },
+        {
+          label: 'Non contrattualizzabile',
+          value: 'non contrattualizzabile',
+          icon: <FileX size={16} className='text-red-500' />,
+        },
+        {
+          label: 'Altro',
+          value: 'altro',
+          icon: <AlertCircle size={16} className='text-gray-500' />,
+        },
+      ];
+
+  // non_existent reasons from workflow (if available)
+  const nonExistentReasonOptions = clientWorkflow?.non_existent_reasons?.map((r) => ({
+    label: r.label,
+    value: r.value,
+    icon: <XCircle size={16} className='text-gray-400' />,
+  })) ?? null;
+
+  const selectedNonExistentReasonDef = clientWorkflow?.non_existent_reasons?.find(
+    (r) => r.value === nonExistentReason
+  ) ?? null;
 
   // Function to handle loading more logs
   const handleLoadMoreLogs = async () => {
@@ -164,12 +196,48 @@ const StorePopup: React.FC<StorePopupProps> = ({
     setLoadingMoreLogs(false);
   };
 
-  // Reset pagination when store changes
+  // Reset pagination and workflow state when store changes
   useEffect(() => {
     setLogsOffset(0);
     setHasMoreLogs(true);
-    setPhotoUploaded(false); // Reset photo success state when store changes
+    setPhotoUploaded(false);
+    setNonExistentReason('');
+    setNonExistentText('');
+    setExistingOutcome(null);
   }, [store.id]);
+
+  // Fetch client workflow and any existing outcome for this store
+  useEffect(() => {
+    const fetchWorkflow = async () => {
+      if (!store.client_id) { setClientWorkflow(null); return; }
+      const { data } = await supabase
+        .from('client_workflows')
+        .select('workflow')
+        .eq('client_id', store.client_id)
+        .eq('active', true)
+        .single();
+      setClientWorkflow(data ? (data.workflow as ClientWorkflow) : null);
+    };
+
+    const fetchOutcome = async () => {
+      if (!store.client_id) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      setCurrentUserId(user.id);
+      const { data } = await supabase
+        .from('store_visit_outcomes')
+        .select('outcome_data')
+        .eq('store_id', store.id)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (data) setExistingOutcome(data.outcome_data);
+    };
+
+    fetchWorkflow();
+    fetchOutcome();
+  }, [store.id, store.client_id]);
 
   // Function to get current user position
   const getUserPosition = () => {
@@ -906,6 +974,25 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 </div>
               )}
 
+              {/* DOM link (Amex) – sbloccato dopo la foto */}
+              {clientWorkflow?.dom_link && (
+                <a
+                  href={photoUploaded ? clientWorkflow.dom_link : undefined}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className={cn(
+                    'flex items-center justify-center gap-2 w-full py-2 px-4 rounded-md text-sm font-medium transition-colors',
+                    photoUploaded
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
+                      : 'bg-white/10 text-white/40 cursor-not-allowed pointer-events-none border border-white/20'
+                  )}
+                >
+                  <ExternalLink className='h-4 w-4' />
+                  Apri piattaforma DOM
+                  {!photoUploaded && <span className='text-xs ml-1'>(sblocca con foto)</span>}
+                </a>
+              )}
+
               {/* Avviso visivo: la select è bloccata finché non si carica la foto */}
               {!photoUploaded &&
                 ![
@@ -977,7 +1064,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 }
               />
 
-              {/* Show notes select only when status is 'failed' (Bad prospect) */}
+              {/* Notes select for 'failed' (Bad prospect) */}
               {(storeStatuses[store.id] === 'failed' ||
                 store.status === 'failed') && (
                 <SelectComponent
@@ -986,7 +1073,6 @@ const StorePopup: React.FC<StorePopupProps> = ({
                   onChange={(note) => {
                     if (note) {
                       setSelectedNote(note);
-                      // Update with the new note
                       handleStatusChangeAttempt(store.id, 'failed', note);
                     }
                   }}
@@ -999,6 +1085,65 @@ const StorePopup: React.FC<StorePopupProps> = ({
                   }
                 />
               )}
+
+              {/* non_existent reasons (workflow-driven, e.g. Amex) */}
+              {nonExistentReasonOptions &&
+                (storeStatuses[store.id] === 'non_existent' || store.status === 'non_existent') && (
+                  <div className='space-y-2'>
+                    <SelectComponent
+                      placeholder='Motivo inesistenza'
+                      value={nonExistentReason}
+                      onChange={(v) => {
+                        if (v) {
+                          setNonExistentReason(v);
+                          setNonExistentText('');
+                        }
+                      }}
+                      options={nonExistentReasonOptions}
+                      disabled={!!loadingStatus[store.id]}
+                    />
+                    {selectedNonExistentReasonDef?.freeText && (
+                      <div className='flex gap-2'>
+                        <input
+                          type='text'
+                          placeholder={selectedNonExistentReasonDef.freeTextLabel ?? 'Note'}
+                          value={nonExistentText}
+                          onChange={(e) => setNonExistentText(e.target.value)}
+                          className='flex-1 px-3 py-2 rounded-md text-sm bg-white/10 border border-white/30 text-white placeholder:text-white/50'
+                        />
+                        <Button
+                          type='button'
+                          size='sm'
+                          className='bg-white text-[#224677] hover:bg-gray-100'
+                          disabled={!nonExistentText.trim() || !!loadingStatus[store.id]}
+                          onClick={() => {
+                            const note = `${selectedNonExistentReasonDef.label}: ${nonExistentText.trim()}`;
+                            handleStatusChangeAttempt(store.id, 'non_existent', note);
+                          }}
+                        >
+                          Salva
+                        </Button>
+                      </div>
+                    )}
+                    {nonExistentReason && !selectedNonExistentReasonDef?.freeText && (
+                      <Button
+                        type='button'
+                        size='sm'
+                        className='w-full bg-white text-[#224677] hover:bg-gray-100'
+                        disabled={!!loadingStatus[store.id]}
+                        onClick={() =>
+                          handleStatusChangeAttempt(
+                            store.id,
+                            'non_existent',
+                            selectedNonExistentReasonDef?.label ?? nonExistentReason
+                          )
+                        }
+                      >
+                        Salva motivo
+                      </Button>
+                    )}
+                  </div>
+                )}
 
               {/* Generic Photo Upload Button */}
               <input
@@ -1091,18 +1236,26 @@ const StorePopup: React.FC<StorePopupProps> = ({
               </Button>
             )}
 
-            {storeStatuses[store.id] === 'concluded' && (
-              <Button
-                onClick={() =>
-                  window.open(
-                    'https://appraise.attitudeltd.com/ff_acquiring',
-                    '_blank'
-                  )
-                }
-              >
-                <FileCheck className='mr-2' /> Compila distinta
-              </Button>
-            )}
+            {storeStatuses[store.id] === 'concluded' &&
+              (clientWorkflow?.concluded_sub_workflow ? (
+                // Amex (or workflow-driven client): show WorkflowRunner sub-form
+                <WorkflowRunner
+                  storeId={store.id}
+                  clientId={store.client_id!}
+                  userId={currentUserId}
+                  workflow={clientWorkflow}
+                  existingOutcome={existingOutcome}
+                />
+              ) : (
+                // Default client: link to distinta form
+                <Button
+                  onClick={() =>
+                    window.open('https://appraise.attitudeltd.com/ff_acquiring', '_blank')
+                  }
+                >
+                  <FileCheck className='mr-2' /> Compila distinta
+                </Button>
+              ))}
 
             {statusLogs[store.id]?.length > 0 && (
               <div className='py-3'>

@@ -377,7 +377,7 @@ const Map = ({ user }: any) => {
             prev: storeStatuses[storeId] || 'free',
             new: newStatus,
             modifier: user.id,
-            notes: newStatus === 'failed' && note ? note : null,
+            notes: (['failed', 'non_existent'].includes(newStatus) && note) ? note : null,
           },
         ]);
 

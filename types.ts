@@ -41,6 +41,52 @@ export interface StoreLog {
   modifierName?: string; // Name of the user who made the change
 }
 
+// ── Workflow types ─────────────────────────────────────────────────────────────
+
+export interface WorkflowOption {
+  value: string;
+  label: string;
+  requiresPhoto?: boolean;
+  photoLabel?: string;
+  freeText?: boolean;
+  freeTextLabel?: string;
+  externalLink?: boolean;
+}
+
+export interface WorkflowMainChoice {
+  value: string;
+  label: string;
+  subOptions: WorkflowOption[];
+}
+
+export interface WorkflowSection {
+  id: string;
+  title: string;
+  type: 'choice_with_sub' | 'multi_terminal' | 'choice' | 'multi_select';
+  mainChoices?: WorkflowMainChoice[]; // choice_with_sub
+  terminals?: WorkflowOption[];       // multi_terminal
+  choices?: WorkflowOption[];         // choice
+  options?: WorkflowOption[];         // multi_select
+}
+
+export interface WorkflowReason {
+  value: string;
+  label: string;
+  freeText?: boolean;
+  freeTextLabel?: string;
+}
+
+export interface ClientWorkflow {
+  dom_link?: string;
+  failed_reasons?: WorkflowReason[];
+  non_existent_reasons?: WorkflowReason[];
+  concluded_sub_workflow?: {
+    sections: WorkflowSection[];
+  };
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+
 export type StorePopupProps = {
   store: Store;
   coord: [number, number];
