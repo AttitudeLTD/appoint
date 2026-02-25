@@ -906,6 +906,23 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 </div>
               )}
 
+              {/* Avviso visivo: la select è bloccata finché non si carica la foto */}
+              {!photoUploaded &&
+                ![
+                  'concluded',
+                  'already_client',
+                  'failed',
+                  'not_interested',
+                  'non_existent',
+                ].includes(storeStatuses[store.id] || store.status) && (
+                  <div className='flex items-center gap-2 px-3 py-2 rounded-md bg-amber-400/20 border border-amber-400/50'>
+                    <Camera className='h-4 w-4 text-amber-300 flex-shrink-0' />
+                    <p className='text-xs text-amber-200 leading-tight'>
+                      Scatta prima la foto <strong>"Mi trovo qui"</strong> per cambiare stato
+                    </p>
+                  </div>
+                )}
+
               <SelectComponent
                 placeholder='Stato avanzamento'
                 value={storeStatuses[store.id] || store.status}
@@ -1021,7 +1038,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 ) : (
                   <>
                     <Camera className='mr-2' />
-                    Inserisci foto
+                    Foto generica
                   </>
                 )}
               </Button>

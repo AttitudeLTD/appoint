@@ -45,20 +45,21 @@ export const SelectComponent = ({
     return {
       control: (base: any, state: any) => ({
         ...base,
-        backgroundColor: '#ffffff',
-        borderColor: state.isFocused
-          ? '#224677'
-          : '#e5e7eb',
-        borderRadius: 'var(--radius)',
-        color: '#224677',
-        boxShadow: state.isFocused ? '0 0 0 1px #224677' : 'none',
-        ':hover': {
-          borderColor: state.isFocused
+        backgroundColor: state.isDisabled ? '#f3f4f6' : '#ffffff',
+        borderColor: state.isDisabled
+          ? '#d1d5db'
+          : state.isFocused
             ? '#224677'
-            : '#d1d5db',
+            : '#e5e7eb',
+        borderRadius: 'var(--radius)',
+        color: state.isDisabled ? '#9ca3af' : '#224677',
+        boxShadow: state.isFocused && !state.isDisabled ? '0 0 0 1px #224677' : 'none',
+        ':hover': {
+          borderColor: state.isDisabled ? '#d1d5db' : state.isFocused ? '#224677' : '#d1d5db',
         },
         padding: '2px 8px',
-        cursor: 'pointer',
+        cursor: state.isDisabled ? 'not-allowed' : 'pointer',
+        opacity: state.isDisabled ? 0.6 : 1,
         transition: 'all 0.2s ease',
       }),
       valueContainer: (base: any) => ({
@@ -95,22 +96,22 @@ export const SelectComponent = ({
           backgroundColor: '#f3f4f6',
         },
       }),
-      singleValue: (base: any) => ({
+      singleValue: (base: any, state: any) => ({
         ...base,
-        color: '#224677',
+        color: state.isDisabled ? '#9ca3af' : '#224677',
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
       }),
-      placeholder: (base: any) => ({
+      placeholder: (base: any, state: any) => ({
         ...base,
-        color: '#9ca3af',
+        color: state.isDisabled ? '#9ca3af' : '#9ca3af',
       }),
-      dropdownIndicator: (base: any) => ({
+      dropdownIndicator: (base: any, state: any) => ({
         ...base,
-        color: '#6b7280',
+        color: state.isDisabled ? '#d1d5db' : '#6b7280',
         ':hover': {
-          color: '#224677',
+          color: state.isDisabled ? '#d1d5db' : '#224677',
         },
         padding: '0 8px',
       }),
