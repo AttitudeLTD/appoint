@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Loader, MapPin, Search } from 'lucide-react';
+import { Filter, Loader, MapPin, Search, X } from 'lucide-react';
 
 import L, { LatLngExpression } from 'leaflet';
 import {
@@ -38,6 +38,9 @@ import {
   nonExistentPinM,
   createFreePinWithLogo,
   createFreePinMutedWithLogo,
+  createFreePinColored,
+  createFreePinColoredWithLogo,
+  TIER_COLORS,
 } from '@/utils/nav-icons';
 
 import {
@@ -155,6 +158,9 @@ const Map = ({ user }: any) => {
   const [governanceLevel, setGovernanceLevel] = useState<GovernanceLevel>('am'); // populated from users.role
   const [clients, setClients] = useState<{ id: number; name: string; logo?: string | null }[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
+  const [selectedTiers, setSelectedTiers] = useState<Set<string>>(new Set());
+  const [showFilters, setShowFilters] = useState(false);
+  const [showTierColors, setShowTierColors] = useState(true);
 
   // Ref per il filtro client: si legge dentro fetchStoresAndLogs senza metterlo nelle deps
   const selectedClientIdRef = useRef<number | null>(null);
@@ -728,54 +734,157 @@ const Map = ({ user }: any) => {
       <div className='relative w-full h-full'>
         {coord && (
           <div className='absolute top-4 left-4 z-[1000] w-[calc(100vw-2rem)] max-w-[420px] pointer-events-auto space-y-2'>
-            {/* Client filter */}
-            <div className='flex flex-wrap items-center gap-2'>
+            {/* Filter button + panel */}
+            <div className='relative'>
               <Button
                 type='button'
                 size='sm'
                 variant='outline'
-                className='rounded-full text-xs'
+                className='rounded-full text-xs flex items-center gap-1.5 shadow-md'
                 style={{
-                  backgroundColor: selectedClientId == null ? '#224677' : 'white',
+                  backgroundColor: (selectedClientId != null || selectedTiers.size > 0) ? '#224677' : 'white',
                   borderColor: '#224677',
-                  color: selectedClientId == null ? 'white' : '#224677',
+                  color: (selectedClientId != null || selectedTiers.size > 0) ? 'white' : '#224677',
                 }}
-                onClick={() => setSelectedClientId(null)}
+                onClick={() => setShowFilters((v) => !v)}
               >
-                Tutti
+                <Filter className='h-3 w-3' />
+                Filtri
+                {(selectedClientId != null || selectedTiers.size > 0) && (
+                  <span className='bg-white text-[#224677] rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold'>
+                    {(selectedClientId != null ? 1 : 0) + selectedTiers.size}
+                  </span>
+                )}
               </Button>
-              {clients.map((c) => {
-                const logoUrl = getClientLogoUrl(c.logo);
-                return (
-                  <Button
-                    key={c.id}
-                    type='button'
-                    size='sm'
-                    variant='outline'
-                    className='rounded-full text-xs flex items-center gap-1.5'
-                    style={{
-                      backgroundColor: selectedClientId === c.id ? '#224677' : 'white',
-                      borderColor: '#224677',
-                      color: selectedClientId === c.id ? 'white' : '#224677',
-                    }}
-                    onClick={() => setSelectedClientId(c.id)}
-                  >
-                    {logoUrl ? (
-                      <span className='relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0 bg-gray-200'>
-                        <img
-                          src={logoUrl}
-                          alt=''
-                          className='w-full h-full object-cover'
-                          width={20}
-                          height={20}
-                        />
-                      </span>
-                    ) : null}
-                    {c.name}
-                  </Button>
-                );
-              })}
+
+              {showFilters && (
+                <div
+                  className='absolute top-full mt-2 left-0 bg-white rounded-xl shadow-2xl p-4 z-[10000] min-w-[280px]'
+                  style={{ border: '1px solid #e5e7eb' }}
+                >
+                  <div className='flex items-center justify-between mb-3'>
+                    <span className='text-sm font-semibold text-gray-800'>Filtri</span>
+                    <button onClick={() => setShowFilters(false)} className='text-gray-400 hover:text-gray-600'>
+                      <X className='h-4 w-4' />
+                    </button>
+                  </div>
+
+                  {/* Cliente */}
+                  <p className='text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2'>Cliente</p>
+                  <div className='flex flex-wrap gap-1.5 mb-4'>
+                    <button
+                      className='rounded-full text-xs px-3 py-1 border transition-colors'
+                      style={{
+                        backgroundColor: selectedClientId == null ? '#224677' : 'white',
+                        borderColor: '#224677',
+                        color: selectedClientId == null ? 'white' : '#224677',
+                      }}
+                      onClick={() => setSelectedClientId(null)}
+                    >
+                      Tutti
+                    </button>
+                    {clients.map((c) => {
+                      const logoUrl = getClientLogoUrl(c.logo);
+                      return (
+                        <button
+                          key={c.id}
+                          className='rounded-full text-xs px-3 py-1 border flex items-center gap-1.5 transition-colors'
+                          style={{
+                            backgroundColor: selectedClientId === c.id ? '#224677' : 'white',
+                            borderColor: '#224677',
+                            color: selectedClientId === c.id ? 'white' : '#224677',
+                          }}
+                          onClick={() => setSelectedClientId(c.id)}
+                        >
+                          {logoUrl && (
+                            <span className='w-4 h-4 rounded-full overflow-hidden flex-shrink-0 bg-gray-200'>
+                              <img src={logoUrl} alt='' className='w-full h-full object-cover' />
+                            </span>
+                          )}
+                          {c.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Tier */}
+                  <p className='text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2'>Tier</p>
+                  <div className='flex flex-wrap gap-1.5'>
+                    {(
+                      [
+                        { value: null,     label: 'Tutti',  dot: null },
+                        { value: 'gold+',  label: 'Gold+',  dot: '#FFA500' },
+                        { value: 'gold',   label: 'Gold',   dot: '#FFD700' },
+                        { value: 'silver', label: 'Silver', dot: '#C0C0C0' },
+                        { value: 'bronze', label: 'Bronze', dot: '#CD7F32' },
+                      ] as { value: string | null; label: string; dot: string | null }[]
+                    ).map(({ value, label, dot }) => {
+                      const isActive = value === null ? selectedTiers.size === 0 : selectedTiers.has(value);
+                      return (
+                        <button
+                          key={label}
+                          className='rounded-full text-xs px-3 py-1 border flex items-center gap-1.5 transition-colors'
+                          style={{
+                            backgroundColor: isActive ? (dot ?? '#224677') : 'white',
+                            borderColor: dot ?? '#224677',
+                            color: isActive ? 'white' : '#374151',
+                          }}
+                          onClick={() => {
+                            if (value === null) {
+                              setSelectedTiers(new Set());
+                            } else {
+                              setSelectedTiers((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(value)) next.delete(value);
+                                else next.add(value);
+                                return next;
+                              });
+                            }
+                          }}
+                        >
+                          {dot && (
+                            <span
+                              className='w-2 h-2 rounded-full flex-shrink-0'
+                              style={{
+                                backgroundColor: isActive ? 'rgba(255,255,255,0.8)' : dot,
+                                border: '1px solid rgba(0,0,0,0.1)',
+                              }}
+                            />
+                          )}
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Tier color toggle */}
+                  <div className='mt-4 pt-3 border-t border-gray-100 flex items-center justify-between'>
+                    <span className='text-xs text-gray-600'>Colori tier sui pin</span>
+                    <button
+                      onClick={() => setShowTierColors((v) => !v)}
+                      className='relative inline-flex h-5 w-9 items-center rounded-full transition-colors'
+                      style={{ backgroundColor: showTierColors ? '#224677' : '#d1d5db' }}
+                    >
+                      <span
+                        className='inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform'
+                        style={{ transform: showTierColors ? 'translateX(18px)' : 'translateX(2px)' }}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Reset */}
+                  {(selectedClientId != null || selectedTiers.size > 0) && (
+                    <button
+                      className='mt-3 w-full text-xs text-gray-400 hover:text-gray-600 underline'
+                      onClick={() => { setSelectedClientId(null); setSelectedTiers(new Set()); }}
+                    >
+                      Rimuovi tutti i filtri
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
+
             <div className='flex items-center gap-2'>
               {/* Address search */}
               <div className='relative flex-1'>
@@ -861,18 +970,31 @@ const Map = ({ user }: any) => {
               disableClusteringAtZoom={16}
               minimumClusterSize={10}
             >
-            {stores.map((store) => {
+            {stores
+              .filter((store) =>
+                selectedTiers.size === 0 ||
+                (store.tier != null && selectedTiers.has(store.tier))
+              )
+              .map((store) => {
               const storeCoordinates = parseCoords(store.location);
               if (!storeCoordinates) return null; // Skip rendering if coordinates are invalid
 
               const clientLogoUrl =
                 store.status === 'free' ? getClientLogoUrl(store.client_logo) : null;
 
+              const tierFillColor = (showTierColors && store.tier)
+                ? (TIER_COLORS[(store.tier as string).toLowerCase() as keyof typeof TIER_COLORS] ?? null)
+                : null;
+
               const icon = store.modifiedByOtherUser
                 ? store.status === 'free'
-                  ? clientLogoUrl
-                    ? createFreePinMutedWithLogo(clientLogoUrl)
-                    : freePinM
+                  ? tierFillColor && clientLogoUrl
+                    ? createFreePinColoredWithLogo(tierFillColor, clientLogoUrl, true)  // tier color + logo
+                    : tierFillColor
+                      ? createFreePinColored(tierFillColor, true)                       // tier color only
+                      : clientLogoUrl
+                        ? createFreePinMutedWithLogo(clientLogoUrl)                     // logo only
+                        : freePinM                                                       // default
                   : store.status === 'in_progress'
                     ? progressPinM
                     : store.status === 'concluded'
@@ -885,9 +1007,13 @@ const Map = ({ user }: any) => {
                             ? nonExistentPinM
                             : failedPinM
                 : store.status === 'free'
-                  ? clientLogoUrl
-                    ? createFreePinWithLogo(clientLogoUrl)
-                    : freePin
+                  ? tierFillColor && clientLogoUrl
+                    ? createFreePinColoredWithLogo(tierFillColor, clientLogoUrl)        // tier color + logo
+                    : tierFillColor
+                      ? createFreePinColored(tierFillColor)                             // tier color only
+                      : clientLogoUrl
+                        ? createFreePinWithLogo(clientLogoUrl)                          // logo only
+                        : freePin                                                        // default
                   : store.status === 'in_progress'
                     ? progressPin
                     : store.status === 'concluded'
@@ -900,8 +1026,10 @@ const Map = ({ user }: any) => {
                             ? nonExistentPin
                             : failedPin;
 
+              const finalIcon = icon;
+
               return store.modifiedByOtherUser ? (
-                <Marker key={store.id} position={storeCoordinates} icon={icon}>
+                <Marker key={store.id} position={storeCoordinates} icon={finalIcon}>
                   <Popup>
                     {governanceLevel === 'agent' ? (
                       <>In questo punto vendita è in corso una trattativa.</>
@@ -918,7 +1046,7 @@ const Map = ({ user }: any) => {
                   </Popup>
                 </Marker>
               ) : (
-                <Marker key={store.id} position={storeCoordinates} icon={icon}>
+                <Marker key={store.id} position={storeCoordinates} icon={finalIcon}>
                   <Popup>
                     <StorePopup
                       store={store}

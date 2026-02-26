@@ -230,6 +230,72 @@ export const nonExistentPin = new L.Icon({
   shadowSize: [60, 45],
 });
 
+export const TIER_COLORS: Record<string, string> = {
+  'gold+': '#FFA500',
+  'gold':  '#FFD700',
+  'silver':'#C0C0C0',
+  'bronze':'#CD7F32',
+};
+
+/**
+ * Wraps any existing L.Icon or L.DivIcon with a colored CSS drop-shadow that follows
+ * the exact shape of the pin (transparent pixels are preserved). Requires no SVG edits.
+ */
+export function applyTierBorder(
+  base: L.Icon | L.DivIcon,
+  tierColor: string
+): L.DivIcon {
+  const opts = base.options as any;
+  const [w, h]: [number, number] = opts.iconSize ?? [40, 40];
+  const anchor: [number, number] = opts.iconAnchor ?? [w / 2, h];
+  const popup: [number, number] = opts.popupAnchor ?? [0, -h];
+
+  const innerHtml: string =
+    opts.html !== undefined
+      ? opts.html // DivIcon (logo pins)
+      : `<img src="${opts.iconUrl}" width="${w}" height="${h}" style="display:block" />`; // regular Icon
+
+  // 4× crisp drop-shadow at 0.8px → very thin outline following the exact pin shape
+  const s = `drop-shadow(0.8px 0 0 ${tierColor}) drop-shadow(-0.8px 0 0 ${tierColor}) drop-shadow(0 0.8px 0 ${tierColor}) drop-shadow(0 -0.8px 0 ${tierColor})`;
+
+  return new L.DivIcon({
+    html: `<div style="filter:${s};width:${w}px;height:${h}px;display:inline-flex">${innerHtml}</div>`,
+    className: '',
+    iconSize: [w, h],
+    iconAnchor: anchor,
+    popupAnchor: popup,
+  });
+}
+
+/** Free pin: tier color fill + client logo image (best of both). */
+export function createFreePinColoredWithLogo(color: string, logoUrl: string, muted = false): L.DivIcon {
+  const size: [number, number] = muted ? [38, 38] : [52, 52];
+  const anchor: [number, number] = muted ? [19, 34] : [26, 47];
+  const popup: [number, number] = muted ? [0, -36] : [0, -48];
+  const [imgSize, imgTop, imgLeft] = muted ? [14, 9, 12] : [18, 13, 17];
+  const html = `
+    <div style="position:relative;width:${size[0]}px;height:${size[1]}px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" width="${size[0]}" height="${size[1]}" style="display:block">
+        <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0" fill="${color}" opacity="${muted ? 0.65 : 1}"/>
+        <circle cx="36" cy="30" r="14" fill="white" stroke="none"/>
+      </svg>
+      <img src="${logoUrl}" style="position:absolute;top:${imgTop}px;left:${imgLeft}px;width:${imgSize}px;height:${imgSize}px;border-radius:50%;object-fit:cover;pointer-events:none" />
+    </div>`;
+  return new L.DivIcon({ html, className: '', iconSize: size, iconAnchor: anchor, popupAnchor: popup });
+}
+
+/** Free pin with a custom fill color (used for tier coloring). Uses DivIcon/inline SVG for reliable react-leaflet reactivity. */
+export function createFreePinColored(color: string, muted = false): L.DivIcon {
+  const size: [number, number] = muted ? [30, 30] : [40, 40];
+  const anchor: [number, number] = muted ? [14, 40] : [24, 50];
+  const popup: [number, number] = muted ? [0, -38] : [0, -48];
+  const html = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" width="${size[0]}" height="${size[1]}" style="display:block;overflow:visible">
+    <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0" fill="${color}" opacity="${muted ? 0.65 : 1}"/>
+    <circle cx="36" cy="30" r="6" fill="white"/>
+  </svg>`;
+  return new L.DivIcon({ html, className: '', iconSize: size, iconAnchor: anchor, popupAnchor: popup });
+}
+
 /**
  * Crea un pin "free" con il logo del cliente al posto del pallino colorato.
  * Usa L.DivIcon in modo da poter usare un <img> normale (nessuna codifica base64).
