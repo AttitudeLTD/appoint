@@ -18,9 +18,5 @@ export default async function ProtectedPage() {
     return redirect('/');
   }
 
-  return (
-    <main>
-      <DynamicMap user={user} />
-    </main>
-  );
+  return <DynamicMap user={user} />;
 }

@@ -5,23 +5,46 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from './ui/sheet';
 import { Button } from './ui/button';
-import { Avatar } from './ui/avatar';
-import { Info, List, Navigation, Store, Camera, Loader, X, Download } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { Navigation, Store, Camera, Loader, X, Download } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores } from '@/utils/stores';
 import { getStatusLabel } from '@/utils/utils';
 import { getMyLoc } from '@/utils/navigation';
 
-export function UserList() {
+interface UserListProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function UserList({ open: externalOpen, onOpenChange: externalOnOpenChange }: UserListProps = {}) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [stores, setStores] = useState<any[]>([]);
   const [coord, setCoord] = useState<[number, number] | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setIsOpen = (v: boolean) => {
+    setInternalOpen(v);
+    externalOnOpenChange?.(v);
+  };
+  const touchStartY = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const delta = e.changedTouches[0].clientY - touchStartY.current;
+    if (delta < -60) {
+      setIsExpanded(true);
+    } else if (delta > 60) {
+      if (isExpanded) setIsExpanded(false);
+      else setIsOpen(false);
+    }
+  };
   const [loading, setLoading] = useState(false);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const supabase = createClient();
@@ -132,27 +155,28 @@ export function UserList() {
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button variant='ghost' className='p-0 h-8 w-8 rounded-full hover:bg-white/20 transition-colors'>
-          <Avatar className='h-8 w-8 flex items-center justify-center bg-transparent'>
-            <List className='h-4 w-4 text-white' />
-          </Avatar>
-        </Button>
-      </SheetTrigger>
       <SheetContent
         side='bottom'
         hideClose
-        showPanelToggle
-        onPanelToggle={() => setIsExpanded(!isExpanded)}
         className={cn(
-          'h-[96%] sm:h-[385px] sm:rounded-t-[10px] z-[1000] overflow-y-auto p-0 transition-[height]',
-          isExpanded && 'h-[75vh] sm:h-[75vh]'
+          'flex flex-col sm:rounded-t-[10px] z-[1000] overflow-hidden p-0 transition-all duration-300',
+          isExpanded ? 'h-[85vh]' : 'h-[50vh]'
         )}
         style={{ backgroundColor: '#224677' }}
       >
-        <SheetHeader className='sticky top-0 p-4 border-b border-white/20 backdrop-blur-sm' style={{ backgroundColor: '#224677' }}>
-          <div className='absolute inset-0' style={{ backgroundColor: '#224677' }} />
-          <div className='relative z-10 flex items-center justify-between'>
+        {/* Drag handle */}
+        <div
+          className='flex-shrink-0 flex justify-center items-center h-6 cursor-grab active:cursor-grabbing touch-none select-none'
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onClick={() => setIsExpanded((e) => !e)}
+          title={isExpanded ? 'Riduci' : 'Espandi'}
+        >
+          <div className='w-10 h-1 rounded-full bg-white/30' />
+        </div>
+
+        <SheetHeader className='flex-shrink-0 px-4 pb-3 pt-1 border-b border-white/20' style={{ backgroundColor: '#224677' }}>
+          <div className='flex items-center justify-between'>
             <SheetTitle className='flex items-center gap-2 text-white'>
               Attività in corso
               {loading && (
@@ -180,7 +204,8 @@ export function UserList() {
             </div>
           </div>
         </SheetHeader>
-        <div className='mt-6 p-6 overflow-y-auto' style={{ backgroundColor: '#224677' }}>
+
+        <div className='flex-1 overflow-y-auto p-6' style={{ backgroundColor: '#224677' }}>
           {stores.map((entry, index) => {
             // Generate unique key for each entry
             const entryKey = entry.type === 'photo' 

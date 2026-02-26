@@ -40,8 +40,18 @@ const categories = [
   { value: 'altro', label: 'Altro' },
 ];
 
-export function NewStoreForm() {
-  const [isOpen, setIsOpen] = useState(false);
+interface NewStoreFormProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function NewStoreForm({ open: externalOpen, onOpenChange: externalOnOpenChange }: NewStoreFormProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setIsOpen = (v: boolean) => {
+    setInternalOpen(v);
+    externalOnOpenChange?.(v);
+  };
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedClientId, setSelectedClientId] = useState<string>('');
@@ -212,13 +222,16 @@ export function NewStoreForm() {
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button variant='ghost' className='p-0 h-8 w-8 rounded-full hover:bg-white/20 transition-colors'>
-          <Avatar className='h-8 w-8 flex items-center justify-center bg-transparent'>
-            <Plus className='h-4 w-4 text-white' />
-          </Avatar>
-        </Button>
-      </SheetTrigger>
+      {/* Mostra il trigger standalone solo quando non è in modalità controllata (es. direttamente nell'header) */}
+      {externalOpen === undefined && (
+        <SheetTrigger asChild>
+          <Button variant='ghost' className='p-0 h-8 w-8 rounded-full hover:bg-white/20 transition-colors'>
+            <Avatar className='h-8 w-8 flex items-center justify-center bg-transparent'>
+              <Plus className='h-4 w-4 text-white' />
+            </Avatar>
+          </Button>
+        </SheetTrigger>
+      )}
       <SheetContent className='z-[1000] overflow-y-auto'>
         <div className='h-full flex flex-col'>
           <SheetHeader>

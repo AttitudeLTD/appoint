@@ -53,8 +53,6 @@ import { Input } from './ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 
@@ -62,7 +60,6 @@ import StorePopup from './StorePopup';
 import { Button } from './ui/button';
 
 type GovernanceLevel = 'agent' | 'am' | 'supervisor';
-const GOVERNANCE_STORAGE_KEY = 'appoint_governance_level';
 
 // Create a new component to handle map movements
 function MapEventHandler({
@@ -136,7 +133,7 @@ const Map = ({ user }: any) => {
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showSearchResults, setShowSearchResults] = useState(true);
   const [showGeoMessage, setShowGeoMessage] = useState(false);
-  const [governanceLevel, setGovernanceLevel] = useState<GovernanceLevel>('am');
+  const [governanceLevel, setGovernanceLevel] = useState<GovernanceLevel>('am'); // populated from users.role
   const [clients, setClients] = useState<{ id: number; name: string; logo?: string | null }[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
 
@@ -146,19 +143,6 @@ const Map = ({ user }: any) => {
 
   // Ultimo centro usato per la fetch dei pin (aggiornato dentro fetchStoresAndLogs)
   const lastFetchCenter = useRef<[number, number] | null>(null);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(GOVERNANCE_STORAGE_KEY) as
-        | GovernanceLevel
-        | null;
-      if (saved === 'agent' || saved === 'am' || saved === 'supervisor') {
-        setGovernanceLevel(saved);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
 
   useEffect(() => {
     const loadClients = async () => {
@@ -171,18 +155,6 @@ const Map = ({ user }: any) => {
     loadClients();
   }, [supabase]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(GOVERNANCE_STORAGE_KEY, governanceLevel);
-    } catch {
-      // ignore
-    }
-
-    // Notify other UI (header) to react (e.g., hide dashboard button for agent)
-    window.dispatchEvent(
-      new CustomEvent('governanceChange', { detail: { level: governanceLevel } })
-    );
-  }, [governanceLevel]);
 
   function MapClickHandler() {
     const map = useMap();
@@ -530,16 +502,20 @@ const Map = ({ user }: any) => {
   useEffect(() => {
     // Fetch user's name
     const getUserName = async () => {
-      const { data: userName, error } = await supabase
+      const { data: userData, error } = await supabase
         .from('users')
-        .select('name, surname, number')
+        .select('name, surname, number, role')
         .eq('id', user.id)
         .single();
 
       if (error) {
-        console.error('Error fetching user name:', error);
-      } else {
-        setAgent(userName || null);
+        console.error('Error fetching user info:', error);
+      } else if (userData) {
+        setAgent(userData);
+        const role = userData.role as GovernanceLevel | null;
+        if (role === 'agent' || role === 'am' || role === 'supervisor') {
+          setGovernanceLevel(role);
+        }
       }
     };
 
@@ -782,51 +758,6 @@ const Map = ({ user }: any) => {
               })}
             </div>
             <div className='flex items-center gap-2'>
-              {/* Governance visibility selector */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    className='h-10 w-10 rounded-full p-0 justify-center shadow-md min-w-[40px] cursor-pointer pointer-events-auto'
-                    style={{ backgroundColor: '#224677', borderColor: '#224677', color: 'white' }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                  >
-                    <span className='text-[11px] font-semibold pointer-events-none text-white'>
-                      {governanceLevel === 'agent'
-                        ? 'A'
-                        : governanceLevel === 'am'
-                          ? 'AM'
-                          : 'S'}
-                    </span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align='start' className='z-[10000]' style={{ backgroundColor: '#224677' }}>
-                  <DropdownMenuRadioGroup
-                    value={governanceLevel}
-                    onValueChange={(value) => {
-                      if (
-                        value === 'agent' ||
-                        value === 'am' ||
-                        value === 'supervisor'
-                      ) {
-                        setGovernanceLevel(value);
-                      }
-                    }}
-                  >
-                    <DropdownMenuRadioItem value='agent' className='text-white hover:bg-[#1a3560]'>
-                      Agente
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value='am' className='text-white hover:bg-[#1a3560]'>AM</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value='supervisor' className='text-white hover:bg-[#1a3560]'>
-                      Supervisor
-                    </DropdownMenuRadioItem>
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
               {/* Address search */}
               <div className='relative flex-1'>
                 <Input
@@ -879,7 +810,7 @@ const Map = ({ user }: any) => {
         {coord ? (
           <MapContainer
             style={{
-              height: '80vh',
+              height: '100%',
               width: '100vw',
             }}
             center={coord}
@@ -978,7 +909,7 @@ const Map = ({ user }: any) => {
             })}
           </MapContainer>
         ) : (
-          <div className='h-[80vh] w-[100vw] flex flex-col items-center justify-center'>
+          <div className='flex-1 w-full flex flex-col items-center justify-center'>
             <Loader className='h-8 w-8 animate-spin text-[#1B304E] mb-4' />
             <p className='text-lg font-medium'>Caricamento mappa...</p>
             <p className='text-sm mt-2'>

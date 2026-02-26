@@ -5,38 +5,17 @@ import { Avatar } from '@/components/ui/avatar';
 import { LayoutDashboard, Map } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
 
-export function DashboardToggleButton() {
+interface DashboardToggleButtonProps {
+  role: 'agent' | 'am' | 'supervisor' | null;
+}
+
+export function DashboardToggleButton({ role }: DashboardToggleButtonProps) {
   const pathname = usePathname();
   const isDashboard = pathname?.includes('/dashboard');
-  const [governanceLevel, setGovernanceLevel] = useState<string | null>(null);
 
-  useEffect(() => {
-    const read = () => {
-      try {
-        setGovernanceLevel(localStorage.getItem('appoint_governance_level'));
-      } catch {
-        // ignore
-      }
-    };
-
-    read();
-
-    const onGovernanceChange = () => read();
-    window.addEventListener('governanceChange', onGovernanceChange as EventListener);
-    window.addEventListener('storage', onGovernanceChange);
-    return () => {
-      window.removeEventListener(
-        'governanceChange',
-        onGovernanceChange as EventListener
-      );
-      window.removeEventListener('storage', onGovernanceChange);
-    };
-  }, []);
-
-  // If "Agente" is selected, hide the dashboard button on the map view.
-  if (governanceLevel === 'agent' && !isDashboard) {
+  // Agents don't see the dashboard button on the map
+  if (role === 'agent' && !isDashboard) {
     return null;
   }
 
