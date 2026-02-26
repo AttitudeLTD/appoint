@@ -162,6 +162,8 @@ const Map = ({ user }: any) => {
   const [showFilters, setShowFilters] = useState(false);
   const [showTierColors, setShowTierColors] = useState(true);
   const filtersPanelRef = useRef<HTMLDivElement>(null);
+  // Per AM: set di modifier user id per cui mostrare il nome (agenti nella mia area)
+  const [modifierShowNameSet, setModifierShowNameSet] = useState<Set<string>>(new Set());
 
   // Chiudi popup filtri al click fuori
   useEffect(() => {
@@ -517,10 +519,11 @@ const Map = ({ user }: any) => {
 
           // If modified by another user, get their information
           let modifierName = '';
+          let modifierId: string | undefined;
           if (modifiedByOtherUser && logs && logs.length > 0) {
-            // Find the latest log from another user
             const otherUserLog = logs.find((log) => log.modifier !== user.id);
             if (otherUserLog) {
+              modifierId = otherUserLog.modifier;
               const userInfo = await fetchUserInfo(otherUserLog.modifier);
               if (userInfo) {
                 modifierName = `${userInfo.name} ${userInfo.surname}`;
@@ -528,7 +531,7 @@ const Map = ({ user }: any) => {
             }
           }
 
-          return { ...store, modifiedByOtherUser, modifierName };
+          return { ...store, modifiedByOtherUser, modifierName, modifierId };
         })
       );
 
@@ -588,6 +591,45 @@ const Map = ({ user }: any) => {
       clearTimeout(fallbackTimeout);
     };
   }, [user.id, supabase, fetchStoresAndLogs]);
+
+  // Per AM: calcola quali modifier (agenti) sono nella mia area → mostriamo il nome solo per quelli
+  useEffect(() => {
+    if (governanceLevel !== 'am' || stores.length === 0) {
+      if (governanceLevel !== 'am') setModifierShowNameSet(new Set());
+      return;
+    }
+    const modifierIds = Array.from(
+      new Set(
+        stores
+          .filter((s: any) => s.modifiedByOtherUser && s.modifierId)
+          .map((s: any) => s.modifierId as string)
+      )
+    );
+    if (modifierIds.length === 0) {
+      setModifierShowNameSet(new Set());
+      return;
+    }
+    (async () => {
+      const { data: myAreas } = await supabase
+        .from('user_areas')
+        .select('area_id')
+        .eq('user_id', user.id);
+      const myAreaIds = new Set((myAreas ?? []).map((r) => String(r.area_id)));
+      if (myAreaIds.size === 0) {
+        setModifierShowNameSet(new Set());
+        return;
+      }
+      const { data: modifierAreas } = await supabase
+        .from('user_areas')
+        .select('user_id, area_id')
+        .in('user_id', modifierIds);
+      const showSet = new Set<string>();
+      (modifierAreas ?? []).forEach((r: { user_id: string; area_id: number }) => {
+        if (myAreaIds.has(String(r.area_id))) showSet.add(r.user_id);
+      });
+      setModifierShowNameSet(showSet);
+    })();
+  }, [governanceLevel, stores, user.id, supabase]);
 
   // Al cambio filtro richiama la fetch con l'ultimo centro usato (non con coord che è la posizione persona)
   useEffect(() => {
@@ -1046,7 +1088,11 @@ const Map = ({ user }: any) => {
                   <Popup>
                     {governanceLevel === 'agent' ? (
                       <>In questo punto vendita è in corso una trattativa.</>
-                    ) : (
+                    ) : governanceLevel === 'supervisor' ||
+                      (governanceLevel === 'am' &&
+                        'modifierId' in store &&
+                        store.modifierId &&
+                        modifierShowNameSet.has(store.modifierId)) ? (
                       <>
                         In questo punto vendita è in corso una trattativa gestita
                         da
@@ -1055,6 +1101,8 @@ const Map = ({ user }: any) => {
                           : ' un altro agente'}
                         .
                       </>
+                    ) : (
+                      <>In questo punto vendita è in corso una trattativa.</>
                     )}
                   </Popup>
                 </Marker>

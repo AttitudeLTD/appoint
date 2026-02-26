@@ -89,7 +89,7 @@ export function UserList({ open: externalOpen, onOpenChange: externalOnOpenChang
       return;
     }
 
-    // CSV Headers
+    const withAgent = displayedStores.some((e) => e.modifier_display_name);
     const headers = [
       'Tipo',
       'Nome Attività',
@@ -98,31 +98,23 @@ export function UserList({ open: externalOpen, onOpenChange: externalOnOpenChang
       'Comune',
       'Provincia',
       'Stato',
+      ...(withAgent ? ['Agente'] : []),
       'Data',
-      'URL Foto'
+      'URL Foto',
     ];
 
-    // Convert displayed (filtered) stores to CSV rows
-    const csvRows = displayedStores.map((entry) => {
-      const fullAddress = [
-        entry.address,
-        entry.cap,
-        entry.comune,
-        entry.provincia ? `(${entry.provincia})` : null,
-      ].filter(Boolean).join(', ');
-
-      return [
-        entry.type === 'photo' ? 'Foto' : 'Stato',
-        entry.store_name || '',
-        entry.address || '',
-        entry.cap || '',
-        entry.comune || '',
-        entry.provincia || '',
-        entry.type === 'photo' ? 'Foto scattata' : getStatusLabel(entry.status),
-        new Date(entry.created_at).toLocaleString('it-IT'),
-        entry.type === 'photo' ? (entry.photo_url || '') : ''
-      ];
-    });
+    const csvRows = displayedStores.map((entry) => [
+      entry.type === 'photo' ? 'Foto' : 'Stato',
+      entry.store_name || '',
+      entry.address || '',
+      entry.cap || '',
+      entry.comune || '',
+      entry.provincia || '',
+      entry.type === 'photo' ? 'Foto scattata' : getStatusLabel(entry.status),
+      ...(withAgent ? [entry.modifier_display_name ?? ''] : []),
+      new Date(entry.created_at).toLocaleString('it-IT'),
+      entry.type === 'photo' ? (entry.photo_url || '') : '',
+    ]);
 
     // Combine headers and rows
     const csvContent = [
@@ -286,6 +278,11 @@ export function UserList({ open: externalOpen, onOpenChange: externalOnOpenChang
                     ) : (
                       <p className='text-sm text-white/80'>
                         {getStatusLabel(entry.status)}
+                      </p>
+                    )}
+                    {entry.modifier_display_name && (
+                      <p className='text-xs text-amber-200/90 mt-0.5'>
+                        Agente: {entry.modifier_display_name}
                       </p>
                     )}
                     <p className='text-xs text-white/60 mt-0.5'>

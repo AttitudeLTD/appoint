@@ -16,7 +16,7 @@ import {
   CalendarIcon,
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
-import { fetchUserStores } from '@/utils/stores';
+import { fetchUserStores, getDashboardContext } from '@/utils/stores';
 import { getMyLoc } from '@/utils/navigation';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { getStatusLabel, statuses } from '@/utils/utils';
@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DayPicker } from 'react-day-picker';
 import { it } from 'date-fns/locale';
 import { format } from 'date-fns';
@@ -63,6 +64,8 @@ function getDefaultDateRange() {
   };
 }
 
+type DashboardRole = 'agent' | 'am' | 'supervisor';
+
 export default function DashboardPage() {
   const [allActivities, setAllActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,6 +73,10 @@ export default function DashboardPage() {
   const [nearbyLoading, setNearbyLoading] = useState(true);
   const [nearbyError, setNearbyError] = useState<string | null>(null);
   const supabase = createClient();
+
+  const [dashboardRole, setDashboardRole] = useState<DashboardRole | null>(null);
+  const [agentsForFilter, setAgentsForFilter] = useState<{ id: string; name: string; surname: string }[]>([]);
+  const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([]);
 
   // Storico attività: date range (default ultimi 7 giorni), cliente, lista
   const [historyDateFrom, setHistoryDateFrom] = useState<string>(() =>
@@ -84,6 +91,7 @@ export default function DashboardPage() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [coord, setCoord] = useState<[number, number] | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [agentFilterOpen, setAgentFilterOpen] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -92,8 +100,13 @@ export default function DashboardPage() {
           data: { user },
         } = await supabase.auth.getUser();
         if (user) {
-          const data = await fetchUserStores(user.id);
-          setAllActivities(data);
+          const ctx = await getDashboardContext(user.id);
+          setDashboardRole(ctx.role ?? null);
+          setAgentsForFilter(ctx.agents);
+          if (ctx.role === 'agent') {
+            const data = await fetchUserStores(user.id);
+            setAllActivities(data);
+          }
         }
       } catch (error) {
         console.error('Error loading activities:', error);
@@ -104,6 +117,22 @@ export default function DashboardPage() {
 
     load();
   }, []);
+
+  const loadAllActivities = useCallback(async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    const agentIds = selectedAgentIds.length > 0 ? selectedAgentIds : undefined;
+    const data = await fetchUserStores(user.id, { agentIds });
+    setAllActivities(data);
+  }, [selectedAgentIds, supabase]);
+
+  useEffect(() => {
+    if (dashboardRole === 'am' || dashboardRole === 'supervisor') {
+      loadAllActivities();
+    }
+  }, [dashboardRole, selectedAgentIds, loadAllActivities]);
 
   // Posizione utente per indicazioni
   useEffect(() => {
@@ -124,10 +153,15 @@ export default function DashboardPage() {
       const toDate = historyDateTo || defaultRange.toStr;
       const dateFrom = new Date(fromDate + 'T00:00:00').toISOString();
       const dateTo = new Date(toDate + 'T23:59:59').toISOString();
+      const agentIds =
+        (dashboardRole === 'am' || dashboardRole === 'supervisor') && selectedAgentIds.length > 0
+          ? selectedAgentIds
+          : undefined;
       const data = await fetchUserStores(user.id, {
         dateFrom,
         dateTo,
         clientId: historyClientId || undefined,
+        agentIds,
       });
       setHistoryActivities(data);
     } catch (error) {
@@ -135,7 +169,7 @@ export default function DashboardPage() {
     } finally {
       setHistoryLoading(false);
     }
-  }, [historyDateFrom, historyDateTo, historyClientId, supabase]);
+  }, [historyDateFrom, historyDateTo, historyClientId, dashboardRole, selectedAgentIds, supabase]);
 
   useEffect(() => {
     loadHistory();
@@ -197,6 +231,7 @@ export default function DashboardPage() {
 
   const handleDownloadHistoryCSV = useCallback(() => {
     if (filteredHistoryActivities.length === 0) return;
+    const withAgent = (dashboardRole === 'am' || dashboardRole === 'supervisor');
     const headers = [
       'Tipo',
       'Nome Attività',
@@ -205,6 +240,7 @@ export default function DashboardPage() {
       'Comune',
       'Provincia',
       'Stato',
+      ...(withAgent ? ['Agente'] : []),
       'Data',
       'URL Foto',
     ];
@@ -217,6 +253,7 @@ export default function DashboardPage() {
         entry.comune || '',
         entry.provincia || '',
         entry.type === 'photo' ? 'Foto scattata' : getStatusLabel(entry.status),
+        ...(withAgent ? [entry.modifier_display_name ?? ''] : []),
         new Date(entry.created_at).toLocaleString('it-IT'),
         entry.type === 'photo' ? entry.photo_url || '' : '',
       ];
@@ -244,7 +281,7 @@ export default function DashboardPage() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
-  }, [filteredHistoryActivities]);
+  }, [filteredHistoryActivities, dashboardRole]);
 
   // Aggrega per store: uno per store (prima occorrenza = più recente), poi conta per esito
   const kpis = useMemo(() => {
@@ -291,12 +328,69 @@ export default function DashboardPage() {
   }, [allActivities]);
 
 
+  const showAgentFilter = dashboardRole === 'am' || dashboardRole === 'supervisor';
+  const agentFilterLabel =
+    selectedAgentIds.length === 0
+      ? 'Tutti gli agenti'
+      : selectedAgentIds.length === 1
+        ? agentsForFilter.find((a) => a.id === selectedAgentIds[0])
+          ? `${agentsForFilter.find((a) => a.id === selectedAgentIds[0])!.name} ${agentsForFilter.find((a) => a.id === selectedAgentIds[0])!.surname}`.trim()
+          : '1 agente'
+        : `${selectedAgentIds.length} agenti`;
+
   return (
     <div className='container mx-auto px-4 py-8 max-w-7xl' style={{ backgroundColor: '#224677', minHeight: '100vh' }}>
       {/* Header */}
       <div className='mb-8'>
         <h1 className='text-3xl font-bold text-white'>Dashboard</h1>
       </div>
+
+      {/* Filtro agenti (solo AM e Supervisor) */}
+      {showAgentFilter && agentsForFilter.length > 0 && (
+        <div className='mb-6 flex flex-wrap items-center gap-3'>
+          <Popover open={agentFilterOpen} onOpenChange={setAgentFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant='outline'
+                className='h-9 min-w-[200px] justify-between bg-white/10 border-white/20 text-white hover:bg-white/20'
+              >
+                <span className='truncate'>{agentFilterLabel}</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className='w-64 p-2 bg-slate-900 border-white/20' align='start'>
+              <div className='space-y-1 max-h-64 overflow-y-auto'>
+                <label className='flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-white/10 text-sm text-white'>
+                  <Checkbox
+                    checked={selectedAgentIds.length === 0}
+                    onCheckedChange={(checked) => {
+                      if (checked) setSelectedAgentIds([]);
+                    }}
+                  />
+                  Tutti gli agenti
+                </label>
+                {agentsForFilter.map((agent) => (
+                  <label
+                    key={agent.id}
+                    className='flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-white/10 text-sm text-white'
+                  >
+                    <Checkbox
+                      checked={selectedAgentIds.includes(agent.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedAgentIds((prev) => [...prev, agent.id]);
+                        } else {
+                          setSelectedAgentIds((prev) => prev.filter((id) => id !== agent.id));
+                        }
+                      }}
+                    />
+                    {[agent.name, agent.surname].filter(Boolean).join(' ').trim() || agent.id}
+                  </label>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
 
       {/* KPI Section */}
       <div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-8'>
@@ -456,6 +550,12 @@ export default function DashboardPage() {
                           ) : (
                             <p className='text-xs text-white/80 mt-1'>
                               {getStatusLabel(activity.status)}
+                            </p>
+                          )}
+                          {(dashboardRole === 'am' || dashboardRole === 'supervisor') &&
+                            activity.modifier_display_name && (
+                            <p className='text-xs text-amber-200/90 mt-0.5'>
+                              Agente: {activity.modifier_display_name}
                             </p>
                           )}
                           <p className='text-xs text-white/60 mt-0.5'>

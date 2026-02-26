@@ -24,6 +24,7 @@ export interface Store {
   client_logo?: string | null; // storage path in bucket client-logos
   modifiedByOtherUser: boolean;
   modifierName?: string; // Optional name of the agent who modified the store
+  modifierId?: string; // UUID of the agent who modified (for AM/supervisor visibility)
 }
 
 export interface Agent {
