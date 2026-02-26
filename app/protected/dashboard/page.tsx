@@ -12,6 +12,8 @@ import {
   X,
   Navigation,
   History,
+  Download,
+  CalendarIcon,
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores } from '@/utils/stores';
@@ -19,7 +21,6 @@ import { getMyLoc } from '@/utils/navigation';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { getStatusLabel, statuses } from '@/utils/utils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -27,6 +28,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DayPicker } from 'react-day-picker';
+import { it } from 'date-fns/locale';
+import { format } from 'date-fns';
+import 'react-day-picker/style.css';
 
 const STATUS_KPI_CONFIG: Record<
   string,
@@ -73,9 +79,11 @@ export default function DashboardPage() {
     getDefaultDateRange().toStr
   );
   const [historyClientId, setHistoryClientId] = useState<string | null>(null);
+  const [historyEsitoFilter, setHistoryEsitoFilter] = useState<string>('all');
   const [historyActivities, setHistoryActivities] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [coord, setCoord] = useState<[number, number] | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -176,6 +184,68 @@ export default function DashboardPage() {
     return Array.from(m.entries()).map(([id, name]) => ({ id, name }));
   }, [historyActivities]);
 
+  // Storico filtrato per esito (per lista e CSV)
+  const filteredHistoryActivities = useMemo(() => {
+    if (historyEsitoFilter === 'all') return historyActivities;
+    if (historyEsitoFilter === 'photo') {
+      return historyActivities.filter((a) => a.type === 'photo');
+    }
+    return historyActivities.filter(
+      (a) => a.type === 'status' && a.status === historyEsitoFilter
+    );
+  }, [historyActivities, historyEsitoFilter]);
+
+  const handleDownloadHistoryCSV = useCallback(() => {
+    if (filteredHistoryActivities.length === 0) return;
+    const headers = [
+      'Tipo',
+      'Nome Attività',
+      'Indirizzo',
+      'CAP',
+      'Comune',
+      'Provincia',
+      'Stato',
+      'Data',
+      'URL Foto',
+    ];
+    const csvRows = filteredHistoryActivities.map((entry) => {
+      return [
+        entry.type === 'photo' ? 'Foto' : 'Stato',
+        entry.store_name || '',
+        entry.address || '',
+        entry.cap || '',
+        entry.comune || '',
+        entry.provincia || '',
+        entry.type === 'photo' ? 'Foto scattata' : getStatusLabel(entry.status),
+        new Date(entry.created_at).toLocaleString('it-IT'),
+        entry.type === 'photo' ? entry.photo_url || '' : '',
+      ];
+    });
+    const csvContent = [
+      headers.join(','),
+      ...csvRows.map((row) =>
+        row
+          .map((cell) => {
+            const cellStr = String(cell ?? '');
+            if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+              return `"${cellStr.replace(/"/g, '""')}"`;
+            }
+            return cellStr;
+          })
+          .join(',')
+      ),
+    ].join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `storico-attivita-${new Date().toISOString().split('T')[0]}.csv`;
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  }, [filteredHistoryActivities]);
+
   // Aggrega per store: uno per store (prima occorrenza = più recente), poi conta per esito
   const kpis = useMemo(() => {
     const storeToStatus = new Map<number, string>();
@@ -255,29 +325,64 @@ export default function DashboardPage() {
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
         {/* Riquadro Storico Attività */}
         <div className='bg-white/10 rounded-lg border border-white/20 p-6 shadow-sm flex flex-col'>
-          <div className='flex items-center gap-2 mb-4 flex-shrink-0'>
-            <History className='h-5 w-5 text-blue-300' />
-            <h2 className='text-xl font-semibold text-white'>Storico Attività</h2>
+          <div className='flex items-center justify-between gap-2 mb-4 flex-shrink-0'>
+            <div className='flex items-center gap-2'>
+              <History className='h-5 w-5 text-blue-300' />
+              <h2 className='text-xl font-semibold text-white'>Storico Attività</h2>
+            </div>
+            <Button
+              variant='ghost'
+              size='icon'
+              className='h-8 w-8 text-white hover:bg-white/20'
+              onClick={handleDownloadHistoryCSV}
+              disabled={filteredHistoryActivities.length === 0}
+              title='Scarica CSV'
+            >
+              <Download className='h-4 w-4' />
+            </Button>
           </div>
-          {/* Filtri: range date (calendario) e cliente — si aggiornano in automatico */}
+          {/* Filtri: range date (popup calendario), cliente, esito */}
           <div className='flex flex-wrap items-end gap-3 mb-4 flex-shrink-0'>
             <div className='flex flex-col gap-1'>
-              <label className='text-xs text-white/80'>Da</label>
-              <Input
-                type='date'
-                value={historyDateFrom}
-                onChange={(e) => setHistoryDateFrom(e.target.value)}
-                className='bg-white/10 border-white/20 text-white h-9 w-[140px] [color-scheme:dark]'
-              />
-            </div>
-            <div className='flex flex-col gap-1'>
-              <label className='text-xs text-white/80'>A</label>
-              <Input
-                type='date'
-                value={historyDateTo}
-                onChange={(e) => setHistoryDateTo(e.target.value)}
-                className='bg-white/10 border-white/20 text-white h-9 w-[140px] [color-scheme:dark]'
-              />
+              <label className='text-xs text-white/80'>Periodo</label>
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant='outline'
+                    className='h-9 w-[220px] justify-start gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20'
+                  >
+                    <CalendarIcon className='h-4 w-4' />
+                    {historyDateFrom && historyDateTo ? (
+                      <>
+                        {format(new Date(historyDateFrom + 'T12:00:00'), 'd MMM yyyy', { locale: it })} –{' '}
+                        {format(new Date(historyDateTo + 'T12:00:00'), 'd MMM yyyy', { locale: it })}
+                      </>
+                    ) : (
+                      <span className='text-white/80'>Seleziona periodo</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className='w-auto p-0 bg-slate-900 border-white/20' align='start'>
+                  <DayPicker
+                    mode='range'
+                    locale={it}
+                    selected={{
+                      from: historyDateFrom ? new Date(historyDateFrom + 'T12:00:00') : undefined,
+                      to: historyDateTo ? new Date(historyDateTo + 'T12:00:00') : undefined,
+                    }}
+                    onSelect={(range) => {
+                      if (range?.from) {
+                        setHistoryDateFrom(format(range.from, 'yyyy-MM-dd'));
+                      }
+                      if (range?.to) {
+                        setHistoryDateTo(format(range.to, 'yyyy-MM-dd'));
+                        setCalendarOpen(false);
+                      }
+                    }}
+                    numberOfMonths={1}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className='flex flex-col gap-1'>
               <label className='text-xs text-white/80'>Cliente</label>
@@ -298,13 +403,30 @@ export default function DashboardPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className='flex flex-col gap-1'>
+              <label className='text-xs text-white/80'>Esito</label>
+              <Select value={historyEsitoFilter} onValueChange={setHistoryEsitoFilter}>
+                <SelectTrigger className='bg-white/10 border-white/20 text-white h-9 w-[180px]'>
+                  <SelectValue placeholder='Tutti gli esiti' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='all'>Tutti gli esiti</SelectItem>
+                  {statuses.filter((s) => s.value !== 'free').map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value='photo'>Foto scattata</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className='min-h-0 flex-1 overflow-y-auto' style={{ maxHeight: '320px' }}>
             {historyLoading ? (
               <div className='text-center text-white/80 py-8'>Caricamento...</div>
-            ) : historyActivities.length > 0 ? (
+            ) : filteredHistoryActivities.length > 0 ? (
               <div className='space-y-3'>
-                {historyActivities.map((activity, index) => {
+                {filteredHistoryActivities.map((activity, index) => {
                   const entryKey =
                     activity.type === 'photo'
                       ? `photo-${activity.store_id}-${activity.created_at}-${index}`
@@ -385,7 +507,9 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className='text-center text-white/80 py-8'>
-                Nessuna attività nel periodo selezionato
+                {historyActivities.length > 0
+                  ? 'Nessuna attività con gli esiti selezionati'
+                  : 'Nessuna attività nel periodo selezionato'}
               </div>
             )}
           </div>

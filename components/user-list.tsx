@@ -8,12 +8,19 @@ import {
 } from './ui/sheet';
 import { Button } from './ui/button';
 import { Navigation, Store, Camera, Loader, X, Download } from 'lucide-react';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores } from '@/utils/stores';
-import { getStatusLabel } from '@/utils/utils';
+import { getStatusLabel, statuses } from '@/utils/utils';
 import { getMyLoc } from '@/utils/navigation';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface UserListProps {
   open?: boolean;
@@ -47,7 +54,15 @@ export function UserList({ open: externalOpen, onOpenChange: externalOnOpenChang
   };
   const [loading, setLoading] = useState(false);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [esitoFilter, setEsitoFilter] = useState<string>('all');
   const supabase = createClient();
+
+  // Lista filtrata per esito (usata per visualizzazione e CSV)
+  const displayedStores = useMemo(() => {
+    if (esitoFilter === 'all') return stores;
+    if (esitoFilter === 'photo') return stores.filter((s) => s.type === 'photo');
+    return stores.filter((s) => s.type === 'status' && s.status === esitoFilter);
+  }, [stores, esitoFilter]);
 
   // Load stores function
   const loadStores = useCallback(async () => {
@@ -68,9 +83,9 @@ export function UserList({ open: externalOpen, onOpenChange: externalOnOpenChang
     }
   }, [supabase]);
 
-  // Download CSV function
+  // Download CSV function (scarica i dati attualmente filtrati)
   const handleDownloadCSV = () => {
-    if (stores.length === 0) {
+    if (displayedStores.length === 0) {
       return;
     }
 
@@ -87,8 +102,8 @@ export function UserList({ open: externalOpen, onOpenChange: externalOnOpenChang
       'URL Foto'
     ];
 
-    // Convert stores to CSV rows
-    const csvRows = stores.map((entry) => {
+    // Convert displayed (filtered) stores to CSV rows
+    const csvRows = displayedStores.map((entry) => {
       const fullAddress = [
         entry.address,
         entry.cap,
@@ -184,11 +199,26 @@ export function UserList({ open: externalOpen, onOpenChange: externalOnOpenChang
               )}
             </SheetTitle>
             <div className='flex items-center gap-2'>
+              <Select value={esitoFilter} onValueChange={setEsitoFilter}>
+                <SelectTrigger className='h-8 w-[160px] bg-white/10 border-white/20 text-white text-sm'>
+                  <SelectValue placeholder='Esito' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='all'>Tutti gli esiti</SelectItem>
+                  {statuses.filter((s) => s.value !== 'free').map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value='photo'>Foto scattata</SelectItem>
+                </SelectContent>
+              </Select>
               <Button
                 variant='ghost'
                 size='icon'
                 className='h-8 w-8 text-white hover:bg-white/20'
                 onClick={handleDownloadCSV}
+                disabled={displayedStores.length === 0}
                 title='Scarica CSV'
               >
                 <Download className='h-4 w-4' />
@@ -206,7 +236,7 @@ export function UserList({ open: externalOpen, onOpenChange: externalOnOpenChang
         </SheetHeader>
 
         <div className='flex-1 overflow-y-auto p-6' style={{ backgroundColor: '#224677' }}>
-          {stores.map((entry, index) => {
+          {displayedStores.map((entry, index) => {
             // Generate unique key for each entry
             const entryKey = entry.type === 'photo' 
               ? `photo-${entry.store_id}-${entry.created_at}-${index}`
@@ -308,6 +338,11 @@ export function UserList({ open: externalOpen, onOpenChange: externalOnOpenChang
           {!loading && stores.length === 0 && (
             <div className='text-center text-white/80 mt-4'>
               Nessuna attività in corso
+            </div>
+          )}
+          {!loading && stores.length > 0 && displayedStores.length === 0 && (
+            <div className='text-center text-white/80 mt-4'>
+              Nessuna attività con gli esiti selezionati
             </div>
           )}
           {loading && isFirstLoad && stores.length === 0 && (
