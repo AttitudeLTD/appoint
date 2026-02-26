@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Loader, MapPin, Search } from 'lucide-react';
 
-import { LatLngExpression } from 'leaflet';
+import L, { LatLngExpression } from 'leaflet';
 import {
   MapContainer,
   Marker,
@@ -12,6 +12,7 @@ import {
   useMap,
   ZoomControl,
 } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 
 import { Agent, Store, StoreLog } from '@/types';
@@ -104,6 +105,24 @@ function MapController({ newCenter }: { newCenter?: [number, number] }) {
 
   return null;
 }
+
+const createClusterIcon = (cluster: any) => {
+  const count = cluster.getChildCount();
+  const size = count < 10 ? 36 : count < 50 ? 44 : 52;
+  const fontSize = count < 10 ? 14 : count < 100 ? 12 : 11;
+  return new L.DivIcon({
+    html: `<div style="
+      width:${size}px;height:${size}px;border-radius:50%;
+      background:#1B304E;border:2.5px solid rgba(255,255,255,0.5);
+      display:flex;align-items:center;justify-content:center;
+      color:white;font-size:${fontSize}px;font-weight:700;
+      box-shadow:0 2px 8px rgba(0,0,0,0.4);
+    ">${count}</div>`,
+    className: '',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+};
 
 const Map = ({ user }: any) => {
   const supabase = createClient();
@@ -832,7 +851,16 @@ const Map = ({ user }: any) => {
               </Popup>
             </Marker>
 
-            {/* Marker for each store within 3km */}
+            {/* Cluster + individual markers */}
+            <MarkerClusterGroup
+              iconCreateFunction={createClusterIcon}
+              maxClusterRadius={60}
+              spiderfyOnMaxZoom
+              showCoverageOnHover={false}
+              zoomToBoundsOnClick
+              disableClusteringAtZoom={16}
+              minimumClusterSize={10}
+            >
             {stores.map((store) => {
               const storeCoordinates = parseCoords(store.location);
               if (!storeCoordinates) return null; // Skip rendering if coordinates are invalid
@@ -907,6 +935,7 @@ const Map = ({ user }: any) => {
                 </Marker>
               );
             })}
+            </MarkerClusterGroup>
           </MapContainer>
         ) : (
           <div className='flex-1 w-full flex flex-col items-center justify-center'>
