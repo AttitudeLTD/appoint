@@ -14,11 +14,6 @@ export function DashboardToggleButton({ role }: DashboardToggleButtonProps) {
   const pathname = usePathname();
   const isDashboard = pathname?.includes('/dashboard');
 
-  // Agents don't see the dashboard button on the map
-  if (role === 'agent' && !isDashboard) {
-    return null;
-  }
-
   return (
     <Link href={isDashboard ? '/protected' : '/protected/dashboard'}>
       <Button variant='ghost' className='p-0 h-8 w-8 rounded-full hover:bg-white/20 transition-colors'>

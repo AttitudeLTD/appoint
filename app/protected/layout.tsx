@@ -3,7 +3,6 @@ import { hasEnvVars } from '@/utils/supabase/check-env-vars';
 import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/utils/supabase/server';
-import { DashboardToggleButton } from '@/components/dashboard-toggle-button';
 import { ProfileMenu } from '@/components/ProfileMenu';
 
 export default async function Layout({
@@ -55,19 +54,16 @@ export default async function Layout({
             {!hasEnvVars ? (
               <EnvVarWarning />
             ) : (
-              <>
-                <DashboardToggleButton role={userRole} />
-                <ProfileMenu
+              <ProfileMenu
                   email={userEmail}
                   name={userName}
                   role={userRole}
                 />
-              </>
             )}
           </div>
         </div>
       </nav>
-      <main className='flex-1 overflow-hidden min-h-0'>{children}</main>
+      <main className='flex-1 min-h-0 overflow-y-auto'>{children}</main>
       <footer
         className='flex-shrink-0 w-full flex items-center justify-center border-t text-center text-[10px] py-1'
         style={{ backgroundColor: '#224677', color: 'rgba(255,255,255,0.5)' }}

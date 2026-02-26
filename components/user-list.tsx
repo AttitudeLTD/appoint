@@ -252,21 +252,21 @@ export function UserList({ open: externalOpen, onOpenChange: externalOnOpenChang
                       {entry.provincia && ` (${entry.provincia})`}
                     </p>
                     {entry.type === 'photo' ? (
-                      <p className='text-sm text-blue-300 font-medium mt-1'>
-                        Foto scattata il{' '}
-                        {new Date(entry.created_at).toLocaleDateString('it-IT', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
+                      <p className='text-sm text-blue-300 font-medium mt-1'>Foto scattata</p>
                     ) : (
                       <p className='text-sm text-white/80'>
                         {getStatusLabel(entry.status)}
                       </p>
                     )}
+                    <p className='text-xs text-white/60 mt-0.5'>
+                      {new Date(entry.created_at).toLocaleDateString('it-IT', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
                   </div>
                 </div>
                 <div className='flex gap-2'>

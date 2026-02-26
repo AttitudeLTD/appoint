@@ -2,17 +2,28 @@
 
 import { createClient } from '@/utils/supabase/server';
 
-export async function fetchUserStores(userId: string) {
-  const supabase = createClient();
+export type FetchUserStoresOptions = {
+  dateFrom?: string;
+  dateTo?: string;
+  clientId?: string | null;
+};
 
-  // First get status logs
-  const { data: storeStatuses, error: statusError } = await supabase
+export async function fetchUserStores(userId: string, options?: FetchUserStoresOptions) {
+  const supabase = createClient();
+  const { dateFrom, dateTo, clientId } = options ?? {};
+  const isHistoryMode = dateFrom != null || dateTo != null;
+
+  // Build date filter for history mode (storico attività)
+  let statusQuery = supabase
     .from('store_status_logs')
     .select('*')
     .eq('modifier', userId)
-    .order('store_id')
     .order('created_at', { ascending: false })
     .limit(1000);
+  if (dateFrom) statusQuery = statusQuery.gte('created_at', dateFrom);
+  if (dateTo) statusQuery = statusQuery.lte('created_at', dateTo);
+
+  const { data: storeStatuses, error: statusError } = await statusQuery;
 
   if (statusError) {
     console.error('Error fetching store statuses:', statusError);
@@ -20,39 +31,51 @@ export async function fetchUserStores(userId: string) {
   }
 
   // Get photos for this user (from "Mi trovo qui")
-  const { data: storePhotos, error: photosError } = await supabase
+  let photosQuery = supabase
     .from('store_photos')
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
+  if (dateFrom) photosQuery = photosQuery.gte('created_at', dateFrom);
+  if (dateTo) photosQuery = photosQuery.lte('created_at', dateTo);
+  const { data: storePhotos, error: photosError } = await photosQuery;
 
   if (photosError) {
     console.error('Error fetching store photos:', photosError);
   }
 
   // Get generic photos for this user (from "Inserisci foto")
-  const { data: genericPhotos, error: genericPhotosError } = await supabase
+  let genericQuery = supabase
     .from('generic_photos')
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
+  if (dateFrom) genericQuery = genericQuery.gte('created_at', dateFrom);
+  if (dateTo) genericQuery = genericQuery.lte('created_at', dateTo);
+  const { data: genericPhotos, error: genericPhotosError } = await genericQuery;
 
   if (genericPhotosError) {
     console.error('Error fetching generic photos:', genericPhotosError);
   }
 
-  // Filter to keep only the latest status for each store
+  // History mode: use all entries; otherwise keep only latest status per store
   const storeMap = new Map();
-  storeStatuses?.forEach((status) => {
-    if (!storeMap.has(status.store_id)) {
-      storeMap.set(status.store_id, status);
-    }
-  });
+  if (isHistoryMode) {
+    storeStatuses?.forEach((status) => storeMap.set(`${status.store_id}-${status.created_at}`, status));
+  } else {
+    storeStatuses?.forEach((status) => {
+      if (!storeMap.has(status.store_id)) {
+        storeMap.set(status.store_id, status);
+      }
+    });
+  }
+
+  const statusValues = Array.from(storeMap.values());
 
   // Get unique store IDs from status logs, store photos, and generic photos
   const photoStoreIds = storePhotos?.map((photo) => photo.store_id) || [];
   const genericPhotoStoreIds = genericPhotos?.map((photo) => photo.store_id) || [];
-  const statusStoreIds = Array.from(storeMap.keys());
+  const statusStoreIds = statusValues.map((s: { store_id: number }) => s.store_id);
   const uniqueStoreIds = Array.from(new Set([...statusStoreIds, ...photoStoreIds, ...genericPhotoStoreIds]));
 
   // Fetch store details for these IDs (with client name)
@@ -76,8 +99,11 @@ export async function fetchUserStores(userId: string) {
       ? (store.client as { name: string }).name
       : null;
 
+  const byClient = (entry: { client_id?: number | string | null }) =>
+    clientId == null || String(entry.client_id) === String(clientId);
+
   // Combine status logs and photos into a unified array
-  const statusEntries = Array.from(storeMap.values())
+  const statusEntries = statusValues
     .map((status) => {
       const store = storeDetailsMap.get(status.store_id);
       return {
@@ -99,55 +125,60 @@ export async function fetchUserStores(userId: string) {
         client_name: getClientName(store),
       };
     })
-    .filter((store) => store.status !== 'free');
+    .filter((entry) => entry.status !== 'free')
+    .filter(byClient);
 
   // Add photo entries (from "Mi trovo qui")
-  const photoEntries = (storePhotos || []).map((photo) => {
-    const store = storeDetailsMap.get(photo.store_id);
-    return {
-      type: 'photo' as const,
-      store_id: photo.store_id,
-      store_name: store?.name,
-      address: store?.address,
-      cap: store?.cap,
-      comune: store?.comune,
-      provincia: store?.provincia,
-      status: store?.status || '',
-      created_at: photo.created_at,
-      owner_name: store?.owner_name,
-      phone: store?.phone,
-      category: store?.category,
-      location: store?.location,
-      coordinates: store?.coordinates,
-      photo_url: photo.photo_url,
-      client_id: store?.client_id ?? null,
-      client_name: getClientName(store),
-    };
-  });
+  const photoEntries = (storePhotos || [])
+    .map((photo) => {
+      const store = storeDetailsMap.get(photo.store_id);
+      return {
+        type: 'photo' as const,
+        store_id: photo.store_id,
+        store_name: store?.name,
+        address: store?.address,
+        cap: store?.cap,
+        comune: store?.comune,
+        provincia: store?.provincia,
+        status: store?.status || '',
+        created_at: photo.created_at,
+        owner_name: store?.owner_name,
+        phone: store?.phone,
+        category: store?.category,
+        location: store?.location,
+        coordinates: store?.coordinates,
+        photo_url: photo.photo_url,
+        client_id: store?.client_id ?? null,
+        client_name: getClientName(store),
+      };
+    })
+    .filter(byClient);
 
   // Add generic photo entries (from "Inserisci foto")
-  const genericPhotoEntries = (genericPhotos || []).map((photo) => {
-    const store = storeDetailsMap.get(photo.store_id);
-    return {
-      type: 'photo' as const,
-      store_id: photo.store_id,
-      store_name: store?.name,
-      address: store?.address,
-      cap: store?.cap,
-      comune: store?.comune,
-      provincia: store?.provincia,
-      status: store?.status || '',
-      created_at: photo.created_at,
-      owner_name: store?.owner_name,
-      phone: store?.phone,
-      category: store?.category,
-      location: store?.location,
-      coordinates: store?.coordinates,
-      photo_url: photo.photo_url,
-      client_id: store?.client_id ?? null,
-      client_name: getClientName(store),
-    };
-  });
+  const genericPhotoEntries = (genericPhotos || [])
+    .map((photo) => {
+      const store = storeDetailsMap.get(photo.store_id);
+      return {
+        type: 'photo' as const,
+        store_id: photo.store_id,
+        store_name: store?.name,
+        address: store?.address,
+        cap: store?.cap,
+        comune: store?.comune,
+        provincia: store?.provincia,
+        status: store?.status || '',
+        created_at: photo.created_at,
+        owner_name: store?.owner_name,
+        phone: store?.phone,
+        category: store?.category,
+        location: store?.location,
+        coordinates: store?.coordinates,
+        photo_url: photo.photo_url,
+        client_id: store?.client_id ?? null,
+        client_name: getClientName(store),
+      };
+    })
+    .filter(byClient);
 
   // Combine and sort by created_at (most recent first)
   const allEntries = [...statusEntries, ...photoEntries, ...genericPhotoEntries].sort(

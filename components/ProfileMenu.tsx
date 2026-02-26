@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader, LogOut, Plus, List } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Loader, LogOut, Plus, List, LayoutDashboard, Map } from 'lucide-react';
 import { signOutAction } from '@/app/actions';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -44,11 +46,13 @@ function getInitials(name: string): string {
 }
 
 export function ProfileMenu({ email, name, role }: ProfileMenuProps) {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [newStoreOpen, setNewStoreOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
+  const isDashboard = pathname?.includes('/dashboard');
   const initials = name ? getInitials(name) : email.slice(0, 2).toUpperCase();
   const roleLabel = role ? ROLE_LABELS[role] : 'Agente';
   const roleColor = role ? ROLE_COLORS[role] : ROLE_COLORS.agent;
@@ -113,6 +117,26 @@ export function ProfileMenu({ email, name, role }: ProfileMenuProps) {
 
           {/* Actions */}
           <div className='py-1'>
+            {isDashboard ? (
+              <Link
+                href='/protected'
+                className='flex w-full items-center gap-3 px-4 py-2.5 text-sm text-white/80 hover:bg-white/10 hover:text-white transition-colors'
+                onClick={() => setOpen(false)}
+              >
+                <Map className='h-4 w-4 flex-shrink-0' />
+                Mappa
+              </Link>
+            ) : (
+              <Link
+                href='/protected/dashboard'
+                className='flex w-full items-center gap-3 px-4 py-2.5 text-sm text-white/80 hover:bg-white/10 hover:text-white transition-colors'
+                onClick={() => setOpen(false)}
+              >
+                <LayoutDashboard className='h-4 w-4 flex-shrink-0' />
+                Dashboard
+              </Link>
+            )}
+
             <button
               className='flex w-full items-center gap-3 px-4 py-2.5 text-sm text-white/80 hover:bg-white/10 hover:text-white transition-colors'
               onClick={() => {

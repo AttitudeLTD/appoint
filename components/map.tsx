@@ -161,6 +161,19 @@ const Map = ({ user }: any) => {
   const [selectedTiers, setSelectedTiers] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
   const [showTierColors, setShowTierColors] = useState(true);
+  const filtersPanelRef = useRef<HTMLDivElement>(null);
+
+  // Chiudi popup filtri al click fuori
+  useEffect(() => {
+    if (!showFilters) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (filtersPanelRef.current && !filtersPanelRef.current.contains(e.target as Node)) {
+        setShowFilters(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showFilters]);
 
   // Ref per il filtro client: si legge dentro fetchStoresAndLogs senza metterlo nelle deps
   const selectedClientIdRef = useRef<number | null>(null);
@@ -734,8 +747,56 @@ const Map = ({ user }: any) => {
       <div className='relative w-full h-full'>
         {coord && (
           <div className='absolute top-4 left-4 z-[1000] w-[calc(100vw-2rem)] max-w-[420px] pointer-events-auto space-y-2'>
+            {/* Address search */}
+            <div className='flex items-center gap-2'>
+              <div className='relative flex-1'>
+                <Input
+                  type='text'
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowSearchResults(true);
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder='Cerca indirizzo...'
+                  className='w-full px-4 py-2 pl-10 border rounded-full shadow-md bg-white text-black'
+                  style={{ backgroundColor: 'white', color: 'black' }}
+                />
+                <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
+
+                {searchResults.length > 0 && showSearchResults && (
+                  <div className='absolute w-full mt-2 shadow-lg max-h-60 overflow-auto'>
+                    {searchResults.map((result, index) => (
+                      <Button
+                        key={index}
+                        variant={'outline'}
+                        className={`w-full px-4 py-1 text-left flex justify-start border-none focus:outline-none ${
+                          index === 0
+                            ? 'rounded-md rounded-b-none'
+                            : index === searchResults.length - 1
+                              ? 'rounded-md rounded-t-none'
+                              : 'rounded-none'
+                        } ${focusedIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
+                        onClick={() => handleSelectLocation(result)}
+                      >
+                        <MapPin className='h-4 w-4 text-gray-400 flex-shrink-0' />
+                        <p className='text-sm truncate'>{result.display_name}</p>
+                      </Button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Loading indicator */}
+                {isSearching && (
+                  <div className='absolute right-3 top-2.5'>
+                    <Loader className='h-5 w-5 animate-spin text-gray-400' />
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Filter button + panel */}
-            <div className='relative'>
+            <div className='relative' ref={filtersPanelRef}>
               <Button
                 type='button'
                 size='sm'
@@ -883,54 +944,6 @@ const Map = ({ user }: any) => {
                   )}
                 </div>
               )}
-            </div>
-
-            <div className='flex items-center gap-2'>
-              {/* Address search */}
-              <div className='relative flex-1'>
-                <Input
-                  type='text'
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setShowSearchResults(true);
-                  }}
-                  onKeyDown={handleKeyDown}
-                  placeholder='Cerca indirizzo...'
-                  className='w-full px-4 py-2 pl-10 border rounded-full shadow-md bg-white text-black'
-                  style={{ backgroundColor: 'white', color: 'black' }}
-                />
-                <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
-
-                {searchResults.length > 0 && showSearchResults && (
-                  <div className='absolute w-full mt-2 shadow-lg max-h-60 overflow-auto'>
-                    {searchResults.map((result, index) => (
-                      <Button
-                        key={index}
-                        variant={'outline'}
-                        className={`w-full px-4 py-1 text-left flex justify-start border-none focus:outline-none ${
-                          index === 0
-                            ? 'rounded-md rounded-b-none'
-                            : index === searchResults.length - 1
-                              ? 'rounded-md rounded-t-none'
-                              : 'rounded-none'
-                        } ${focusedIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
-                        onClick={() => handleSelectLocation(result)}
-                      >
-                        <MapPin className='h-4 w-4 text-gray-400 flex-shrink-0' />
-                        <p className='text-sm truncate'>{result.display_name}</p>
-                      </Button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Loading indicator */}
-                {isSearching && (
-                  <div className='absolute right-3 top-2.5'>
-                    <Loader className='h-5 w-5 animate-spin text-gray-400' />
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         )}
