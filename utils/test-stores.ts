@@ -5,7 +5,7 @@
  */
 
 export const TEST_STORE_ID_MIN = 13565;
-export const TEST_STORE_ID_MAX = 13614;
+export const TEST_STORE_ID_MAX = 13814;
 export const TEST_USER_ID = '81c0a417-836b-4ecd-9e8a-ca9bfcd37ac7';
 
 function isTestStoreId(storeId: number): boolean {

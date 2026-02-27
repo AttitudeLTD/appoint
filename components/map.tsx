@@ -19,7 +19,7 @@ import { Agent, Store, StoreLog } from '@/types';
 import { createClient } from '@/utils/supabase/client';
 import { getClientLogoUrl } from '@/utils/client-logo';
 import { getMyLoc, parseCoords } from '@/utils/navigation';
-import { filterStoresForUser } from '@/utils/test-stores';
+import { filterStoresForUser, TEST_USER_ID } from '@/utils/test-stores';
 import { generateMailBody, statuses } from '@/utils/utils';
 import {
   alreadyClientPin,
@@ -809,28 +809,6 @@ const Map = ({ user }: any) => {
                 />
                 <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
 
-                {searchResults.length > 0 && showSearchResults && (
-                  <div className='absolute w-full mt-2 shadow-lg max-h-60 overflow-auto'>
-                    {searchResults.map((result, index) => (
-                      <Button
-                        key={index}
-                        variant={'outline'}
-                        className={`w-full px-4 py-1 text-left flex justify-start border-none focus:outline-none ${
-                          index === 0
-                            ? 'rounded-md rounded-b-none'
-                            : index === searchResults.length - 1
-                              ? 'rounded-md rounded-t-none'
-                              : 'rounded-none'
-                        } ${focusedIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
-                        onClick={() => handleSelectLocation(result)}
-                      >
-                        <MapPin className='h-4 w-4 text-gray-400 flex-shrink-0' />
-                        <p className='text-sm truncate'>{result.display_name}</p>
-                      </Button>
-                    ))}
-                  </div>
-                )}
-
                 {/* Loading indicator */}
                 {isSearching && (
                   <div className='absolute right-3 top-2.5'>
@@ -840,7 +818,29 @@ const Map = ({ user }: any) => {
               </div>
             </div>
 
-            {/* Filter button + panel */}
+            {/* Risultati ricerca indirizzo (sopra al tasto Filtri) */}
+            {searchResults.length > 0 && showSearchResults && (
+              <div className='w-full shadow-lg max-h-60 overflow-auto rounded-md bg-white'>
+                {searchResults.map((result, index) => (
+                  <Button
+                    key={index}
+                    variant='outline'
+                    className={`w-full px-4 py-1 text-left flex justify-start border-none focus:outline-none rounded-none ${
+                      index === 0 ? 'rounded-t-md' : ''
+                    } ${index === searchResults.length - 1 ? 'rounded-b-md' : ''} ${
+                      focusedIndex === index ? 'bg-accent text-accent-foreground' : ''
+                    }`}
+                    onClick={() => handleSelectLocation(result)}
+                  >
+                    <MapPin className='h-4 w-4 text-gray-400 flex-shrink-0' />
+                    <p className='text-sm truncate'>{result.display_name}</p>
+                  </Button>
+                ))}
+              </div>
+            )}
+
+            {/* Filter button + panel (nascosto per utente di test) */}
+            {user.id !== TEST_USER_ID && (
             <div className='relative' ref={filtersPanelRef}>
               <Button
                 type='button'
@@ -990,6 +990,7 @@ const Map = ({ user }: any) => {
                 </div>
               )}
             </div>
+            )}
           </div>
         )}
 
