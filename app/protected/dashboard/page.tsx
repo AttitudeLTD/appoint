@@ -305,11 +305,11 @@ export default function DashboardPage() {
     }
     const total = storeToStatus.size;
     const byStatus: Record<string, number> = {};
-    for (const status of storeToStatus.values()) {
+    Array.from(storeToStatus.values()).forEach((status) => {
       if (status !== 'free') {
         byStatus[status] = (byStatus[status] || 0) + 1;
       }
-    }
+    });
 
     const items: { id: string; label: string; value: string; icon: typeof Store; color: string; bgColor: string }[] = [
       {

@@ -52,7 +52,7 @@ export async function getAgentsForFilter(currentUserId: string): Promise<{ id: s
     .from('user_areas')
     .select('user_id')
     .in('area_id', areaIds);
-  const ids = [...new Set((userIdsInAreas ?? []).map((r) => r.user_id))];
+  const ids = Array.from(new Set((userIdsInAreas ?? []).map((r) => r.user_id)));
   if (ids.length === 0) return [];
 
   const { data: users } = await supabase
@@ -78,7 +78,7 @@ async function getVisibleAgentIds(supabase: ReturnType<typeof createClient>, cur
     const areaIds = (myAreas ?? []).map((r) => r.area_id);
     if (areaIds.length === 0) return [];
     const { data: userIdsInAreas } = await supabase.from('user_areas').select('user_id').in('area_id', areaIds);
-    const ids = [...new Set((userIdsInAreas ?? []).map((r) => r.user_id))];
+    const ids = Array.from(new Set((userIdsInAreas ?? []).map((r) => r.user_id)));
     const { data: agents } = await supabase.from('users').select('id').in('id', ids).eq('role', 'agent');
     return (agents ?? []).map((u) => u.id);
   }
