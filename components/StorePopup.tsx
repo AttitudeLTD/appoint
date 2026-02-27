@@ -1237,17 +1237,16 @@ const StorePopup: React.FC<StorePopupProps> = ({
             )}
 
             {storeStatuses[store.id] === 'concluded' &&
-              (clientWorkflow?.concluded_sub_workflow ? (
-                // Amex (or workflow-driven client): show WorkflowRunner sub-form
+              (clientWorkflow?.concluded_sub_workflow?.sections?.length ? (
                 <WorkflowRunner
                   storeId={store.id}
                   clientId={store.client_id!}
                   userId={currentUserId}
                   workflow={clientWorkflow}
+                  variant='concluded'
                   existingOutcome={existingOutcome}
                 />
-              ) : (
-                // Default client: link to distinta form
+              ) : storeStatuses[store.id] === 'concluded' ? (
                 <Button
                   onClick={() =>
                     window.open('https://appraise.attitudeltd.com/ff_acquiring', '_blank')
@@ -1255,7 +1254,20 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 >
                   <FileCheck className='mr-2' /> Compila distinta
                 </Button>
-              ))}
+              ) : null)}
+
+            {storeStatuses[store.id] === 'already_client' &&
+              clientWorkflow &&
+              (clientWorkflow.already_client_sub_workflow?.sections?.length ?? 0) > 0 && (
+                <WorkflowRunner
+                  storeId={store.id}
+                  clientId={store.client_id!}
+                  userId={currentUserId}
+                  workflow={clientWorkflow}
+                  variant='already_client'
+                  existingOutcome={existingOutcome}
+                />
+              )}
 
             {statusLogs[store.id]?.length > 0 && (
               <div className='py-3'>

@@ -193,20 +193,32 @@ export default function DashboardPage() {
         radius: NEARBY_RADIUS_M,
         p_limit: 30,
       };
-      supabase
-        .rpc('get_stores_within_radius', params)
-        .then(({ data: storesData, error: rpcError }) => {
+
+      (async () => {
+        try {
+          const { data: storesData, error: rpcError } = await supabase.rpc(
+            'get_stores_within_radius',
+            params
+          );
+
           if (rpcError) {
             console.error('get_stores_within_radius error:', rpcError);
             setNearbyError('Errore nel caricamento');
             setNearbyProspects([]);
             return;
           }
+
           const stores = (storesData ?? []).filter((s: any) => s.status === 'free');
           setNearbyProspects(stores.slice(0, NEARBY_LIMIT));
           setNearbyError(null);
-        })
-        .finally(() => setNearbyLoading(false));
+        } catch (error) {
+          console.error('Unexpected error in get_stores_within_radius:', error);
+          setNearbyError('Errore nel caricamento');
+          setNearbyProspects([]);
+        } finally {
+          setNearbyLoading(false);
+        }
+      })();
     });
   }, []);
 

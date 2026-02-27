@@ -13,6 +13,7 @@ interface TerminalEntry {
   id: string;
   type: string;
   photoUrl?: string;
+  note?: string;
 }
 
 interface WorkflowData {
@@ -37,11 +38,14 @@ const EMPTY_DATA: WorkflowData = {
   further_actions: [],
 };
 
+type WorkflowVariant = 'concluded' | 'already_client';
+
 interface Props {
   storeId: number;
   clientId: number;
   userId: string;
   workflow: ClientWorkflow;
+  variant: WorkflowVariant;
   existingOutcome?: WorkflowData | null;
 }
 
@@ -50,6 +54,7 @@ export const WorkflowRunner: React.FC<Props> = ({
   clientId,
   userId,
   workflow,
+  variant,
   existingOutcome,
 }) => {
   const supabase = createClient();
@@ -59,7 +64,10 @@ export const WorkflowRunner: React.FC<Props> = ({
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const sections = workflow.concluded_sub_workflow?.sections ?? [];
+  const sections =
+    variant === 'already_client'
+      ? (workflow.already_client_sub_workflow?.sections ?? [])
+      : (workflow.concluded_sub_workflow?.sections ?? []);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -77,7 +85,7 @@ export const WorkflowRunner: React.FC<Props> = ({
   };
 
   const addTerminal = () =>
-    set({ terminals: [...data.terminals, { id: Date.now().toString(), type: '', photoUrl: '' }] });
+    set({ terminals: [...data.terminals, { id: Date.now().toString(), type: '', photoUrl: '', note: '' }] });
 
   const removeTerminal = (id: string) =>
     set({ terminals: data.terminals.filter((t) => t.id !== id) });
@@ -313,6 +321,18 @@ export const WorkflowRunner: React.FC<Props> = ({
                   <ExternalLink className='h-3 w-3' /> Apri piattaforma DOM
                 </a>
               )}
+              {section.terminalNoteLabel && (
+                <div className='mt-2'>
+                  <label className='text-xs text-white/70 block mb-1'>{section.terminalNoteLabel}</label>
+                  <input
+                    type='text'
+                    placeholder={section.terminalNoteLabel}
+                    value={terminal.note ?? ''}
+                    onChange={(e) => updateTerminal(terminal.id, { note: e.target.value })}
+                    className='w-full px-2 py-1.5 rounded text-sm bg-white/10 border border-white/30 text-white placeholder:text-white/50'
+                  />
+                </div>
+              )}
             </div>
           );
         })}
@@ -400,9 +420,12 @@ export const WorkflowRunner: React.FC<Props> = ({
 
   // ── Main render ────────────────────────────────────────────────────────────
 
+  const title =
+    variant === 'already_client' ? 'Esito già cliente' : 'Esito contratto sottoscritto';
+
   return (
     <div className='mt-2 space-y-5 border-t border-white/20 pt-4'>
-      <p className='text-sm font-bold text-white'>Esito contratto sottoscritto</p>
+      <p className='text-sm font-bold text-white'>{title}</p>
 
       {sections.map((section) => (
         <div key={section.id} className='p-3 rounded-lg bg-white/5 border border-white/10 space-y-2'>

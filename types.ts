@@ -66,6 +66,7 @@ export interface WorkflowSection {
   type: 'choice_with_sub' | 'multi_terminal' | 'choice' | 'multi_select';
   mainChoices?: WorkflowMainChoice[]; // choice_with_sub
   terminals?: WorkflowOption[];       // multi_terminal
+  terminalNoteLabel?: string;         // multi_terminal: label per campo note per ogni terminale
   choices?: WorkflowOption[];         // choice
   options?: WorkflowOption[];         // multi_select
 }
@@ -82,6 +83,9 @@ export interface ClientWorkflow {
   failed_reasons?: WorkflowReason[];
   non_existent_reasons?: WorkflowReason[];
   concluded_sub_workflow?: {
+    sections: WorkflowSection[];
+  };
+  already_client_sub_workflow?: {
     sections: WorkflowSection[];
   };
 }
