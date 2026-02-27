@@ -19,6 +19,7 @@ import { Agent, Store, StoreLog } from '@/types';
 import { createClient } from '@/utils/supabase/client';
 import { getClientLogoUrl } from '@/utils/client-logo';
 import { getMyLoc, parseCoords } from '@/utils/navigation';
+import { filterStoresForUser } from '@/utils/test-stores';
 import { generateMailBody, statuses } from '@/utils/utils';
 import {
   alreadyClientPin,
@@ -505,8 +506,10 @@ const Map = ({ user }: any) => {
         return;
       }
 
+      const visibleStores = filterStoresForUser(storesData ?? [], user.id);
+
       const storesWithLogs = await Promise.all(
-        (storesData ?? []).map(async (store: any) => {
+        visibleStores.map(async (store: any) => {
           const { data: logs } = await supabase
             .from('store_status_logs')
             .select('modifier, created_at')

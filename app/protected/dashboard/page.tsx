@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores, getDashboardContext } from '@/utils/stores';
+import { filterStoresForUser } from '@/utils/test-stores';
 import { getMyLoc } from '@/utils/navigation';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { getStatusLabel, statuses } from '@/utils/utils';
@@ -196,6 +197,14 @@ export default function DashboardPage() {
 
       (async () => {
         try {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          if (!user) {
+            setNearbyLoading(false);
+            return;
+          }
+
           const { data: storesData, error: rpcError } = await supabase.rpc(
             'get_stores_within_radius',
             params
@@ -208,7 +217,8 @@ export default function DashboardPage() {
             return;
           }
 
-          const stores = (storesData ?? []).filter((s: any) => s.status === 'free');
+          const visibleStores = filterStoresForUser(storesData ?? [], user.id);
+          const stores = visibleStores.filter((s: any) => s.status === 'free');
           setNearbyProspects(stores.slice(0, NEARBY_LIMIT));
           setNearbyError(null);
         } catch (error) {
