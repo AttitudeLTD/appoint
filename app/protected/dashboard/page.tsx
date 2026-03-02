@@ -205,9 +205,8 @@ export default function DashboardPage() {
             return;
           }
 
-          const { data: storesData, error: rpcError } = await supabase.rpc(
-            'get_stores_within_radius',
-            params
+          const { data: storesData, error: rpcError } = await Promise.resolve(
+            supabase.rpc('get_stores_within_radius', params)
           );
 
           if (rpcError) {
