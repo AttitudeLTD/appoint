@@ -184,6 +184,7 @@ const Map = ({ user }: any) => {
 
   // Ultimo centro usato per la fetch dei pin (aggiornato dentro fetchStoresAndLogs)
   const lastFetchCenter = useRef<[number, number] | null>(null);
+  const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const loadClients = async () => {
@@ -571,17 +572,24 @@ const Map = ({ user }: any) => {
     }, 3000);
 
     // Fallback timeout: se dopo 10 secondi non abbiamo coordinate, usa Roma
-    const fallbackTimeout = setTimeout(() => {
-      if (!coord) {
-        // Coordinate di default: Roma
-        const defaultCoords: LatLngExpression = [41.90914449596167, 12.524449000864948];
-        setCoord(defaultCoords);
-        fetchStoresAndLogs(defaultCoords[0], defaultCoords[1]);
-      }
-    }, 10000); // 10 secondi
+    fallbackTimeoutRef.current = setTimeout(() => {
+      setCoord((current) => {
+        // Solo se non abbiamo ancora coordinate (evita di sovrascrivere la posizione già ottenuta)
+        if (current == null) {
+          const defaultCoords: LatLngExpression = [41.90914449596167, 12.524449000864948];
+          fetchStoresAndLogs(defaultCoords[0], defaultCoords[1]);
+          return defaultCoords;
+        }
+        return current;
+      });
+    }, 10000);
 
     getMyLoc((coords: LatLngExpression | null) => {
       if (coords && Array.isArray(coords)) {
+        if (fallbackTimeoutRef.current != null) {
+          clearTimeout(fallbackTimeoutRef.current);
+          fallbackTimeoutRef.current = null;
+        }
         setCoord(coords);
         fetchStoresAndLogs(coords[0], coords[1]);
       }
@@ -591,7 +599,10 @@ const Map = ({ user }: any) => {
 
     return () => {
       clearTimeout(geoTimeout);
-      clearTimeout(fallbackTimeout);
+      if (fallbackTimeoutRef.current != null) {
+        clearTimeout(fallbackTimeoutRef.current);
+        fallbackTimeoutRef.current = null;
+      }
     };
   }, [user.id, supabase, fetchStoresAndLogs]);
 
