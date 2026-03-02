@@ -92,6 +92,8 @@ export default function DashboardPage() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [coord, setCoord] = useState<[number, number] | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarDraftFrom, setCalendarDraftFrom] = useState<Date | undefined>(undefined);
+  const [calendarDraftTo, setCalendarDraftTo] = useState<Date | undefined>(undefined);
   const [agentFilterOpen, setAgentFilterOpen] = useState(false);
 
   useEffect(() => {
@@ -436,10 +438,10 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* Due riquadri affiancati */}
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+      {/* Due riquadri affiancati: stessa altezza, area lista riempie fino in fondo e scrolla se serve */}
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch'>
         {/* Riquadro Storico Attività */}
-        <div className='bg-white/10 rounded-lg border border-white/20 p-6 shadow-sm flex flex-col'>
+        <div className='bg-white/10 rounded-lg border border-white/20 p-6 shadow-sm flex flex-col min-h-0 overflow-hidden max-h-[32rem]'>
           <div className='flex items-center justify-between gap-2 mb-4 flex-shrink-0'>
             <div className='flex items-center gap-2'>
               <History className='h-5 w-5 text-blue-300' />
@@ -456,46 +458,89 @@ export default function DashboardPage() {
               <Download className='h-4 w-4' />
             </Button>
           </div>
-          {/* Filtri: range date (popup calendario), cliente, esito */}
+          {/* Filtri */}
           <div className='flex flex-wrap items-end gap-3 mb-4 flex-shrink-0'>
             <div className='flex flex-col gap-1'>
               <label className='text-xs text-white/80'>Periodo</label>
-              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <Popover
+                open={calendarOpen}
+                onOpenChange={(open) => {
+                  setCalendarOpen(open);
+                  if (open) {
+                    setCalendarDraftFrom(undefined);
+                    setCalendarDraftTo(undefined);
+                  }
+                }}
+              >
                 <PopoverTrigger asChild>
                   <Button
                     variant='outline'
-                    className='h-9 w-[220px] justify-start gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20'
+                    className='h-8 w-[155px] min-w-0 justify-start gap-1 overflow-hidden px-2 bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs'
                   >
-                    <CalendarIcon className='h-4 w-4' />
-                    {historyDateFrom && historyDateTo ? (
-                      <>
-                        {format(new Date(historyDateFrom + 'T12:00:00'), 'd MMM yyyy', { locale: it })} –{' '}
-                        {format(new Date(historyDateTo + 'T12:00:00'), 'd MMM yyyy', { locale: it })}
-                      </>
-                    ) : (
-                      <span className='text-white/80'>Seleziona periodo</span>
-                    )}
+                    <CalendarIcon className='h-3.5 w-3.5 shrink-0' />
+                    <span className='min-w-0 truncate'>
+                      {historyDateFrom && historyDateTo ? (
+                        <>
+                          {format(new Date(historyDateFrom + 'T12:00:00'), 'd/M/yy')} –{' '}
+                          {format(new Date(historyDateTo + 'T12:00:00'), 'd/M/yy')}
+                        </>
+                      ) : (
+                        <span className='text-white/80'>Seleziona periodo</span>
+                      )}
+                    </span>
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className='w-auto p-0 bg-slate-900 border-white/20' align='start'>
-                  <DayPicker
-                    mode='range'
-                    locale={it}
-                    selected={{
-                      from: historyDateFrom ? new Date(historyDateFrom + 'T12:00:00') : undefined,
-                      to: historyDateTo ? new Date(historyDateTo + 'T12:00:00') : undefined,
-                    }}
-                    onSelect={(range) => {
-                      if (range?.from) {
-                        setHistoryDateFrom(format(range.from, 'yyyy-MM-dd'));
-                      }
-                      if (range?.to) {
-                        setHistoryDateTo(format(range.to, 'yyyy-MM-dd'));
-                        setCalendarOpen(false);
-                      }
-                    }}
-                    numberOfMonths={1}
-                  />
+                <PopoverContent
+                  className='w-auto p-4 border border-white/20 rounded-xl shadow-xl'
+                  style={{ backgroundColor: '#224677' }}
+                  align='start'
+                >
+                  <div
+                    className='rdp-root rdp-dashboard-theme'
+                    style={
+                      {
+                        ['--rdp-accent-color']: '#CBACF9',
+                        ['--rdp-accent-background-color']: 'transparent',
+                        ['--rdp-day_button-border']: 'none',
+                        ['--rdp-day_button-border-radius']: '9999px',
+                        ['--rdp-today-color']: 'white',
+                        ['--rdp-range_middle-background-color']: 'transparent',
+                        ['--rdp-range_middle-color']: '#CBACF9',
+                        ['--rdp-range_start-background']: 'transparent',
+                        ['--rdp-range_start-date-background-color']: 'transparent',
+                        ['--rdp-range_start-color']: '#CBACF9',
+                        ['--rdp-range_end-background']: 'transparent',
+                        ['--rdp-range_end-date-background-color']: 'transparent',
+                        ['--rdp-range_end-color']: '#CBACF9',
+                        ['--rdp-outside-opacity']: '0.4',
+                        color: 'white',
+                      } as React.CSSProperties
+                    }
+                  >
+                    <DayPicker
+                      mode='range'
+                      locale={it}
+                      selected={{
+                        from: calendarDraftFrom,
+                        to: calendarDraftTo,
+                      }}
+                      onSelect={(range) => {
+                        const hadFirstSelection = calendarDraftFrom != null;
+                        setCalendarDraftFrom(range?.from);
+                        setCalendarDraftTo(range?.to ?? undefined);
+                        if (
+                          range?.from != null &&
+                          range?.to != null &&
+                          hadFirstSelection
+                        ) {
+                          setHistoryDateFrom(format(range.from, 'yyyy-MM-dd'));
+                          setHistoryDateTo(format(range.to, 'yyyy-MM-dd'));
+                          setCalendarOpen(false);
+                        }
+                      }}
+                      numberOfMonths={1}
+                    />
+                  </div>
                 </PopoverContent>
               </Popover>
             </div>
@@ -536,7 +581,7 @@ export default function DashboardPage() {
               </Select>
             </div>
           </div>
-          <div className='min-h-0 flex-1 overflow-y-auto' style={{ maxHeight: '320px' }}>
+          <div className='min-h-0 flex-1 overflow-y-auto min-h-[280px]'>
             {historyLoading ? (
               <div className='text-center text-white/80 py-8'>Caricamento...</div>
             ) : filteredHistoryActivities.length > 0 ? (
@@ -637,12 +682,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Riquadro Prospect vicini a te */}
-        <div className='bg-white/10 rounded-lg border border-white/20 p-6 shadow-sm flex flex-col'>
+        <div className='bg-white/10 rounded-lg border border-white/20 p-6 shadow-sm flex flex-col min-h-0 overflow-hidden max-h-[32rem]'>
           <div className='flex items-center gap-2 mb-4 flex-shrink-0'>
             <MapPin className='h-5 w-5 text-green-300' />
             <h2 className='text-xl font-semibold text-white'>Prospect vicini a te</h2>
           </div>
-          <div className='min-h-0 flex-1 overflow-y-auto' style={{ maxHeight: '320px' }}>
+          <div className='min-h-0 flex-1 overflow-y-auto min-h-[280px]'>
             {nearbyLoading ? (
               <div className='text-center text-white/80 py-8'>Caricamento...</div>
             ) : nearbyError ? (

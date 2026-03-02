@@ -89,3 +89,38 @@
     background: linear-gradient(90deg, #161a31 0%, #06091f 100%);
   }
 }
+
+/* Calendario Storico Attività: tema dashboard (#224677) + accent lilla (#CBACF9) */
+.rdp-root,
+.rdp-root .rdp {
+  color: white;
+}
+.rdp-root [class*='month_caption'],
+.rdp-root [class*='weekday'],
+.rdp-root [class*='day_button'] {
+  color: white;
+}
+.rdp-root .rdp-button_previous,
+.rdp-root .rdp-button_next {
+  color: #CBACF9;
+}
+.rdp-root .rdp-button_previous:hover,
+.rdp-root .rdp-button_next:hover {
+  background: rgba(203, 172, 249, 0.25);
+  color: #CBACF9;
+}
+.rdp-root [class*='day_button']:hover:not([disabled]) {
+  background: rgba(203, 172, 249, 0.3);
+  color: white;
+}
+.rdp-root [class*='outside'] {
+  color: rgba(255, 255, 255, 0.4);
+}
+/* Range e giorni selezionati: solo la cifra in lilla, niente sfondo pieno */
+.rdp-dashboard-theme .rdp-selected .rdp-day_button,
+.rdp-dashboard-theme .rdp-range_start .rdp-day_button,
+.rdp-dashboard-theme .rdp-range_end .rdp-day_button,
+.rdp-dashboard-theme .rdp-range_middle .rdp-day_button {
+  background-color: transparent !important;
+  color: #CBACF9 !important;
+}
