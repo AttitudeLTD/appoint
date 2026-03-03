@@ -35,6 +35,35 @@ export const signUpAction = async (formData: FormData) => {
   }
 };
 
+const ALLOWED_TEST_EMAIL = 'amex.appoint@attitudeltd.com';
+const GENERIC_LOGIN_ERROR = 'Credenziali non valide. Riprova.';
+
+/** Login per Area Riservata: solo email amex.appoint@attitudeltd.com; messaggio generico se email errata. */
+export const signInAreaRiservataAction = async (formData: FormData) => {
+  const email = (formData.get('email') as string)?.trim().toLowerCase();
+  const password = formData.get('password') as string;
+  const supabase = createClient();
+
+  if (!email || !password) {
+    return encodedRedirect('error', '/sign-in', 'Inserisci email e password.');
+  }
+
+  if (email !== ALLOWED_TEST_EMAIL) {
+    return encodedRedirect('error', '/sign-in', GENERIC_LOGIN_ERROR);
+  }
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: ALLOWED_TEST_EMAIL,
+    password,
+  });
+
+  if (error) {
+    return encodedRedirect('error', '/sign-in', GENERIC_LOGIN_ERROR);
+  }
+
+  return redirect('/protected');
+};
+
 export const signInAction = async (formData: FormData) => {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
