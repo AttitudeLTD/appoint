@@ -6,7 +6,7 @@
 
 export const TEST_STORE_ID_MIN = 13565;
 export const TEST_STORE_ID_MAX = 13814;
-export const TEST_USER_ID = '81c0a417-836b-4ecd-9e8a-ca9bfcd37ac8';
+export const TEST_USER_ID = '4558cd40-01e2-4b2b-b2cb-41bf1830a572';
 
 function isTestStoreId(storeId: number): boolean {
   return storeId >= TEST_STORE_ID_MIN && storeId <= TEST_STORE_ID_MAX;
