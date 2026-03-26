@@ -127,9 +127,20 @@ export default function DashboardPage() {
     } = await supabase.auth.getUser();
     if (!user) return;
     const agentIds = selectedAgentIds.length > 0 ? selectedAgentIds : undefined;
-    const data = await fetchUserStores(user.id, { agentIds });
+    const defaultRange = getDefaultDateRange();
+    const fromDate = historyDateFrom || defaultRange.fromStr;
+    const toDate = historyDateTo || defaultRange.toStr;
+    const dateFrom = new Date(fromDate + 'T00:00:00').toISOString();
+    const dateTo = new Date(toDate + 'T23:59:59').toISOString();
+
+    const data = await fetchUserStores(user.id, {
+      agentIds,
+      dateFrom,
+      dateTo,
+      clientId: historyClientId || undefined,
+    });
     setAllActivities(data);
-  }, [selectedAgentIds, supabase]);
+  }, [selectedAgentIds, historyDateFrom, historyDateTo, historyClientId, supabase]);
 
   useEffect(() => {
     if (dashboardRole === 'am' || dashboardRole === 'supervisor') {
@@ -308,8 +319,15 @@ export default function DashboardPage() {
 
   // Aggrega per store: uno per store (prima occorrenza = più recente), poi conta per esito
   const kpis = useMemo(() => {
+    const kpiActivities =
+      historyEsitoFilter === 'all'
+        ? allActivities
+        : historyEsitoFilter === 'photo'
+          ? allActivities.filter((a) => a.type === 'photo')
+          : allActivities.filter((a) => a.type === 'status' && a.status === historyEsitoFilter);
+
     const storeToStatus = new Map<number, string>();
-    for (const e of allActivities) {
+    for (const e of kpiActivities) {
       if (!storeToStatus.has(e.store_id)) {
         storeToStatus.set(e.store_id, e.status || 'free');
       }
@@ -332,6 +350,7 @@ export default function DashboardPage() {
         bgColor: 'bg-blue-500/20',
       },
     ];
+    if (historyEsitoFilter === 'photo') return items;
     for (const s of statuses) {
       if (s.value === 'free') continue;
       const count = byStatus[s.value] ?? 0;
@@ -348,7 +367,7 @@ export default function DashboardPage() {
       }
     }
     return items;
-  }, [allActivities]);
+  }, [allActivities, historyEsitoFilter]);
 
 
   const showAgentFilter = dashboardRole === 'am' || dashboardRole === 'supervisor';
@@ -369,8 +388,8 @@ export default function DashboardPage() {
       </div>
 
       {/* Filtro agenti (solo AM e Supervisor) */}
-      {showAgentFilter && agentsForFilter.length > 0 && (
-        <div className='mb-6 flex flex-wrap items-center gap-3'>
+      <div className='mb-6 flex flex-wrap items-end gap-3'>
+        {showAgentFilter && agentsForFilter.length > 0 && (
           <Popover open={agentFilterOpen} onOpenChange={setAgentFilterOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -412,8 +431,134 @@ export default function DashboardPage() {
               </div>
             </PopoverContent>
           </Popover>
+        )}
+
+        {/* Filtri globali dashboard: periodo, cliente, esito (valgono per KPI + storico) */}
+        <div className='flex flex-wrap items-end gap-3'>
+          <div className='flex flex-col gap-1'>
+            <label className='text-xs text-white/80'>Periodo</label>
+            <Popover
+              open={calendarOpen}
+              onOpenChange={(open) => {
+                setCalendarOpen(open);
+                if (open) {
+                  setCalendarDraftFrom(undefined);
+                  setCalendarDraftTo(undefined);
+                }
+              }}
+            >
+              <PopoverTrigger asChild>
+                <Button
+                  variant='outline'
+                  className='h-8 w-[155px] min-w-0 justify-start gap-1 overflow-hidden px-2 bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs'
+                >
+                  <CalendarIcon className='h-3.5 w-3.5 shrink-0' />
+                  <span className='min-w-0 truncate'>
+                    {historyDateFrom && historyDateTo ? (
+                      <>
+                        {format(new Date(historyDateFrom + 'T12:00:00'), 'd/M/yy')} –{' '}
+                        {format(new Date(historyDateTo + 'T12:00:00'), 'd/M/yy')}
+                      </>
+                    ) : (
+                      <span className='text-white/80'>Seleziona periodo</span>
+                    )}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className='w-auto p-4 border border-white/20 rounded-xl shadow-xl'
+                style={{ backgroundColor: '#224677' }}
+                align='start'
+              >
+                <div
+                  className='rdp-root rdp-dashboard-theme'
+                  style={
+                    {
+                      ['--rdp-accent-color']: '#CBACF9',
+                      ['--rdp-accent-background-color']: 'transparent',
+                      ['--rdp-day_button-border']: 'none',
+                      ['--rdp-day_button-border-radius']: '9999px',
+                      ['--rdp-today-color']: 'white',
+                      ['--rdp-range_middle-background-color']: 'transparent',
+                      ['--rdp-range_middle-color']: '#CBACF9',
+                      ['--rdp-range_start-background']: 'transparent',
+                      ['--rdp-range_start-date-background-color']: 'transparent',
+                      ['--rdp-range_start-color']: '#CBACF9',
+                      ['--rdp-range_end-background']: 'transparent',
+                      ['--rdp-range_end-date-background-color']: 'transparent',
+                      ['--rdp-range_end-color']: '#CBACF9',
+                      ['--rdp-outside-opacity']: '0.4',
+                      color: 'white',
+                    } as React.CSSProperties
+                  }
+                >
+                  <DayPicker
+                    mode='range'
+                    locale={it}
+                    selected={{
+                      from: calendarDraftFrom,
+                      to: calendarDraftTo,
+                    }}
+                    onSelect={(range) => {
+                      const hadFirstSelection = calendarDraftFrom != null;
+                      setCalendarDraftFrom(range?.from);
+                      setCalendarDraftTo(range?.to ?? undefined);
+                      if (
+                        range?.from != null &&
+                        range?.to != null &&
+                        hadFirstSelection
+                      ) {
+                        setHistoryDateFrom(format(range.from, 'yyyy-MM-dd'));
+                        setHistoryDateTo(format(range.to, 'yyyy-MM-dd'));
+                        setCalendarOpen(false);
+                      }
+                    }}
+                    numberOfMonths={1}
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className='flex flex-col gap-1'>
+            <label className='text-xs text-white/80'>Cliente</label>
+            <Select
+              value={historyClientId ?? 'all'}
+              onValueChange={(v) => setHistoryClientId(v === 'all' ? null : v)}
+            >
+              <SelectTrigger className='bg-white/10 border-white/20 text-white h-9 w-[180px]'>
+                <SelectValue placeholder='Tutti i clienti' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>Tutti i clienti</SelectItem>
+                {historyClients.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className='flex flex-col gap-1'>
+            <label className='text-xs text-white/80'>Esito</label>
+            <Select value={historyEsitoFilter} onValueChange={setHistoryEsitoFilter}>
+              <SelectTrigger className='bg-white/10 border-white/20 text-white h-9 w-[180px]'>
+                <SelectValue placeholder='Tutti gli esiti' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='all'>Tutti gli esiti</SelectItem>
+                {statuses.filter((s) => s.value !== 'free').map((s) => (
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+                <SelectItem value='photo'>Foto scattata</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* KPI Section */}
       <div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-8'>
@@ -457,129 +602,6 @@ export default function DashboardPage() {
             >
               <Download className='h-4 w-4' />
             </Button>
-          </div>
-          {/* Filtri */}
-          <div className='flex flex-wrap items-end gap-3 mb-4 flex-shrink-0'>
-            <div className='flex flex-col gap-1'>
-              <label className='text-xs text-white/80'>Periodo</label>
-              <Popover
-                open={calendarOpen}
-                onOpenChange={(open) => {
-                  setCalendarOpen(open);
-                  if (open) {
-                    setCalendarDraftFrom(undefined);
-                    setCalendarDraftTo(undefined);
-                  }
-                }}
-              >
-                <PopoverTrigger asChild>
-                  <Button
-                    variant='outline'
-                    className='h-8 w-[155px] min-w-0 justify-start gap-1 overflow-hidden px-2 bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs'
-                  >
-                    <CalendarIcon className='h-3.5 w-3.5 shrink-0' />
-                    <span className='min-w-0 truncate'>
-                      {historyDateFrom && historyDateTo ? (
-                        <>
-                          {format(new Date(historyDateFrom + 'T12:00:00'), 'd/M/yy')} –{' '}
-                          {format(new Date(historyDateTo + 'T12:00:00'), 'd/M/yy')}
-                        </>
-                      ) : (
-                        <span className='text-white/80'>Seleziona periodo</span>
-                      )}
-                    </span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className='w-auto p-4 border border-white/20 rounded-xl shadow-xl'
-                  style={{ backgroundColor: '#224677' }}
-                  align='start'
-                >
-                  <div
-                    className='rdp-root rdp-dashboard-theme'
-                    style={
-                      {
-                        ['--rdp-accent-color']: '#CBACF9',
-                        ['--rdp-accent-background-color']: 'transparent',
-                        ['--rdp-day_button-border']: 'none',
-                        ['--rdp-day_button-border-radius']: '9999px',
-                        ['--rdp-today-color']: 'white',
-                        ['--rdp-range_middle-background-color']: 'transparent',
-                        ['--rdp-range_middle-color']: '#CBACF9',
-                        ['--rdp-range_start-background']: 'transparent',
-                        ['--rdp-range_start-date-background-color']: 'transparent',
-                        ['--rdp-range_start-color']: '#CBACF9',
-                        ['--rdp-range_end-background']: 'transparent',
-                        ['--rdp-range_end-date-background-color']: 'transparent',
-                        ['--rdp-range_end-color']: '#CBACF9',
-                        ['--rdp-outside-opacity']: '0.4',
-                        color: 'white',
-                      } as React.CSSProperties
-                    }
-                  >
-                    <DayPicker
-                      mode='range'
-                      locale={it}
-                      selected={{
-                        from: calendarDraftFrom,
-                        to: calendarDraftTo,
-                      }}
-                      onSelect={(range) => {
-                        const hadFirstSelection = calendarDraftFrom != null;
-                        setCalendarDraftFrom(range?.from);
-                        setCalendarDraftTo(range?.to ?? undefined);
-                        if (
-                          range?.from != null &&
-                          range?.to != null &&
-                          hadFirstSelection
-                        ) {
-                          setHistoryDateFrom(format(range.from, 'yyyy-MM-dd'));
-                          setHistoryDateTo(format(range.to, 'yyyy-MM-dd'));
-                          setCalendarOpen(false);
-                        }
-                      }}
-                      numberOfMonths={1}
-                    />
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className='flex flex-col gap-1'>
-              <label className='text-xs text-white/80'>Cliente</label>
-              <Select
-                value={historyClientId ?? 'all'}
-                onValueChange={(v) => setHistoryClientId(v === 'all' ? null : v)}
-              >
-                <SelectTrigger className='bg-white/10 border-white/20 text-white h-9 w-[180px]'>
-                  <SelectValue placeholder='Tutti i clienti' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>Tutti i clienti</SelectItem>
-                  {historyClients.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className='flex flex-col gap-1'>
-              <label className='text-xs text-white/80'>Esito</label>
-              <Select value={historyEsitoFilter} onValueChange={setHistoryEsitoFilter}>
-                <SelectTrigger className='bg-white/10 border-white/20 text-white h-9 w-[180px]'>
-                  <SelectValue placeholder='Tutti gli esiti' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>Tutti gli esiti</SelectItem>
-                  {statuses.filter((s) => s.value !== 'free').map((s) => (
-                    <SelectItem key={s.value} value={s.value}>
-                      {s.label}
-                    </SelectItem>
-                  ))}
-                  <SelectItem value='photo'>Foto scattata</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
           <div className='min-h-0 flex-1 overflow-y-auto min-h-[280px]'>
             {historyLoading ? (
