@@ -269,6 +269,7 @@ export default function DashboardPage() {
     const headers = [
       'Tipo',
       'Nome Attività',
+      'Partita IVA',
       'Indirizzo',
       'CAP',
       'Comune',
@@ -282,6 +283,7 @@ export default function DashboardPage() {
       return [
         entry.type === 'photo' ? 'Foto' : 'Stato',
         entry.store_name || '',
+        entry.pi || '',
         entry.address || '',
         entry.cap || '',
         entry.comune || '',
@@ -628,6 +630,11 @@ export default function DashboardPage() {
                           <p className='font-medium text-sm truncate text-white'>
                             {activity.store_name}
                           </p>
+                          {activity.pi ? (
+                            <p className='text-xs text-white/70 truncate'>
+                              P.IVA: {activity.pi}
+                            </p>
+                          ) : null}
                           <p className='text-xs text-white/80 truncate'>
                             {activity.address}
                             {activity.cap && `, ${activity.cap}`}

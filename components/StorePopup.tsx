@@ -838,6 +838,12 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 </p>
                 <p className='text-base text-white'>{store.category}</p>
               </div>
+              {store.pi ? (
+                <div className='py-3 border-b border-white/20'>
+                  <p className='text-base text-white/80 font-medium'>Partita IVA:</p>
+                  <p className='text-base text-white'>{store.pi}</p>
+                </div>
+              ) : null}
               {(store.tier || store.fatturato) && (
                 <div className='py-3 border-b border-white/20'>
                   <p className='text-base text-white/80 font-medium'>

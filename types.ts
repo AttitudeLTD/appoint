@@ -9,6 +9,16 @@ export interface Store {
   category: string;
   email: string;
   owner_name: string;
+  /** Partita IVA */
+  pi?: string | null;
+  cf_azienda?: string | null;
+  codice_ateco?: string | null;
+  dipendenti?: number | string | null;
+  cap?: string | null;
+  comune?: string | null;
+  provincia?: string | null;
+  regione?: string | null;
+  coordinates?: [number, number] | null;
   status:
     | 'free'
     | 'in_progress'
