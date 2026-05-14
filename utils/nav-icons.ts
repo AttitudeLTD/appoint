@@ -267,8 +267,33 @@ export function applyTierBorder(
   });
 }
 
+// =============================================================================
+// Cache delle icone "dinamiche" (DivIcon parametrico per colore/logo).
+// -----------------------------------------------------------------------------
+// Le factory qui sotto venivano chiamate dentro il `.map()` dei Marker ad ogni
+// render del componente Map. Ogni chiamata produceva una NUOVA istanza
+// `L.DivIcon`, e react-leaflet, vedendo una nuova reference, chiamava
+// `marker.setIcon(...)`. Leaflet, per applicare il nuovo icon, sostituisce il
+// DOM element del marker — provocando il classico "flicker" del marker e
+// della sua ombra durante un fetch in background.
+//
+// Cache-ando il risultato per chiave testuale ((color|logoUrl|muted)) otteniamo
+// la stessa reference per gli stessi input: setIcon non viene mai chiamato
+// quando il pin non è effettivamente cambiato. Il cache è semplice e bounded
+// dai client_logo presenti (poche unità nella pratica) × numero di tier.
+// =============================================================================
+
+const colorLogoCache = new Map<string, L.DivIcon>();
+const colorOnlyCache = new Map<string, L.DivIcon>();
+const logoOnlyCache  = new Map<string, L.DivIcon>();
+const logoMutedCache = new Map<string, L.DivIcon>();
+
 /** Free pin: tier color fill + client logo image (best of both). */
 export function createFreePinColoredWithLogo(color: string, logoUrl: string, muted = false): L.DivIcon {
+  const key = `${color}|${logoUrl}|${muted ? 'm' : 'n'}`;
+  const cached = colorLogoCache.get(key);
+  if (cached) return cached;
+
   const size: [number, number] = muted ? [38, 38] : [52, 52];
   const anchor: [number, number] = muted ? [19, 34] : [26, 47];
   const popup: [number, number] = muted ? [0, -36] : [0, -48];
@@ -281,11 +306,17 @@ export function createFreePinColoredWithLogo(color: string, logoUrl: string, mut
       </svg>
       <img src="${logoUrl}" style="position:absolute;top:${imgTop}px;left:${imgLeft}px;width:${imgSize}px;height:${imgSize}px;border-radius:50%;object-fit:cover;pointer-events:none" />
     </div>`;
-  return new L.DivIcon({ html, className: '', iconSize: size, iconAnchor: anchor, popupAnchor: popup });
+  const icon = new L.DivIcon({ html, className: '', iconSize: size, iconAnchor: anchor, popupAnchor: popup });
+  colorLogoCache.set(key, icon);
+  return icon;
 }
 
 /** Free pin with a custom fill color (used for tier coloring). Uses DivIcon/inline SVG for reliable react-leaflet reactivity. */
 export function createFreePinColored(color: string, muted = false): L.DivIcon {
+  const key = `${color}|${muted ? 'm' : 'n'}`;
+  const cached = colorOnlyCache.get(key);
+  if (cached) return cached;
+
   const size: [number, number] = muted ? [30, 30] : [40, 40];
   const anchor: [number, number] = muted ? [14, 40] : [24, 50];
   const popup: [number, number] = muted ? [0, -38] : [0, -48];
@@ -293,7 +324,9 @@ export function createFreePinColored(color: string, muted = false): L.DivIcon {
     <path d="M60 30c0 14.979-16.617 30.579-22.197 35.397a3 3 0 0 1-3.606 0C28.617 60.579 12 44.979 12 30a24 24 0 0 1 48 0" fill="${color}" opacity="${muted ? 0.65 : 1}"/>
     <circle cx="36" cy="30" r="6" fill="white"/>
   </svg>`;
-  return new L.DivIcon({ html, className: '', iconSize: size, iconAnchor: anchor, popupAnchor: popup });
+  const icon = new L.DivIcon({ html, className: '', iconSize: size, iconAnchor: anchor, popupAnchor: popup });
+  colorOnlyCache.set(key, icon);
+  return icon;
 }
 
 /**
@@ -301,6 +334,9 @@ export function createFreePinColored(color: string, muted = false): L.DivIcon {
  * Usa L.DivIcon in modo da poter usare un <img> normale (nessuna codifica base64).
  */
 export function createFreePinWithLogo(logoUrl: string): L.DivIcon {
+  const cached = logoOnlyCache.get(logoUrl);
+  if (cached) return cached;
+
   // circle cx=36 cy=30 r=14 in viewBox 0 0 72 72 → rendered 52x52:
   // center pixel (26, 21.7), radius 10.1 → logo 18x18 at top≈13 left≈17
   const html = `
@@ -311,17 +347,22 @@ export function createFreePinWithLogo(logoUrl: string): L.DivIcon {
       </svg>
       <img src="${logoUrl}" style="position:absolute;top:13px;left:17px;width:18px;height:18px;border-radius:50%;object-fit:cover;pointer-events:none" />
     </div>`;
-  return new L.DivIcon({
+  const icon = new L.DivIcon({
     html,
     className: '',
     iconSize: [52, 52],
     iconAnchor: [26, 47],
     popupAnchor: [0, -48],
   });
+  logoOnlyCache.set(logoUrl, icon);
+  return icon;
 }
 
 /** Versione attenuata (store gestito da altro agente). */
 export function createFreePinMutedWithLogo(logoUrl: string): L.DivIcon {
+  const cached = logoMutedCache.get(logoUrl);
+  if (cached) return cached;
+
   // rendered 38x38, circle center ~(19, 15.8), radius ~7.4 → logo 14x14 at top≈9 left≈12
   const html = `
     <div style="position:relative;width:38px;height:38px;">
@@ -331,13 +372,15 @@ export function createFreePinMutedWithLogo(logoUrl: string): L.DivIcon {
       </svg>
       <img src="${logoUrl}" style="position:absolute;top:9px;left:12px;width:14px;height:14px;border-radius:50%;object-fit:cover;pointer-events:none" />
     </div>`;
-  return new L.DivIcon({
+  const icon = new L.DivIcon({
     html,
     className: '',
     iconSize: [38, 38],
     iconAnchor: [19, 34],
     popupAnchor: [0, -36],
   });
+  logoMutedCache.set(logoUrl, icon);
+  return icon;
 }
 
 // Non Existent Store Icon Muted (Gray with X-circle)

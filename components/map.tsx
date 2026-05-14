@@ -19,7 +19,6 @@ import { Agent, Store, StoreLog } from '@/types';
 import { createClient } from '@/utils/supabase/client';
 import { getClientLogoUrl } from '@/utils/client-logo';
 import { getMyLoc, parseCoords } from '@/utils/navigation';
-import { filterStoresForUser, TEST_USER_ID } from '@/utils/test-stores';
 import { generateMailBody, statuses } from '@/utils/utils';
 import {
   alreadyClientPin,
@@ -583,10 +582,10 @@ const Map = ({ user }: any) => {
           return;
         }
 
-        const visibleStores = filterStoresForUser(storesData ?? [], user.id);
-
+        // La visibilità è ora gestita interamente lato DB (RLS + RPC),
+        // quindi `storesData` contiene già solo gli store visibili all'utente.
         const storesWithLogs = await Promise.all(
-          visibleStores.map(async (store: any) => {
+          (storesData ?? []).map(async (store: any) => {
             const { data: logs } = await supabase
               .from('store_status_logs')
               .select('modifier, created_at')
@@ -960,8 +959,7 @@ const Map = ({ user }: any) => {
               </div>
             )}
 
-            {/* Filter button + panel (nascosto per utente di test) */}
-            {user.id !== TEST_USER_ID && (
+            {/* Filter button + panel */}
             <div className='relative' ref={filtersPanelRef}>
               <Button
                 type='button'
@@ -1111,7 +1109,6 @@ const Map = ({ user }: any) => {
                 </div>
               )}
             </div>
-            )}
           </div>
         )}
 

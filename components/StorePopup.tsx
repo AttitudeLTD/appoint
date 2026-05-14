@@ -775,16 +775,15 @@ const StorePopup: React.FC<StorePopupProps> = ({
         </Button>
 
         <Sheet>
-          <SheetTrigger
-            onClick={() => {
-              setLogsOffset(0);
-              setHasMoreLogs(true);
-              fetchStatusLogs(store.id, 0);
-            }}
-          >
+          <SheetTrigger asChild>
             <Button
               variant='secondary'
               className='w-full bg-[#1B304E] hover:bg-[#224677] text-white'
+              onClick={() => {
+                setLogsOffset(0);
+                setHasMoreLogs(true);
+                fetchStatusLogs(store.id, 0);
+              }}
             >
               <Settings className='mr-2' /> Gestisci
             </Button>
