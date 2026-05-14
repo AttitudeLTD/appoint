@@ -155,6 +155,153 @@ function UserLocationTracker({
   return null;
 }
 
+// Search bar isolata: tutto lo stato del campo "cerca indirizzo" vive qui.
+// In questo modo, ad ogni keystroke rerenda SOLO questo componente e non
+// l'intero <Map />, evitando il flickering della cluster layer e dei marker
+// (le ombre dei pin lampeggiavano perché il MarkerClusterGroup si rifaceva
+// ad ogni cambio di searchQuery nel parent).
+function AddressSearchBar({
+  onSelect,
+}: {
+  onSelect: (lat: number, lng: number) => void;
+}) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [showSearchResults, setShowSearchResults] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setFocusedIndex(-1);
+  }, [searchResults]);
+
+  // Chiude il dropdown quando l'utente clicca fuori (es. sulla mappa).
+  // Prima questa logica viveva in un MapClickHandler nel parent.
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setShowSearchResults(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            searchQuery
+          )}&limit=5&countrycodes=it&accept-language=it`,
+          { signal: controller.signal }
+        );
+        const data = await response.json();
+        setSearchResults(data);
+      } catch (error: any) {
+        if (error?.name !== 'AbortError') {
+          console.error('Error searching address:', error);
+        }
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
+  const handleSelect = (result: SearchResult) => {
+    const lat = parseFloat(result.lat);
+    const lng = parseFloat(result.lon);
+    setSearchResults([]);
+    setSearchQuery('');
+    setShowSearchResults(false);
+    onSelect(lat, lng);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (searchResults.length === 0) return;
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setFocusedIndex((prev) =>
+          prev < searchResults.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setFocusedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (focusedIndex >= 0) {
+          handleSelect(searchResults[focusedIndex]);
+        }
+        break;
+    }
+  };
+
+  return (
+    <div ref={containerRef} className='space-y-2'>
+      <div className='flex items-center gap-2'>
+        <div className='relative flex-1'>
+          <Input
+            type='text'
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowSearchResults(true);
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder='Cerca indirizzo...'
+            className='w-full px-4 py-2 pl-10 border rounded-full shadow-md bg-white text-black'
+            style={{ backgroundColor: 'white', color: 'black' }}
+          />
+          <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
+          {isSearching && (
+            <div className='absolute right-3 top-2.5'>
+              <Loader className='h-5 w-5 animate-spin text-gray-400' />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {searchResults.length > 0 && showSearchResults && (
+        <div className='w-full shadow-lg max-h-60 overflow-auto rounded-md bg-white'>
+          {searchResults.map((result, index) => (
+            <Button
+              key={index}
+              variant='outline'
+              className={`w-full px-4 py-1 text-left flex justify-start border-none focus:outline-none rounded-none ${
+                index === 0 ? 'rounded-t-md' : ''
+              } ${
+                index === searchResults.length - 1 ? 'rounded-b-md' : ''
+              } ${focusedIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
+              onClick={() => handleSelect(result)}
+            >
+              <MapPin className='h-4 w-4 text-gray-400 flex-shrink-0' />
+              <p className='text-sm truncate'>{result.display_name}</p>
+            </Button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const createClusterIcon = (cluster: any) => {
   const count = cluster.getChildCount();
   const size = count < 10 ? 36 : count < 50 ? 44 : 52;
@@ -194,12 +341,7 @@ const Map = ({ user }: any) => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedNote, setSelectedNote] = useState('');
   const [loadingConfirm, setLoadingConfirm] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<[number, number]>();
-  const [focusedIndex, setFocusedIndex] = useState(-1);
-  const [showSearchResults, setShowSearchResults] = useState(true);
   const [showGeoMessage, setShowGeoMessage] = useState(false);
   const [governanceLevel, setGovernanceLevel] = useState<GovernanceLevel>('am'); // populated from users.role
   const [clients, setClients] = useState<{ id: number; name: string; logo?: string | null }[]>([]);
@@ -255,47 +397,6 @@ const Map = ({ user }: any) => {
     loadClients();
   }, [supabase]);
 
-
-  function MapClickHandler() {
-    const map = useMap();
-
-    useEffect(() => {
-      const handleMapClick = () => {
-        setShowSearchResults(false);
-      };
-
-      map.on('click', handleMapClick);
-
-      return () => {
-        map.off('click', handleMapClick);
-      };
-    }, [map]);
-
-    return null;
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (searchResults.length === 0) return;
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setFocusedIndex((prev) =>
-          prev < searchResults.length - 1 ? prev + 1 : prev
-        );
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setFocusedIndex((prev) => (prev > 0 ? prev - 1 : prev));
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (focusedIndex >= 0) {
-          handleSelectLocation(searchResults[focusedIndex]);
-        }
-        break;
-    }
-  };
 
   const handleStatusChangeAttempt = async (
     storeId: number,
@@ -800,56 +901,18 @@ const Map = ({ user }: any) => {
     }, 3000); // This simulates the time taken to send the email
   };
 
-  // Add debounced search function
-  const searchAddress = async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          query
-        )}&limit=5`
-      );
-      const data = await response.json();
-      setSearchResults(data);
-    } catch (error) {
-      console.error('Error searching address:', error);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  useEffect(() => {
-    setFocusedIndex(-1);
-  }, [searchResults]);
-
-  // Add debounced search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      searchAddress(searchQuery);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const handleSelectLocation = (result: SearchResult) => {
-    const newLocation: [number, number] = [
-      parseFloat(result.lat),
-      parseFloat(result.lon),
-    ];
-    setSelectedLocation(newLocation);
-    setSearchResults([]);
-    setSearchQuery('');
-    // Atterrando programmaticamente sulla nuova posizione tramite `setView`,
-    // l'evento `moveend` di Leaflet non è garantito (timing race con il commit
-    // di React). Triggeriamo subito il fetch così i pin compaiono senza dover
-    // muovere la mappa. Eventuale doppio fetch da moveend è idempotente.
-    fetchStoresAndLogs(newLocation[0], newLocation[1]);
-  };
+  // Quando l'utente seleziona un risultato in AddressSearchBar, atterriamo lì
+  // e triggeriamo un fetch esplicito: l'evento `moveend` di Leaflet su un
+  // `setView` programmatico non è garantito (timing race con il commit React),
+  // quindi non possiamo affidarci solo a quello. Eventuale doppio fetch da
+  // moveend è idempotente grazie alla dedup in `fetchStoresAndLogs`.
+  const handleAddressSelect = useCallback(
+    (lat: number, lng: number) => {
+      setSelectedLocation([lat, lng]);
+      fetchStoresAndLogs(lat, lng);
+    },
+    [fetchStoresAndLogs]
+  );
 
   return (
     <>
@@ -912,52 +975,8 @@ const Map = ({ user }: any) => {
       <div className='relative w-full h-full'>
         {coord && (
           <div className='absolute top-4 left-4 z-[1000] w-[calc(100vw-2rem)] max-w-[420px] pointer-events-auto space-y-2'>
-            {/* Address search */}
-            <div className='flex items-center gap-2'>
-              <div className='relative flex-1'>
-                <Input
-                  type='text'
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setShowSearchResults(true);
-                  }}
-                  onKeyDown={handleKeyDown}
-                  placeholder='Cerca indirizzo...'
-                  className='w-full px-4 py-2 pl-10 border rounded-full shadow-md bg-white text-black'
-                  style={{ backgroundColor: 'white', color: 'black' }}
-                />
-                <Search className='absolute left-3 top-2.5 h-5 w-5 text-gray-400' />
-
-                {/* Loading indicator */}
-                {isSearching && (
-                  <div className='absolute right-3 top-2.5'>
-                    <Loader className='h-5 w-5 animate-spin text-gray-400' />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Risultati ricerca indirizzo (sopra al tasto Filtri) */}
-            {searchResults.length > 0 && showSearchResults && (
-              <div className='w-full shadow-lg max-h-60 overflow-auto rounded-md bg-white'>
-                {searchResults.map((result, index) => (
-                  <Button
-                    key={index}
-                    variant='outline'
-                    className={`w-full px-4 py-1 text-left flex justify-start border-none focus:outline-none rounded-none ${
-                      index === 0 ? 'rounded-t-md' : ''
-                    } ${index === searchResults.length - 1 ? 'rounded-b-md' : ''} ${
-                      focusedIndex === index ? 'bg-accent text-accent-foreground' : ''
-                    }`}
-                    onClick={() => handleSelectLocation(result)}
-                  >
-                    <MapPin className='h-4 w-4 text-gray-400 flex-shrink-0' />
-                    <p className='text-sm truncate'>{result.display_name}</p>
-                  </Button>
-                ))}
-              </div>
-            )}
+            {/* Address search isolata: rerenda solo se stessa, non l'intera mappa */}
+            <AddressSearchBar onSelect={handleAddressSelect} />
 
             {/* Filter button + panel */}
             <div className='relative' ref={filtersPanelRef}>
@@ -1137,7 +1156,6 @@ const Map = ({ user }: any) => {
             scrollWheelZoom={true}
             zoomControl={false}
           >
-            <MapClickHandler />
             <MapController newCenter={selectedLocation} />
             <MapEventHandler onMapMove={fetchStoresAndLogs} />
             {Array.isArray(coord) && (
