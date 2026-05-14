@@ -23,7 +23,9 @@ import {
   DynamicAction,
   DynamicField,
   DynamicFieldCondition,
-  DynamicManageForm,
+  // Rinominato l'import del tipo per evitare la collisione con il
+  // nome del componente esportato in questo stesso file.
+  DynamicManageForm as DynamicManageFormDef,
   DynamicSection,
   Store,
 } from '@/types';
@@ -36,7 +38,7 @@ type FormValues = Record<string, unknown>;
 interface Props {
   store: Store;
   userId: string;
-  form: DynamicManageForm;
+  form: DynamicManageFormDef;
   existingOutcome?: FormValues | null;
   /**
    * Callback fornito da StorePopup per cambiare lo status del pin
