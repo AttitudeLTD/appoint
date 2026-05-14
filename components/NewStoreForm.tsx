@@ -314,12 +314,23 @@ export function NewStoreForm({ open: externalOpen, onOpenChange: externalOnOpenC
             <div className='space-y-4'>
               <h3 className='font-medium text-sm'>Informazioni Base</h3>
               <div className='space-y-2'>
-                <Label>Clienti *</Label>
+                <div className='flex items-baseline justify-between'>
+                  <Label>Clienti *</Label>
+                  {selectedClientIds.length > 0 && (
+                    <span className='text-xs text-muted-foreground'>
+                      {selectedClientIds.length}{' '}
+                      {selectedClientIds.length === 1
+                        ? 'selezionato'
+                        : 'selezionati'}
+                    </span>
+                  )}
+                </div>
                 <p className='text-xs text-muted-foreground'>
                   Seleziona uno o più clienti. Il primo selezionato diventa il
-                  cliente principale del punto vendita.
+                  cliente <span className='font-medium'>principale</span> del
+                  punto vendita.
                 </p>
-                <div className='flex flex-wrap gap-2'>
+                <div className='flex flex-wrap gap-2 pt-1'>
                   {clients.map((c) => {
                     const id = String(c.id);
                     const order = selectedClientIds.indexOf(id);
@@ -331,23 +342,57 @@ export function NewStoreForm({ open: externalOpen, onOpenChange: externalOnOpenC
                         key={c.id}
                         type='button'
                         onClick={() => toggleClient(id)}
+                        aria-pressed={selected}
                         className={cn(
-                          'rounded-full text-xs px-3 py-1 border flex items-center gap-1.5 transition-colors',
+                          'group relative inline-flex items-center gap-2 rounded-full pl-1 pr-3 py-1 text-xs font-medium border transition-all duration-150 cursor-pointer select-none',
                           selected
-                            ? 'bg-[#224677] text-white border-[#224677]'
-                            : 'bg-white text-[#224677] border-[#224677] hover:bg-[#224677]/10'
+                            ? 'bg-[#224677] text-white border-[#224677] shadow-sm hover:bg-[#1a3661]'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50',
+                          isPrimary && 'ring-2 ring-amber-400 ring-offset-1'
                         )}
                       >
-                        {logoUrl && (
-                          <img
-                            src={logoUrl}
-                            alt={c.name}
-                            className='h-4 w-4 rounded-sm object-contain bg-white'
-                          />
+                        <span
+                          className={cn(
+                            'inline-flex h-5 w-5 items-center justify-center rounded-full overflow-hidden flex-shrink-0',
+                            selected
+                              ? 'bg-white/15'
+                              : 'bg-gray-100 ring-1 ring-inset ring-gray-200'
+                          )}
+                        >
+                          {logoUrl ? (
+                            <img
+                              src={logoUrl}
+                              alt=''
+                              className='h-full w-full object-contain'
+                            />
+                          ) : (
+                            <span
+                              className={cn(
+                                'text-[10px] font-semibold',
+                                selected ? 'text-white/90' : 'text-gray-500'
+                              )}
+                            >
+                              {c.name.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                        </span>
+                        <span className='truncate max-w-[160px]'>{c.name}</span>
+                        {selected && (
+                          <svg
+                            className='h-3.5 w-3.5 -mr-0.5 opacity-90'
+                            viewBox='0 0 20 20'
+                            fill='currentColor'
+                            aria-hidden='true'
+                          >
+                            <path
+                              fillRule='evenodd'
+                              d='M16.704 5.29a1 1 0 010 1.42l-7.5 7.5a1 1 0 01-1.414 0l-3.5-3.5a1 1 0 011.414-1.42L8.5 12.09l6.79-6.8a1 1 0 011.414 0z'
+                              clipRule='evenodd'
+                            />
+                          </svg>
                         )}
-                        <span>{c.name}</span>
                         {isPrimary && (
-                          <span className='ml-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide'>
+                          <span className='absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-amber-400 text-amber-950 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider shadow-sm'>
                             Principale
                           </span>
                         )}
