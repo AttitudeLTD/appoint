@@ -3,7 +3,7 @@
 > **Fonte di verità** dello schema del database Supabase del progetto.
 > Aggiornare questo file **ad ogni cambio di schema** (insieme alla migration corrispondente in [`./migrations/`](./migrations/)).
 >
-> _Ultimo aggiornamento: 2026-05-14 — modello di visibilità per utente ([`20260514123300_user_visibility_scope`](./migrations/20260514123300_user_visibility_scope.sql)) + conversione di tutti gli utenti esistenti a `'restricted'` con snapshot dei grants ([`20260514135200_restrict_existing_users`](./migrations/20260514135200_restrict_existing_users.sql))._
+> _Ultimo aggiornamento: 2026-05-14 — modello di visibilità per utente ([`20260514123300_user_visibility_scope`](./migrations/20260514123300_user_visibility_scope.sql)) + conversione di tutti gli utenti esistenti a `'restricted'` con snapshot dei grants ([`20260514135200_restrict_existing_users`](./migrations/20260514135200_restrict_existing_users.sql)) + relazione N:N stores↔clients e tracking del creatore degli store ([`20260514151900_store_multi_client_and_created_by`](./migrations/20260514151900_store_multi_client_and_created_by.sql))._
 
 ---
 
@@ -21,6 +21,7 @@
     - [`user_client_access`](#user_client_access)
     - [`user_store_access`](#user_store_access)
     - [`stores`](#stores)
+    - [`store_clients`](#store_clients)
     - [`store_status_logs`](#store_status_logs)
     - [`store_visit_outcomes`](#store_visit_outcomes)
     - [`store_photos`](#store_photos)
@@ -103,6 +104,103 @@ Definisce il **workflow di visita** (in JSON) di ciascun cliente. _Un workflow p
 | `created_at` | `timestamptz` | NO   | `now()` |                                                        |
 
 **RLS:** lettura `authenticated` vincolata a `public.user_can_see_client(auth.uid(), client_id)` (un utente vede il workflow solo dei clienti che può vedere).
+
+##### Campi del JSON `workflow`
+
+Tutti i campi sono **opzionali** e indipendenti: si abilita solo quello che serve per cliente. La definizione TS canonica è in `types.ts → ClientWorkflow`.
+
+| Campo                            | Tipo                              | Effetto sulla UI                                                                                                                                                  |
+| -------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dom_link`                       | `string` (URL)                    | Aggiunge il bottone "Apri piattaforma DOM" sotto la foto check-in nel popup _legacy_.                                                                              |
+| `failed_reasons`                 | `WorkflowReason[]`                | Sostituisce la select dei motivi quando lo status passa a `failed` (popup _legacy_).                                                                               |
+| `non_existent_reasons`           | `WorkflowReason[]`                | Idem per lo status `non_existent` (popup _legacy_).                                                                                                                |
+| `concluded_sub_workflow.sections`| `WorkflowSection[]`               | Mostrato sotto la select stato quando lo store passa a `concluded` (popup _legacy_, renderer `WorkflowRunner`).                                                    |
+| `already_client_sub_workflow.sections` | `WorkflowSection[]`         | Idem per lo status `already_client`.                                                                                                                               |
+| **`manage_form`**                | `DynamicManageForm` (vedi sotto)  | **Sostituisce completamente** la schermata "Gestisci" del popup con un form generato da JSON (sezioni, campi, foto, azioni). Quando assente → UI legacy invariata. |
+
+##### `manage_form` — form dichiarativo della schermata Gestisci
+
+Il JSON descrive `primary_actions` (bottoni in cima), una lista di `sections` con `fields`, e un `submit` finale. Tutti i campi `show_if` valutano una condizione sui valori già inseriti (mostra/nascondi field dinamicamente).
+
+**Tipi di `field` supportati:**
+
+| `type`           | Note                                                                                                |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| `text`           | Input testo libero (single-line).                                                                   |
+| `textarea`       | Input testo libero multi-line.                                                                      |
+| `number`         | Input numerico (`min`, `max`, `step` opzionali).                                                    |
+| `date`           | Input data nativo.                                                                                  |
+| `select`         | Tendina single-choice (richiede `options: [{value,label}]`).                                        |
+| `radio`          | Pulsanti a pillola single-choice.                                                                   |
+| `multi_select`   | Pulsanti a pillola multi-choice. Valore = array di stringhe.                                        |
+| `checkbox`       | Singolo toggle booleano.                                                                            |
+| `photo`          | Carica foto su bucket Supabase (`bucket` opzionale, default `generic-photos`).                      |
+| `external_link`  | Bottone-link verso URL (`url` obbligatorio).                                                        |
+| `info`           | Banner di testo, no input (`variant: 'info' \| 'warning' \| 'success'`).                            |
+
+**Tipi di `primary_actions`:** `directions` · `phone` · `email` · `external_link` (con `url`) · `status_change` (con `status`).
+
+**Esempio minimale per un cliente nuovo:**
+
+```json
+{
+  "manage_form": {
+    "version": 1,
+    "primary_actions": [
+      { "id": "go", "type": "directions", "label": "Indicazioni", "icon": "navigation" },
+      { "id": "call", "type": "phone",     "label": "Chiama",      "icon": "phone" }
+    ],
+    "sections": [
+      {
+        "id": "check_in",
+        "title": "Presenza in negozio",
+        "fields": [
+          {
+            "id": "check_in_photo",
+            "type": "photo",
+            "label": "Mi trovo qui",
+            "bucket": "store-photos",
+            "required": true
+          }
+        ]
+      },
+      {
+        "id": "outcome",
+        "title": "Esito visita",
+        "fields": [
+          {
+            "id": "interest",
+            "type": "radio",
+            "label": "Interesse del titolare",
+            "options": [
+              { "value": "high",   "label": "Alto" },
+              { "value": "medium", "label": "Medio" },
+              { "value": "low",    "label": "Basso" }
+            ]
+          },
+          {
+            "id": "needs_callback",
+            "type": "checkbox",
+            "label": "Richiede ricontatto"
+          },
+          {
+            "id": "notes",
+            "type": "textarea",
+            "label": "Note libere",
+            "placeholder": "Eventuali dettagli..."
+          }
+        ]
+      }
+    ],
+    "submit": {
+      "label": "Salva esito",
+      "sets_status": "concluded"
+    }
+  }
+}
+```
+
+I valori vengono persistiti in `store_visit_outcomes.outcome_data` (jsonb) come `{ "field_id": value, ... }`. Se `submit.sets_status` è valorizzato, al click di "Salva" lo store passa anche a quello status (con il dialog di conferma del legacy).
 
 ---
 
@@ -221,14 +319,41 @@ Tabella **principale** dei negozi/POS sul territorio. Geocodificati tramite Post
 | `cf_azienda`          | `text`                | YES  | —        | Codice fiscale azienda                                                    |
 | `dipendenti`          | `text`                | YES  | —        |                                                                           |
 | `fatturato`           | `text`                | YES  | —        | Fatturato annuo                                                           |
-| `client_id`           | `smallint`            | NO   | `1`      | **FK** → `clients.id` (ON DELETE RESTRICT)                                |
+| `client_id`           | `smallint`            | NO   | `1`      | **FK** → `clients.id` (ON DELETE RESTRICT). **Cliente "primario"**: regge UI legacy (filtro mappa, workflow popup, `store_visit_outcomes`). Per la lista completa dei clienti associati allo store vedi [`store_clients`](#store_clients). |
+| `created_by`          | `uuid`                | YES  | —        | **FK** → `public.users.id` (ON DELETE SET NULL). Utente applicativo che ha caricato il punto vendita via app. **NULL per le righe importate in bulk dal DB.** |
 
-**Indici notabili:** `idx_stores_client_id` su `(client_id)`. ⚠️ Considerare in futuro un **GIST index su `location`** per le query spaziali.
+**Indici notabili:** `idx_stores_client_id` su `(client_id)`, `idx_stores_created_by` su `(created_by) WHERE created_by IS NOT NULL`. ⚠️ Considerare in futuro un **GIST index su `location`** per le query spaziali.
 
 **RLS:**
 - `SELECT` vincolato a `public.user_can_see_store(auth.uid(), id)` — vedi [Modello di visibilità per utente](#modello-di-visibilit%C3%A0-per-utente). Gli utenti `anon` non vedono nulla.
 - `INSERT` consentito ad utenti `authenticated`.
 - `UPDATE` consentito a tutti.
+
+---
+
+#### `store_clients`
+
+Tabella di join **N:N** tra `stores` e `clients`. Permette ad un punto vendita di essere associato a più clienti contemporaneamente (es. lo stesso negozio è target sia per Amex che per Scalapay).
+
+| Colonna      | Tipo          | Null | Default | Note                                                       |
+| ------------ | ------------- | ---- | ------- | ---------------------------------------------------------- |
+| `store_id`   | `bigint`      | NO   | —       | **PK** + **FK** → `stores.id` (ON DELETE CASCADE)          |
+| `client_id`  | `smallint`    | NO   | —       | **PK** + **FK** → `clients.id` (ON DELETE CASCADE)         |
+| `is_primary` | `boolean`     | NO   | `false` | Solo una riga `true` per `store_id` (indice unico parziale `uq_store_clients_primary_per_store`). Coincide con `stores.client_id`. |
+| `created_at` | `timestamptz` | NO   | `now()` |                                                            |
+| `created_by` | `uuid`        | YES  | —       | **FK** → `public.users.id` (ON DELETE SET NULL). NULL per le associazioni create dal backfill. |
+
+PK composta `(store_id, client_id)`. Indici secondari `idx_store_clients_store_id` e `idx_store_clients_client_id` per i due versi di lookup.
+
+**Semantica**
+- `stores.client_id` resta il **cliente primario** (single FK, regge l'UI legacy: filtro mappa, workflow del popup, `store_visit_outcomes`).
+- `store_clients` contiene **tutti** i clienti associati allo store, **incluso il primario** (la riga con `is_primary = true` mirrora `stores.client_id`).
+- Per ogni store creato via app (form "Nuovo Punto Vendita") vengono inserite N righe, una per ogni cliente selezionato.
+- Per gli store storici / importati in bulk, una migration di backfill ha popolato `store_clients` con una sola riga (`is_primary = true`) presa da `stores.client_id`.
+
+**RLS:** `SELECT` / `INSERT` / `DELETE` ad utenti `authenticated`, condizionati a `public.user_can_see_store(auth.uid(), store_id)` (cioè: per agire su un'associazione devi poter vedere lo store).
+
+> ℹ️ Le funzioni `public.user_can_see_store` / `public.user_can_see_client` / `public.get_stores_within_radius` considerano ANCHE le associazioni in `store_clients` (UNION con il legacy `stores.client_id`): un utente con grant su Amex vede lo store anche se il suo cliente primario è Scalapay, purché esista una riga `(store_id, amex_id)` in `store_clients`.
 
 ---
 
@@ -309,7 +434,7 @@ Foto generiche (es. dei materiali del POS) associate a un negozio. Stessa strutt
 ```mermaid
 erDiagram
     auth_users ||--|| users : "id"
-    clients ||--o{ stores : "client_id"
+    clients ||--o{ stores : "client_id (primario)"
     clients ||--o| client_workflows : "client_id (UNIQUE)"
     clients ||--o{ areas : "client_id"
     clients ||--o{ store_visit_outcomes : "client_id"
@@ -323,12 +448,16 @@ erDiagram
     users  ||--o{ user_store_access : "user_id"
     stores ||--o{ user_store_access : "store_id"
 
+    stores  ||--o{ store_clients : "store_id"
+    clients ||--o{ store_clients : "client_id"
+
     stores ||--o{ store_status_logs : "store_id"
     stores ||--o{ store_visit_outcomes : "store_id"
     stores ||--o{ store_photos : "store_id"
     stores ||--o{ generic_photos : "store_id"
 
     users ||--o{ store_status_logs : "modifier"
+    users ||--o{ stores : "created_by"
 ```
 
 ---
@@ -405,9 +534,9 @@ where id = '<uuid>';
 | ------------------------------------- | ------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `handle_new_user()`                   | —                                                                               | trigger  | **SECURITY DEFINER**. Inserisce una riga in `public.users` quando viene creato un utente in `auth.users`. I nuovi utenti vengono creati con `visibility_scope = 'restricted'`. |
 | `convert_coordinates_to_location()`   | —                                                                               | trigger  | Trasforma il campo testuale `stores.coordinates` (`"lng,lat"`) nel punto PostGIS `stores.location`.                                                        |
-| `user_can_see_store(p_user_id uuid, p_store_id bigint)`     | `uuid, bigint`                                              | `boolean` | **SECURITY DEFINER / STABLE**. Predicato di visibilità sul negozio. Usato dalla RLS di `stores` e dalla RPC `get_stores_within_radius`.                    |
-| `user_can_see_client(p_user_id uuid, p_client_id smallint)` | `uuid, smallint`                                            | `boolean` | **SECURITY DEFINER / STABLE**. Predicato di visibilità sul cliente. Usato dalla RLS di `clients` e `client_workflows`.                                     |
-| `get_stores_within_radius(...)`       | `lat double precision, lng double precision, radius double precision, p_client_id bigint, p_limit integer` | TABLE    | Ritorna negozi entro un raggio (in metri) da un punto, filtrati per cliente **e** per scope di visibilità del chiamante (`auth.uid()`).                    |
+| `user_can_see_store(p_user_id uuid, p_store_id bigint)`     | `uuid, bigint`                                              | `boolean` | **SECURITY DEFINER / STABLE**. Predicato di visibilità sul negozio. Considera `user_store_access`, `user_client_access` ↔ `stores.client_id` **e** `user_client_access` ↔ `store_clients.client_id`. Usato dalla RLS di `stores` / `store_clients` e dalla RPC `get_stores_within_radius`. |
+| `user_can_see_client(p_user_id uuid, p_client_id smallint)` | `uuid, smallint`                                            | `boolean` | **SECURITY DEFINER / STABLE**. Predicato di visibilità sul cliente. Considera `user_client_access` **e** la presenza del cliente tra le associazioni (`stores.client_id` o `store_clients`) di uno store visibile via `user_store_access`. Usato dalla RLS di `clients` e `client_workflows`. |
+| `get_stores_within_radius(...)`       | `lat double precision, lng double precision, radius double precision, p_client_id bigint, p_limit integer` | TABLE    | Ritorna negozi entro un raggio (in metri) da un punto, filtrati per cliente (match su `stores.client_id` **o** su `store_clients.client_id`) **e** per scope di visibilità del chiamante (`auth.uid()`). |
 | `getstoreswithinradius(...)`          | `lat, lng, radius`                                                              | TABLE    | _Legacy / deprecato_ — versione precedente di `get_stores_within_radius`.                                                                                  |
 | `update_store_photos_updated_at()`    | —                                                                               | trigger  | Mantiene `store_photos.updated_at = now()` su UPDATE.                                                                                                      |
 | `update_generic_photos_updated_at()`  | —                                                                               | trigger  | Mantiene `generic_photos.updated_at = now()` su UPDATE.                                                                                                    |
@@ -440,6 +569,9 @@ where id = '<uuid>';
 | `stores`               | _Read stores via visibility scope_              | SELECT   | `public`        | `public.user_can_see_store(auth.uid(), id)`                           |
 | `stores`               | _Enable insert for authenticated users only_    | INSERT   | `authenticated` | WITH CHECK `true`                                                     |
 | `stores`               | _Enable update for users_                       | UPDATE   | `public`        | USING `true` / WITH CHECK `true`                                      |
+| `store_clients`        | _Read store_clients via store visibility_       | SELECT   | `authenticated` | `public.user_can_see_store(auth.uid(), store_id)`                     |
+| `store_clients`        | _Insert store_clients via store visibility_     | INSERT   | `authenticated` | WITH CHECK `public.user_can_see_store(auth.uid(), store_id)`          |
+| `store_clients`        | _Delete store_clients via store visibility_     | DELETE   | `authenticated` | `public.user_can_see_store(auth.uid(), store_id)`                     |
 | `store_status_logs`    | _Enable read access for all users_              | SELECT   | `public`        | `true`                                                                |
 | `store_status_logs`    | _Enable insert for authenticated users only_    | INSERT   | `authenticated` | WITH CHECK `true`                                                     |
 | `store_visit_outcomes` | _Authenticated read store_visit_outcomes_       | SELECT   | `public`        | `auth.role() = 'authenticated'`                                       |

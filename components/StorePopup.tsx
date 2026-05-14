@@ -39,6 +39,7 @@ import {
   SheetTrigger,
 } from './ui/sheet';
 import { WorkflowRunner } from './WorkflowRunner';
+import { DynamicManageForm } from './DynamicManageForm';
 
 import { StorePopupProps, ClientWorkflow } from '@/types';
 import { getStatusLabel, statuses, StatusItem } from '@/utils/utils';
@@ -908,6 +909,22 @@ const StorePopup: React.FC<StorePopupProps> = ({
               </div>
             </div>
 
+            {/* ── Schermata "Gestisci": modulare per cliente ─────────────────
+                Se il workflow del cliente definisce un `manage_form`, la UI
+                viene generata dinamicamente da quel JSON (sezioni, campi
+                input/select/checkbox/foto, ecc). Per i clienti "legacy" (es. 1
+                e 2) `manage_form` è undefined → resta tutta la UI hardcoded
+                originale, identica a prima. */}
+            {clientWorkflow?.manage_form ? (
+              <DynamicManageForm
+                store={store}
+                userId={currentUserId}
+                form={clientWorkflow.manage_form}
+                existingOutcome={existingOutcome}
+                handleStatusChangeAttempt={handleStatusChangeAttempt}
+              />
+            ) : (
+              <>
             <div className='flex flex-col gap-3 mb-4'>
               {/* Photo Upload Button */}
               <input
@@ -1273,6 +1290,8 @@ const StorePopup: React.FC<StorePopupProps> = ({
                   existingOutcome={existingOutcome}
                 />
               )}
+              </>
+            )}
 
             {statusLogs[store.id]?.length > 0 && (
               <div className='py-3'>

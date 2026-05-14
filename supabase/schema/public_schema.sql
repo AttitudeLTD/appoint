@@ -163,14 +163,46 @@ create table if not exists public.stores (
   dipendenti          text,
   fatturato           text,
   client_id           smallint not null default 1
-                      references public.clients(id) on delete restrict
+                      references public.clients(id) on delete restrict,
+  -- Utente applicativo che ha caricato lo store via app (form NewStoreForm).
+  -- NULL per le righe storiche / importate in bulk: la grande maggioranza dei record.
+  created_by          uuid     null
+                      references public.users(id) on delete set null
 );
 
-create index if not exists idx_stores_client_id on public.stores (client_id);
+create index if not exists idx_stores_client_id  on public.stores (client_id);
+create index if not exists idx_stores_created_by on public.stores (created_by)
+  where created_by is not null;
 -- Suggerito (non ancora presente in produzione):
 -- create index if not exists idx_stores_location_gix on public.stores using gist (location);
 
 alter table public.stores enable row level security;
+
+
+-- ---------------------------------------------------------------------------
+-- TABLE: store_clients  (N:N stores ↔ clients)
+-- ---------------------------------------------------------------------------
+-- Un punto vendita può essere associato a più clienti (es. Amex + Scalapay).
+-- `stores.client_id` resta il cliente "primario" (regge UI legacy: filtro mappa,
+-- workflow del popup, store_visit_outcomes). La riga in store_clients con
+-- `is_primary = true` mirrora `stores.client_id`.
+create table if not exists public.store_clients (
+  store_id   bigint      not null references public.stores(id)  on delete cascade,
+  client_id  smallint    not null references public.clients(id) on delete cascade,
+  is_primary boolean     not null default false,
+  created_at timestamptz not null default now(),
+  created_by uuid        null     references public.users(id)   on delete set null,
+  primary key (store_id, client_id)
+);
+
+create index if not exists idx_store_clients_client_id on public.store_clients (client_id);
+create index if not exists idx_store_clients_store_id  on public.store_clients (store_id);
+-- Al massimo una riga "is_primary = true" per store.
+create unique index if not exists uq_store_clients_primary_per_store
+  on public.store_clients (store_id)
+  where is_primary;
+
+alter table public.store_clients enable row level security;
 
 
 -- ---------------------------------------------------------------------------
@@ -389,6 +421,16 @@ begin
     return true;
   end if;
 
+  -- whitelist cliente ↔ uno qualsiasi dei clienti associati via store_clients
+  if exists (
+    select 1
+    from public.store_clients      sc
+    join public.user_client_access uca on uca.client_id = sc.client_id
+    where sc.store_id = p_store_id and uca.user_id = p_user_id
+  ) then
+    return true;
+  end if;
+
   return false;
 end;
 $$;
@@ -444,6 +486,16 @@ begin
     return true;
   end if;
 
+  -- grant via store (cliente associato in store_clients)
+  if exists (
+    select 1
+    from public.user_store_access usa
+    join public.store_clients     sc on sc.store_id = usa.store_id
+    where usa.user_id = p_user_id and sc.client_id = p_client_id
+  ) then
+    return true;
+  end if;
+
   return false;
 end;
 $$;
@@ -494,7 +546,14 @@ begin
   from public.stores s
   left join public.clients c on c.id = s.client_id
   where s.location is not null
-    and (p_client_id is null or s.client_id = p_client_id)
+    and (
+      p_client_id is null
+      or s.client_id = p_client_id
+      or exists (
+        select 1 from public.store_clients sc
+        where sc.store_id = s.id and sc.client_id = p_client_id
+      )
+    )
     and public.user_can_see_store(auth.uid(), s.id)
     and ST_DWithin(
       s.location,
@@ -567,6 +626,23 @@ create policy "Enable insert for authenticated users only"
 
 create policy "Enable update for users"
   on public.stores for update using (true) with check (true);
+
+-- store_clients (read/insert/delete vincolati alla visibilità dello store)
+drop policy if exists "Read store_clients via store visibility"   on public.store_clients;
+drop policy if exists "Insert store_clients via store visibility" on public.store_clients;
+drop policy if exists "Delete store_clients via store visibility" on public.store_clients;
+
+create policy "Read store_clients via store visibility"
+  on public.store_clients for select to authenticated
+  using (public.user_can_see_store(auth.uid(), store_id));
+
+create policy "Insert store_clients via store visibility"
+  on public.store_clients for insert to authenticated
+  with check (public.user_can_see_store(auth.uid(), store_id));
+
+create policy "Delete store_clients via store visibility"
+  on public.store_clients for delete to authenticated
+  using (public.user_can_see_store(auth.uid(), store_id));
 
 -- store_status_logs
 drop policy if exists "Enable read access for all users"          on public.store_status_logs;

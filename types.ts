@@ -32,6 +32,14 @@ export interface Store {
   client_id?: number | null;
   client_name?: string | null;
   client_logo?: string | null; // storage path in bucket client-logos
+  /**
+   * Tutti i client a cui lo store è associato via `store_clients` (N:N).
+   * Include sempre `client_id` (cliente primario). Popolato lato applicativo
+   * dove serve (es. popup del pin); non sempre presente nei payload di mappa.
+   */
+  client_ids?: number[];
+  /** UUID dell'utente che ha caricato il punto vendita via app. NULL per le righe importate in bulk. */
+  created_by?: string | null;
   modifiedByOtherUser: boolean;
   modifierName?: string; // Optional name of the agent who modified the store
   modifierId?: string; // UUID of the agent who modified (for AM/supervisor visibility)
@@ -97,6 +105,135 @@ export interface ClientWorkflow {
   };
   already_client_sub_workflow?: {
     sections: WorkflowSection[];
+  };
+
+  /**
+   * Form della schermata "Gestisci" definito interamente da JSON.
+   *
+   * Quando questo campo è valorizzato per un cliente, lo Sheet "Gestisci" del
+   * pin viene renderizzato dal componente <DynamicManageForm /> usando questa
+   * configurazione e NON viene mostrata la UI legacy hardcoded.
+   *
+   * Quando assente (clienti "legacy", es. 1 e 2) il comportamento attuale
+   * resta identico al 100%.
+   */
+  manage_form?: DynamicManageForm;
+}
+
+// ── Dynamic form (manage_form) ────────────────────────────────────────────────
+
+export type DynamicFieldType =
+  | 'text'
+  | 'textarea'
+  | 'number'
+  | 'date'
+  | 'select'
+  | 'multi_select'
+  | 'checkbox'
+  | 'radio'
+  | 'photo'
+  | 'external_link'
+  | 'info';
+
+export interface DynamicFieldOption {
+  value: string;
+  label: string;
+}
+
+/**
+ * Condizione di visibilità di un field. Se assente, il field è sempre visibile.
+ * Esempio: `{ field: 'outcome', equals: 'interested' }` mostra il field solo
+ * quando il field con id "outcome" ha valore "interested".
+ */
+export interface DynamicFieldCondition {
+  field: string;
+  equals?: string | number | boolean;
+  notEquals?: string | number | boolean;
+  in?: Array<string | number>;
+}
+
+export interface DynamicField {
+  id: string;
+  type: DynamicFieldType;
+  label?: string;
+  placeholder?: string;
+  required?: boolean;
+  help?: string;
+
+  // select / multi_select / radio
+  options?: DynamicFieldOption[];
+
+  // number
+  min?: number;
+  max?: number;
+  step?: number;
+
+  // photo
+  bucket?: string;        // default: "generic-photos"
+  capture?: 'environment' | 'user'; // default: "environment"
+
+  // external_link
+  url?: string;
+  buttonLabel?: string;
+
+  // info
+  text?: string;
+  variant?: 'info' | 'warning' | 'success';
+
+  // Visibility (mostra il field solo se la condizione è soddisfatta)
+  show_if?: DynamicFieldCondition;
+}
+
+export interface DynamicSection {
+  id: string;
+  title?: string;
+  description?: string;
+  fields: DynamicField[];
+  show_if?: DynamicFieldCondition;
+}
+
+export type DynamicActionType =
+  | 'directions'      // apre Google/Apple Maps
+  | 'phone'           // tel:store.phone
+  | 'email'           // mailto:store.email (uso template di default)
+  | 'external_link'   // URL custom
+  | 'status_change';  // cambia lo stato del store
+
+export interface DynamicAction {
+  id: string;
+  type: DynamicActionType;
+  label: string;
+  icon?: 'navigation' | 'phone' | 'mail' | 'external' | 'check' | 'x' | 'ban' | 'star' | 'plus' | 'settings';
+  url?: string;       // solo per external_link
+  status?:            // solo per status_change
+    | 'in_progress'
+    | 'concluded'
+    | 'already_client'
+    | 'failed'
+    | 'not_interested'
+    | 'non_existent';
+  show_if?: DynamicFieldCondition;
+}
+
+export interface DynamicManageForm {
+  version: 1;
+  /** Pulsanti in cima allo Sheet (es. Indicazioni / Chiama / Apri link). */
+  primary_actions?: DynamicAction[];
+  /** Sezioni con i field configurabili. */
+  sections: DynamicSection[];
+  /** Bottone di salvataggio finale. */
+  submit?: {
+    label?: string;                                 // default: "Salva"
+    /** Se impostato, al submit cambia anche lo stato del store. */
+    sets_status?:
+      | 'in_progress'
+      | 'concluded'
+      | 'already_client'
+      | 'failed'
+      | 'not_interested'
+      | 'non_existent';
+    /** Se true (default), persiste i valori in store_visit_outcomes.outcome_data. */
+    save_to_outcomes?: boolean;
   };
 }
 

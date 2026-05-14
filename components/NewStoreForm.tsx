@@ -20,6 +20,7 @@ import { SelectComponent } from './select';
 import { toast } from 'sonner';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { Loader } from '@googlemaps/js-api-loader';
+import { cn } from '@/lib/utils';
 
 const categories = [
   { value: 'commercio', label: 'Commercio' },
@@ -54,8 +55,17 @@ export function NewStoreForm({ open: externalOpen, onOpenChange: externalOnOpenC
   };
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedClientId, setSelectedClientId] = useState<string>('');
-  const [clients, setClients] = useState<{ id: number; name: string }[]>([]);
+  /**
+   * IDs (come stringhe) dei client selezionati. L'ordine in cui l'utente li
+   * seleziona è significativo: il primo elemento diventa il "cliente primario"
+   * dello store (`stores.client_id`), gli altri vengono aggiunti come
+   * associazioni secondarie in `store_clients`.
+   */
+  const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
+  const [clients, setClients] = useState<
+    { id: number; name: string; logo?: string | null }[]
+  >([]);
+  const [clientLogoUrls, setClientLogoUrls] = useState<Record<number, string>>({});
   const [consent, setConsent] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -65,12 +75,30 @@ export function NewStoreForm({ open: externalOpen, onOpenChange: externalOnOpenC
     const loadClients = async () => {
       const { data, error } = await supabase
         .from('clients')
-        .select('id, name')
+        .select('id, name, logo')
         .order('id', { ascending: true });
-      if (!error && data) setClients(data);
+      if (!error && data) {
+        setClients(data);
+        const urls: Record<number, string> = {};
+        for (const c of data) {
+          if (c.logo) {
+            const { data: pub } = supabase.storage
+              .from('client-logos')
+              .getPublicUrl(c.logo);
+            if (pub?.publicUrl) urls[c.id] = pub.publicUrl;
+          }
+        }
+        setClientLogoUrls(urls);
+      }
     };
     if (isOpen) loadClients();
   }, [isOpen, supabase]);
+
+  const toggleClient = (id: string) => {
+    setSelectedClientIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
 
   const geocodeAddress = async (
     address: string
@@ -116,8 +144,8 @@ export function NewStoreForm({ open: externalOpen, onOpenChange: externalOnOpenC
       toast.error('È necessario selezionare una categoria');
       return;
     }
-    if (!selectedClientId) {
-      toast.error('È necessario selezionare un cliente');
+    if (selectedClientIds.length === 0) {
+      toast.error('È necessario selezionare almeno un cliente');
       return;
     }
     if (!token && process.env.NODE_ENV !== 'development') {
@@ -169,13 +197,23 @@ export function NewStoreForm({ open: externalOpen, onOpenChange: externalOnOpenC
         return;
       }
 
+      const clientIdsNum = selectedClientIds.map((v) => parseInt(v, 10));
+      const primaryClientId = clientIdsNum[0]!;
+
+      // Utente applicativo che sta caricando lo store (nullable lato schema:
+      // se non c'è una sessione lo lasciamo NULL come per gli import bulk).
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const createdBy = user?.id ?? null;
+
       const storeData = {
         name: formData.get('name') as string,
         address: formData.get('address') as string,
         coordinates,
         phone: formData.get('phone') as string,
         category: selectedCategory,
-        client_id: parseInt(selectedClientId, 10),
+        client_id: primaryClientId,
         type: formData.get('type') as string,
         codice_ateco: formData.get('codice_ateco') as string,
         cap: formData.get('cap') as string,
@@ -189,10 +227,36 @@ export function NewStoreForm({ open: externalOpen, onOpenChange: externalOnOpenC
         consent: true,
         status: 'free',
         tier: 'bronze',
+        created_by: createdBy,
       };
 
-      const { error } = await supabase.from('stores').insert([storeData]);
+      const { data: inserted, error } = await supabase
+        .from('stores')
+        .insert([storeData])
+        .select('id')
+        .single();
       if (error) throw error;
+
+      // Associa lo store a TUTTI i client selezionati (incluso il primario).
+      // Il primo della lista è marcato `is_primary` (unique index DB-side).
+      const storeId = inserted!.id as number;
+      const clientLinks = clientIdsNum.map((cid, idx) => ({
+        store_id: storeId,
+        client_id: cid,
+        is_primary: idx === 0,
+        created_by: createdBy,
+      }));
+      const { error: linkErr } = await supabase
+        .from('store_clients')
+        .insert(clientLinks);
+      if (linkErr) {
+        // Lo store esiste ma le associazioni multiple sono mancate: lo segnalo
+        // ma non blocco la UX, il cliente primario è già su `stores.client_id`.
+        console.error('store_clients insert error:', linkErr);
+        toast.warning(
+          'Punto vendita creato, ma alcune associazioni cliente non sono state salvate'
+        );
+      }
 
       toast.success('Punto vendita creato con successo');
 
@@ -204,6 +268,7 @@ export function NewStoreForm({ open: externalOpen, onOpenChange: externalOnOpenC
       );
 
       setSelectedCategory('');
+      setSelectedClientIds([]);
       setConsent(false);
       setToken(null);
       setIsOpen(false);
@@ -249,13 +314,47 @@ export function NewStoreForm({ open: externalOpen, onOpenChange: externalOnOpenC
             <div className='space-y-4'>
               <h3 className='font-medium text-sm'>Informazioni Base</h3>
               <div className='space-y-2'>
-                <Label htmlFor='client'>Cliente *</Label>
-                <SelectComponent
-                  placeholder='Seleziona un cliente'
-                  value={selectedClientId}
-                  onChange={(value) => setSelectedClientId(value || '')}
-                  options={clients.map((c) => ({ value: String(c.id), label: c.name }))}
-                />
+                <Label>Clienti *</Label>
+                <p className='text-xs text-muted-foreground'>
+                  Seleziona uno o più clienti. Il primo selezionato diventa il
+                  cliente principale del punto vendita.
+                </p>
+                <div className='flex flex-wrap gap-2'>
+                  {clients.map((c) => {
+                    const id = String(c.id);
+                    const order = selectedClientIds.indexOf(id);
+                    const selected = order !== -1;
+                    const isPrimary = order === 0;
+                    const logoUrl = clientLogoUrls[c.id];
+                    return (
+                      <button
+                        key={c.id}
+                        type='button'
+                        onClick={() => toggleClient(id)}
+                        className={cn(
+                          'rounded-full text-xs px-3 py-1 border flex items-center gap-1.5 transition-colors',
+                          selected
+                            ? 'bg-[#224677] text-white border-[#224677]'
+                            : 'bg-white text-[#224677] border-[#224677] hover:bg-[#224677]/10'
+                        )}
+                      >
+                        {logoUrl && (
+                          <img
+                            src={logoUrl}
+                            alt={c.name}
+                            className='h-4 w-4 rounded-sm object-contain bg-white'
+                          />
+                        )}
+                        <span>{c.name}</span>
+                        {isPrimary && (
+                          <span className='ml-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide'>
+                            Principale
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='name'>Nome Attività *</Label>
