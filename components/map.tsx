@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { Filter, Loader, LocateFixed, MapPin, Search, X } from 'lucide-react';
 
 import L, { LatLngExpression } from 'leaflet';
@@ -398,7 +398,7 @@ const Map = ({ user }: any) => {
   }, [supabase]);
 
 
-  const handleStatusChangeAttempt = async (
+  const handleStatusChangeAttempt = useCallback(async (
     storeId: number,
     newStatus: string,
     note?: string,
@@ -477,7 +477,7 @@ const Map = ({ user }: any) => {
     setSelectedNote(note || '');
     setDialogOpen(true);
     return true;
-  };
+  }, [supabase, user.id]);
 
   const confirmStatusChange = async () => {
     setLoadingConfirm(true);
@@ -565,7 +565,7 @@ const Map = ({ user }: any) => {
     }
   };
 
-  const fetchStatusLogs = async (storeId: number, offset: number = 0) => {
+  const fetchStatusLogs = useCallback(async (storeId: number, offset: number = 0) => {
     try {
       const { data, error } = await supabase
         .from('store_status_logs')
@@ -617,7 +617,7 @@ const Map = ({ user }: any) => {
     } catch (error) {
       console.error('Error in fetchStatusLogs:', error);
     }
-  };
+  }, [supabase]);
 
   // New function to fetch user information by ID
   const fetchUserInfo = async (userId: string) => {
@@ -888,7 +888,7 @@ const Map = ({ user }: any) => {
     });
   }, [stores, storeStatuses]);
 
-  const handleSendEmail = (store: Store) => {
+  const handleSendEmail = useCallback((store: Store) => {
     setLoadingEmail(true); // Start loading for email
 
     const mailBody = generateMailBody(store, agent);
@@ -899,7 +899,7 @@ const Map = ({ user }: any) => {
     setTimeout(() => {
       setLoadingEmail(false); // Reset loading state after a short delay
     }, 3000); // This simulates the time taken to send the email
-  };
+  }, [agent]);
 
   // Quando l'utente seleziona un risultato in AddressSearchBar, atterriamo lì
   // e triggeriamo un fetch esplicito: l'evento `moveend` di Leaflet su un
@@ -913,6 +913,179 @@ const Map = ({ user }: any) => {
     },
     [fetchStoresAndLogs]
   );
+
+  // Memo del cluster + markers: ad ogni rerender di Map che non cambia queste
+  // deps (es. moveend che setta isAwayFromUser allo stesso valore, o qualsiasi
+  // rerender "innocuo"), restituiamo la STESSA reference JSX → React skippa il
+  // diff sul sub-tree → react-leaflet-cluster non distrugge/ricostruisce i
+  // marker → il popup eventualmente aperto NON viene rimontato → niente flicker.
+  const clusterLayer = useMemo(() => (
+    <MarkerClusterGroup
+      iconCreateFunction={createClusterIcon}
+      maxClusterRadius={60}
+      spiderfyOnMaxZoom
+      showCoverageOnHover={false}
+      zoomToBoundsOnClick
+      disableClusteringAtZoom={16}
+      minimumClusterSize={10}
+      removeOutsideVisibleBounds={false}
+      animate={false}
+    >
+      {stores
+        .filter((store) =>
+          selectedTiers.size === 0 ||
+          (store.tier != null && selectedTiers.has(store.tier))
+        )
+        .map((store) => {
+        const storeCoordinates = parseCoords(store.location);
+        if (!storeCoordinates) return null;
+
+        const clientLogoUrl =
+          store.status === 'free' ? getClientLogoUrl(store.client_logo) : null;
+
+        const tierFillColor = (showTierColors && store.tier)
+          ? (TIER_COLORS[(store.tier as string).toLowerCase() as keyof typeof TIER_COLORS] ?? null)
+          : null;
+
+        const icon = store.modifiedByOtherUser
+          ? store.status === 'free'
+            ? tierFillColor && clientLogoUrl
+              ? createFreePinColoredWithLogo(tierFillColor, clientLogoUrl, true)
+              : tierFillColor
+                ? createFreePinColored(tierFillColor, true)
+                : clientLogoUrl
+                  ? createFreePinMutedWithLogo(clientLogoUrl)
+                  : freePinM
+            : store.status === 'in_progress'
+              ? progressPinM
+              : store.status === 'concluded'
+                ? closedPinM
+                : store.status === 'already_client'
+                  ? alreadyClientPinM
+                  : store.status === 'not_interested'
+                    ? notInterestedPinM
+                    : store.status === 'non_existent'
+                      ? nonExistentPinM
+                      : failedPinM
+          : store.status === 'free'
+            ? tierFillColor && clientLogoUrl
+              ? createFreePinColoredWithLogo(tierFillColor, clientLogoUrl)
+              : tierFillColor
+                ? createFreePinColored(tierFillColor)
+                : clientLogoUrl
+                  ? createFreePinWithLogo(clientLogoUrl)
+                  : freePin
+            : store.status === 'in_progress'
+              ? progressPin
+              : store.status === 'concluded'
+                ? closedPin
+                : store.status === 'already_client'
+                  ? alreadyClientPin
+                  : store.status === 'not_interested'
+                    ? notInterestedPin
+                    : store.status === 'non_existent'
+                      ? nonExistentPin
+                      : failedPin;
+
+        const finalIcon = icon;
+
+        return store.modifiedByOtherUser ? (
+          <Marker
+            key={store.id}
+            position={storeCoordinates}
+            icon={finalIcon}
+            eventHandlers={{
+              popupopen: () => {
+                const map = mapRef.current;
+                if (!map) return;
+                // Il popup si estende verso l'alto dal marker. Centriamo la
+                // mappa SOPRA il marker (~25% dell'altezza visibile) così il
+                // pin risulta nella parte centro-bassa e il popup ha aria.
+                const targetLatLng = L.latLng(storeCoordinates[0], storeCoordinates[1]);
+                const z = map.getZoom();
+                const targetPoint = map.project(targetLatLng, z);
+                const verticalOffset = map.getSize().y * 0.25;
+                const newCenter = map.unproject(
+                  [targetPoint.x, targetPoint.y - verticalOffset],
+                  z
+                );
+                map.panTo(newCenter, { animate: true, duration: 0.4 });
+              },
+            }}
+          >
+            <Popup autoPan={false}>
+              {governanceLevel === 'agent' ? (
+                <>In questo punto vendita è in corso una trattativa.</>
+              ) : governanceLevel === 'supervisor' ||
+                (governanceLevel === 'am' &&
+                  'modifierId' in store &&
+                  store.modifierId &&
+                  modifierShowNameSet.has(store.modifierId)) ? (
+                <>
+                  In questo punto vendita è in corso una trattativa gestita
+                  da
+                  {store.modifierName
+                    ? ` ${store.modifierName}`
+                    : ' un altro agente'}
+                  .
+                </>
+              ) : (
+                <>In questo punto vendita è in corso una trattativa.</>
+              )}
+            </Popup>
+          </Marker>
+        ) : (
+          <Marker
+            key={store.id}
+            position={storeCoordinates}
+            icon={finalIcon}
+            eventHandlers={{
+              popupopen: () => {
+                const map = mapRef.current;
+                if (!map) return;
+                const targetLatLng = L.latLng(storeCoordinates[0], storeCoordinates[1]);
+                const z = map.getZoom();
+                const targetPoint = map.project(targetLatLng, z);
+                const verticalOffset = map.getSize().y * 0.25;
+                const newCenter = map.unproject(
+                  [targetPoint.x, targetPoint.y - verticalOffset],
+                  z
+                );
+                map.panTo(newCenter, { animate: true, duration: 0.4 });
+              },
+            }}
+          >
+            <Popup autoPan={false}>
+              <StorePopup
+                store={store}
+                coord={storeCoordinates}
+                statusLogs={{ [store.id]: statusLogs[store.id] || [] }}
+                loadingStatus={{ [store.id]: !!loadingStatus[store.id] }}
+                loadingEmail={loadingEmail}
+                storeStatuses={storeStatuses}
+                fetchStatusLogs={fetchStatusLogs}
+                handleStatusChangeAttempt={handleStatusChangeAttempt}
+                handleSendEmail={handleSendEmail}
+              />
+            </Popup>
+          </Marker>
+        );
+      })}
+    </MarkerClusterGroup>
+  ), [
+    stores,
+    selectedTiers,
+    showTierColors,
+    governanceLevel,
+    modifierShowNameSet,
+    statusLogs,
+    loadingStatus,
+    loadingEmail,
+    storeStatuses,
+    fetchStatusLogs,
+    handleStatusChangeAttempt,
+    handleSendEmail,
+  ]);
 
   return (
     <>
@@ -1135,7 +1308,7 @@ const Map = ({ user }: any) => {
             (sia per pan/zoom che per atterraggio dopo ricerca indirizzo). */}
         {isLoadingStores && (
           <div
-            className='pointer-events-none absolute left-1/2 top-4 z-[1000] flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-sm text-gray-700 shadow-lg backdrop-blur-sm'
+            className='pointer-events-none absolute left-1/2 bottom-6 z-[1000] flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-sm text-gray-700 shadow-lg backdrop-blur-sm'
             role='status'
             aria-live='polite'
           >
@@ -1175,116 +1348,9 @@ const Map = ({ user }: any) => {
               </Popup>
             </Marker>
 
-            {/* Cluster + individual markers */}
-            <MarkerClusterGroup
-              iconCreateFunction={createClusterIcon}
-              maxClusterRadius={60}
-              spiderfyOnMaxZoom
-              showCoverageOnHover={false}
-              zoomToBoundsOnClick
-              disableClusteringAtZoom={16}
-              minimumClusterSize={10}
-            >
-            {stores
-              .filter((store) =>
-                selectedTiers.size === 0 ||
-                (store.tier != null && selectedTiers.has(store.tier))
-              )
-              .map((store) => {
-              const storeCoordinates = parseCoords(store.location);
-              if (!storeCoordinates) return null; // Skip rendering if coordinates are invalid
-
-              const clientLogoUrl =
-                store.status === 'free' ? getClientLogoUrl(store.client_logo) : null;
-
-              const tierFillColor = (showTierColors && store.tier)
-                ? (TIER_COLORS[(store.tier as string).toLowerCase() as keyof typeof TIER_COLORS] ?? null)
-                : null;
-
-              const icon = store.modifiedByOtherUser
-                ? store.status === 'free'
-                  ? tierFillColor && clientLogoUrl
-                    ? createFreePinColoredWithLogo(tierFillColor, clientLogoUrl, true)  // tier color + logo
-                    : tierFillColor
-                      ? createFreePinColored(tierFillColor, true)                       // tier color only
-                      : clientLogoUrl
-                        ? createFreePinMutedWithLogo(clientLogoUrl)                     // logo only
-                        : freePinM                                                       // default
-                  : store.status === 'in_progress'
-                    ? progressPinM
-                    : store.status === 'concluded'
-                      ? closedPinM
-                      : store.status === 'already_client'
-                        ? alreadyClientPinM
-                        : store.status === 'not_interested'
-                          ? notInterestedPinM
-                          : store.status === 'non_existent'
-                            ? nonExistentPinM
-                            : failedPinM
-                : store.status === 'free'
-                  ? tierFillColor && clientLogoUrl
-                    ? createFreePinColoredWithLogo(tierFillColor, clientLogoUrl)        // tier color + logo
-                    : tierFillColor
-                      ? createFreePinColored(tierFillColor)                             // tier color only
-                      : clientLogoUrl
-                        ? createFreePinWithLogo(clientLogoUrl)                          // logo only
-                        : freePin                                                        // default
-                  : store.status === 'in_progress'
-                    ? progressPin
-                    : store.status === 'concluded'
-                      ? closedPin
-                      : store.status === 'already_client'
-                        ? alreadyClientPin
-                        : store.status === 'not_interested'
-                          ? notInterestedPin
-                          : store.status === 'non_existent'
-                            ? nonExistentPin
-                            : failedPin;
-
-              const finalIcon = icon;
-
-              return store.modifiedByOtherUser ? (
-                <Marker key={store.id} position={storeCoordinates} icon={finalIcon}>
-                  <Popup>
-                    {governanceLevel === 'agent' ? (
-                      <>In questo punto vendita è in corso una trattativa.</>
-                    ) : governanceLevel === 'supervisor' ||
-                      (governanceLevel === 'am' &&
-                        'modifierId' in store &&
-                        store.modifierId &&
-                        modifierShowNameSet.has(store.modifierId)) ? (
-                      <>
-                        In questo punto vendita è in corso una trattativa gestita
-                        da
-                        {store.modifierName
-                          ? ` ${store.modifierName}`
-                          : ' un altro agente'}
-                        .
-                      </>
-                    ) : (
-                      <>In questo punto vendita è in corso una trattativa.</>
-                    )}
-                  </Popup>
-                </Marker>
-              ) : (
-                <Marker key={store.id} position={storeCoordinates} icon={finalIcon}>
-                  <Popup>
-                    <StorePopup
-                      store={store}
-                      coord={storeCoordinates}
-                      statusLogs={{ [store.id]: statusLogs[store.id] || [] }}
-                      loadingStatus={{ [store.id]: !!loadingStatus[store.id] }}
-                      loadingEmail={loadingEmail}
-                      storeStatuses={storeStatuses}
-                      fetchStatusLogs={fetchStatusLogs}
-                      handleStatusChangeAttempt={handleStatusChangeAttempt}
-                      handleSendEmail={handleSendEmail}
-                    />
-                  </Popup>
-                </Marker>
-              );
-            })}
-            </MarkerClusterGroup>
+            {/* Cluster + individual markers (memoizzato per evitare flicker dei popup
+                durante pan/zoom della mappa) */}
+            {clusterLayer}
           </MapContainer>
         ) : null}
 
