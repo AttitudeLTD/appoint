@@ -95,6 +95,13 @@ export default function DashboardPage() {
   const [calendarDraftTo, setCalendarDraftTo] = useState<Date | undefined>(undefined);
   const [agentFilterOpen, setAgentFilterOpen] = useState(false);
 
+  // ── Export negozi per supervisor ────────────────────────────────────────────
+  // Lista di tutti i clienti per il select dell'export (caricata solo per supervisor).
+  // L'export è "un cliente alla volta" (no "tutti insieme") per design.
+  const [allClients, setAllClients] = useState<{ id: number; name: string }[]>([]);
+  const [exportClientId, setExportClientId] = useState<string>('');
+  const [exportLoading, setExportLoading] = useState(false);
+
   useEffect(() => {
     async function load() {
       try {
@@ -317,6 +324,172 @@ export default function DashboardPage() {
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
   }, [filteredHistoryActivities, dashboardRole]);
+
+  // Carica la lista clienti per il pannello "Esporta lista negozi" (solo supervisor).
+  useEffect(() => {
+    if (dashboardRole !== 'supervisor') return;
+    (async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, name')
+        .order('name', { ascending: true });
+      if (error) {
+        console.error('Error loading clients for export:', error);
+        return;
+      }
+      setAllClients((data ?? []).map((c: any) => ({ id: c.id, name: c.name })));
+    })();
+  }, [dashboardRole, supabase]);
+
+  // Esporta come CSV tutti i negozi associati al cliente selezionato (sia come
+  // cliente primario sia come secondario, via tabella di join `store_clients`).
+  const handleExportStoresCSV = useCallback(async () => {
+    if (!exportClientId) return;
+    setExportLoading(true);
+    try {
+      const clientIdNum = Number(exportClientId);
+      // 1) Tutti gli store_id collegati a questo cliente (primary o secondary).
+      const { data: links, error: linksErr } = await supabase
+        .from('store_clients')
+        .select('store_id, is_primary')
+        .eq('client_id', clientIdNum);
+      if (linksErr) throw linksErr;
+
+      // 2) Aggiungiamo anche i (eventuali) negozi che hanno SOLO il vecchio
+      //    campo `stores.client_id` valorizzato e nessuna riga in store_clients
+      //    (back-compat con il modello pre-multicliente).
+      const { data: legacyStores, error: legacyErr } = await supabase
+        .from('stores')
+        .select('id')
+        .eq('client_id', clientIdNum);
+      if (legacyErr) throw legacyErr;
+
+      const primaryByStoreId = new Map<number, boolean>();
+      for (const l of links ?? []) primaryByStoreId.set(l.store_id as number, !!l.is_primary);
+      for (const s of legacyStores ?? []) {
+        if (!primaryByStoreId.has(s.id as number)) primaryByStoreId.set(s.id as number, true);
+      }
+
+      const storeIds = Array.from(primaryByStoreId.keys());
+      if (storeIds.length === 0) {
+        alert('Nessun negozio trovato per il cliente selezionato.');
+        return;
+      }
+
+      // 3) Fetch dei dettagli negozio.
+      const { data: storesData, error: storesErr } = await supabase
+        .from('stores')
+        .select(
+          'id, name, pi, cf_azienda, address, comune, provincia, cap, regione, phone, email, category, codice_ateco, dipendenti, fatturato, tier, status, created_at, created_by'
+        )
+        .in('id', storeIds);
+      if (storesErr) throw storesErr;
+
+      // 4) Lookup nominativo creatore (solo per chi ce l'ha valorizzato).
+      const creatorIds = Array.from(
+        new Set(
+          (storesData ?? [])
+            .map((s: any) => s.created_by)
+            .filter((v: string | null) => !!v)
+        )
+      );
+      const creatorById = new Map<string, string>();
+      if (creatorIds.length > 0) {
+        const { data: usersData } = await supabase
+          .from('users')
+          .select('id, name, surname')
+          .in('id', creatorIds);
+        for (const u of usersData ?? []) {
+          creatorById.set(
+            u.id as string,
+            `${u.name ?? ''} ${u.surname ?? ''}`.trim() || (u.id as string)
+          );
+        }
+      }
+
+      const clientName =
+        allClients.find((c) => c.id === clientIdNum)?.name ?? `cliente_${clientIdNum}`;
+
+      // 5) Build CSV.
+      const headers = [
+        'ID',
+        'Ragione sociale',
+        'Partita IVA',
+        'Codice fiscale azienda',
+        'Indirizzo',
+        'Comune',
+        'Provincia',
+        'CAP',
+        'Regione',
+        'Telefono',
+        'Email',
+        'Categoria',
+        'Codice ATECO',
+        'Dipendenti',
+        'Fatturato',
+        'Tier',
+        'Status',
+        'Cliente',
+        'Cliente primario',
+        'Data creazione',
+        'Creato da',
+      ];
+      const rows = (storesData ?? []).map((s: any) => {
+        const isPrimary = primaryByStoreId.get(s.id) === true;
+        return [
+          s.id,
+          s.name ?? '',
+          s.pi ?? '',
+          s.cf_azienda ?? '',
+          s.address ?? '',
+          s.comune ?? '',
+          s.provincia ?? '',
+          s.cap ?? '',
+          s.regione ?? '',
+          s.phone ?? '',
+          s.email ?? '',
+          s.category ?? '',
+          s.codice_ateco ?? '',
+          s.dipendenti ?? '',
+          s.fatturato ?? '',
+          s.tier ?? '',
+          getStatusLabel(s.status) || s.status || '',
+          clientName,
+          isPrimary ? 'Sì' : 'No',
+          s.created_at ? new Date(s.created_at).toLocaleString('it-IT') : '',
+          s.created_by ? creatorById.get(s.created_by) ?? '' : '',
+        ];
+      });
+
+      const escape = (cell: unknown) => {
+        const str = String(cell ?? '');
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      };
+      const csv = [headers, ...rows]
+        .map((r) => r.map(escape).join(','))
+        .join('\n');
+
+      const safeClientName = clientName.replace(/[^a-zA-Z0-9_-]+/g, '_').toLowerCase();
+      const fileName = `negozi-${safeClientName}-${new Date().toISOString().split('T')[0]}.csv`;
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    } catch (err: any) {
+      console.error('Export stores CSV error:', err);
+      alert(`Errore export: ${err?.message ?? 'sconosciuto'}`);
+    } finally {
+      setExportLoading(false);
+    }
+  }, [exportClientId, supabase, allClients]);
 
   // Aggrega per store: uno per store (prima occorrenza = più recente), poi conta per esito
   const kpis = useMemo(() => {
@@ -770,6 +943,57 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Esporta lista negozi (solo supervisor) ───────────────────────────
+          Un cliente per volta: si seleziona un cliente e si scarica il CSV
+          completo di tutti i suoi negozi (primari + secondari).
+          Pensato per consuntivazione AMEX e per passare le lead a Salvo. */}
+      {dashboardRole === 'supervisor' && (
+        <div className='bg-white/10 rounded-lg border border-white/20 p-6 shadow-sm mt-8'>
+          <div className='flex items-center gap-2 mb-4'>
+            <Download className='h-5 w-5 text-amber-300' />
+            <h2 className='text-xl font-semibold text-white'>Esporta lista negozi</h2>
+          </div>
+          <p className='text-sm text-white/70 mb-4'>
+            Seleziona un cliente per scaricare l&apos;elenco completo dei suoi negozi in formato CSV.
+            Si esporta un cliente alla volta.
+          </p>
+          <div className='flex flex-col sm:flex-row gap-3 items-stretch sm:items-end'>
+            <div className='flex-1'>
+              <label className='text-xs text-white/70 font-medium mb-1 block'>
+                Cliente
+              </label>
+              <Select value={exportClientId} onValueChange={setExportClientId}>
+                <SelectTrigger className='bg-white/10 border-white/30 text-white'>
+                  <SelectValue placeholder='Seleziona un cliente…' />
+                </SelectTrigger>
+                <SelectContent>
+                  {allClients.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              type='button'
+              onClick={handleExportStoresCSV}
+              disabled={!exportClientId || exportLoading}
+              className='bg-white text-[#224677] hover:bg-gray-100 disabled:opacity-60'
+            >
+              {exportLoading ? (
+                'Esportazione...'
+              ) : (
+                <>
+                  <Download className='mr-2 h-4 w-4' />
+                  Scarica CSV
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
