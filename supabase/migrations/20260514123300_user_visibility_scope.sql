@@ -256,8 +256,14 @@ create policy "Read client_workflows via visibility scope"
 
 
 -- ---------------------------------------------------------------------------
--- 7) RPC `get_stores_within_radius`: applica il filtro di scoping
---    Manteniamo la firma invariata per non rompere i client esistenti.
+-- 7) RPC `get_stores_within_radius`: applica il filtro di scoping.
+--
+--    IMPORTANTE: i default dei parametri DEVONO restare uguali alla versione
+--    pre-esistente, perché PostgREST risolve gli overload in base ai parametri
+--    nominati passati dal client. Il chiamante `components/map.tsx` chiama la
+--    RPC senza `p_client_id` quando non c'è filtro cliente attivo → se
+--    `p_client_id` non ha `default null`, PostgREST risponde 404 PGRST202
+--    ("Could not find the function ... in the schema cache").
 --
 --    NB: serve un DROP esplicito perché Postgres non permette a
 --    CREATE OR REPLACE di modificare i default dei parametri di una funzione
@@ -286,7 +292,7 @@ create or replace function public.get_stores_within_radius(
   lat         double precision,
   lng         double precision,
   radius      double precision,
-  p_client_id bigint,
+  p_client_id bigint  default null,
   p_limit     integer default 500
 )
 returns table (

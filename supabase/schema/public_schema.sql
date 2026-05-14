@@ -454,11 +454,14 @@ grant execute on function public.user_can_see_client(uuid, smallint) to authenti
 
 -- Geosearch: stores entro un raggio (metri) da un punto, filtrati per cliente
 -- e per scope di visibilità dell'utente chiamante.
+-- NB: `p_client_id default null` è importante perché PostgREST risolve gli
+-- overload in base ai parametri nominati passati dal client (vedi commento
+-- nella migration 20260514123300_user_visibility_scope.sql).
 create or replace function public.get_stores_within_radius(
   lat         double precision,
   lng         double precision,
   radius      double precision,
-  p_client_id bigint,
+  p_client_id bigint  default null,
   p_limit     integer default 500
 )
 returns table (
