@@ -23,7 +23,7 @@
   - App Router
   - Pages Router
   - Middleware
-  - Client
+  - Client.
   - Server
   - It just works.
 - supabase-ssr. A package to configure Supabase Auth to use cookies
