@@ -133,7 +133,16 @@ export type DynamicFieldType =
   | 'radio'
   | 'photo'
   | 'external_link'
-  | 'info';
+  | 'info'
+  /**
+   * Select degli status dello store: al cambio chiama immediatamente
+   * `handleStatusChangeAttempt` (stesso flow del legacy, con dialog di
+   * conferma) e di conseguenza l'icona del pin sulla mappa si aggiorna.
+   * Le opzioni di default sono quelle di `statuses` in `utils/utils.ts`;
+   * con `options` si può limitare a un sottoinsieme (es. solo `free`,
+   * `in_progress`, `failed` per il cliente "Lead da Maintenance").
+   */
+  | 'status_select';
 
 export interface DynamicFieldOption {
   value: string;

@@ -922,6 +922,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 form={clientWorkflow.manage_form}
                 existingOutcome={existingOutcome}
                 handleStatusChangeAttempt={handleStatusChangeAttempt}
+                storeStatuses={storeStatuses}
               />
             ) : (
               <>

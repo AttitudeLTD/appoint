@@ -29,6 +29,7 @@ import {
 } from '@/types';
 import { createClient } from '@/utils/supabase/client';
 import { cn } from '@/lib/utils';
+import { statuses as ALL_STATUSES } from '@/utils/utils';
 
 type FormValues = Record<string, unknown>;
 
@@ -48,6 +49,12 @@ interface Props {
     note?: string,
     checkInProgressLimit?: boolean
   ) => Promise<boolean>;
+  /**
+   * Mappa storeId → status corrente (popolata da fetchStoreStatus in
+   * StorePopup). Serve al field `status_select` per riflettere lo status
+   * "in tempo reale" dopo un cambio, senza dover ricaricare lo store.
+   */
+  storeStatuses?: Record<number, string>;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -91,6 +98,7 @@ export const DynamicManageForm: React.FC<Props> = ({
   form,
   existingOutcome,
   handleStatusChangeAttempt,
+  storeStatuses,
 }) => {
   const supabase = createClient();
   const [values, setValues] = useState<FormValues>(existingOutcome ?? {});
@@ -527,6 +535,43 @@ export const DynamicManageForm: React.FC<Props> = ({
             {field.buttonLabel ?? field.label ?? 'Apri link'}
           </a>
         );
+
+      case 'status_select': {
+        // Opzioni: se il JSON ne specifica un sottoinsieme tramite `options`
+        // (mappando value → label), uso quelle. Altrimenti uso tutte le label
+        // standard di `statuses` da utils/utils.ts.
+        const allowedValues =
+          field.options && field.options.length > 0
+            ? field.options.map((o) => o.value)
+            : ALL_STATUSES.map((s) => s.value);
+        const labelOverrides = new Map<string, string>(
+          (field.options ?? []).map((o) => [o.value, o.label])
+        );
+        const opts = ALL_STATUSES.filter((s) =>
+          allowedValues.includes(s.value)
+        ).map((s) => ({
+          value: s.value,
+          label: labelOverrides.get(s.value) ?? s.label,
+        }));
+        const currentStatus =
+          (storeStatuses?.[store.id] as string | undefined) ?? store.status;
+        return (
+          <FieldShell key={field.id} field={field}>
+            <SelectComponent
+              placeholder={field.placeholder ?? 'Seleziona esito'}
+              value={currentStatus}
+              onChange={(v) => {
+                if (v && v !== currentStatus) {
+                  // Stessa funzione del legacy: apre il dialog di conferma e,
+                  // al confermare, aggiorna lo status del pin (icona inclusa).
+                  handleStatusChangeAttempt(store.id, v);
+                }
+              }}
+              options={opts}
+            />
+          </FieldShell>
+        );
+      }
 
       default:
         return null;
