@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Filter, Loader, MapPin, Search, X } from 'lucide-react';
+import { Filter, Loader, LocateFixed, MapPin, Search, X } from 'lucide-react';
 
 import L, { LatLngExpression } from 'leaflet';
 import {
@@ -66,7 +66,10 @@ import { Button } from './ui/button';
 
 type GovernanceLevel = 'agent' | 'am' | 'supervisor';
 
-// Create a new component to handle map movements
+// Create a new component to handle map movements.
+// Debounciamo `moveend` per evitare lo "spam" di fetch durante un pan rapido
+// (Leaflet può emettere più moveend consecutivi). Un singolo fetch alla fine
+// del movimento basta e riduce drasticamente il flickering dei marker.
 function MapEventHandler({
   onMapMove,
 }: {
@@ -75,14 +78,19 @@ function MapEventHandler({
   const map = useMap();
 
   useEffect(() => {
+    let debounceId: ReturnType<typeof setTimeout> | null = null;
     const handleMoveEnd = () => {
-      const center = map.getCenter();
-      onMapMove(center.lat, center.lng);
+      if (debounceId) clearTimeout(debounceId);
+      debounceId = setTimeout(() => {
+        const center = map.getCenter();
+        onMapMove(center.lat, center.lng);
+      }, 250);
     };
 
     map.on('moveend', handleMoveEnd);
 
     return () => {
+      if (debounceId) clearTimeout(debounceId);
       map.off('moveend', handleMoveEnd);
     };
   }, [map, onMapMove]);
@@ -97,15 +105,53 @@ type SearchResult = {
   lon: string;
 };
 
-// Add this new component to handle map movement
+// Add this new component to handle map movement.
+// Chiudiamo eventuale popup aperto PRIMA di volare alla nuova posizione:
+// evita la transizione visiva ambigua quando l'utente cerca un indirizzo
+// con un popup di un altro pin ancora aperto.
 function MapController({ newCenter }: { newCenter?: [number, number] }) {
   const map = useMap();
 
   useEffect(() => {
     if (newCenter) {
-      map.setView(newCenter, 16);
+      map.closePopup();
+      // Animazione coerente con il bottone "torna alla mia posizione":
+      // stesso flyTo morbido (~0.8s) invece di un setView istantaneo.
+      map.flyTo(newCenter, 16, { duration: 0.8 });
     }
   }, [map, newCenter]);
+
+  return null;
+}
+
+// Tiene traccia se la posizione utente è ancora visibile nel viewport.
+// Notifica il parent dopo ogni pan/zoom così il bottone "ricentrami" può
+// comparire/scomparire automaticamente. Usiamo i bounds (non una soglia di
+// metri fissa) così la sensibilità scala correttamente con il livello di zoom.
+function UserLocationTracker({
+  userCoord,
+  onVisibilityChange,
+}: {
+  userCoord: [number, number];
+  onVisibilityChange: (isAway: boolean) => void;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    const check = () => {
+      const userLatLng = L.latLng(userCoord[0], userCoord[1]);
+      onVisibilityChange(!map.getBounds().contains(userLatLng));
+    };
+
+    check();
+    map.on('moveend', check);
+    map.on('zoomend', check);
+
+    return () => {
+      map.off('moveend', check);
+      map.off('zoomend', check);
+    };
+  }, [map, userCoord, onVisibilityChange]);
 
   return null;
 }
@@ -184,7 +230,20 @@ const Map = ({ user }: any) => {
 
   // Ultimo centro usato per la fetch dei pin (aggiornato dentro fetchStoresAndLogs)
   const lastFetchCenter = useRef<[number, number] | null>(null);
+  // Timestamp dell'ultima fetch effettiva: serve a dedup chiamate ravvicinate
+  // (es. handleSelectLocation che chiama il fetch + moveend che lo rifa).
+  const lastFetchTsRef = useRef<number>(0);
   const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // True mentre stiamo recuperando i pin dalla RPC: alimenta la pill di loading.
+  const [isLoadingStores, setIsLoadingStores] = useState(false);
+
+  // Riferimento al Leaflet Map: usato dal tasto "ricentrami" per fare flyTo
+  // senza dover passare per `selectedLocation` (che resetterebbe lo zoom a 16).
+  const mapRef = useRef<L.Map | null>(null);
+  // True quando la posizione utente non è più dentro il viewport: alimenta il
+  // bottone "torna alla mia posizione".
+  const [isAwayFromUser, setIsAwayFromUser] = useState(false);
 
   useEffect(() => {
     const loadClients = async () => {
@@ -483,63 +542,109 @@ const Map = ({ user }: any) => {
 
   const fetchStoresAndLogs = useCallback(
     async (lat: number, lng: number) => {
-      // Memorizza il centro usato per questa fetch
-      lastFetchCenter.current = [lat, lng];
-
-      // Legge il filtro client dal ref (non nelle deps → questa funzione non si ricrea al cambio filtro)
-      const rpcParams: { lat: number; lng: number; radius: number; p_client_id?: number; p_limit?: number } = {
-        lat,
-        lng,
-        radius: 800,
-        p_limit: 80,
-      };
-      if (selectedClientIdRef.current != null) {
-        rpcParams.p_client_id = selectedClientIdRef.current;
-      }
-
-      const { data: storesData, error: rpcError } = await supabase.rpc(
-        'get_stores_within_radius',
-        rpcParams
-      );
-
-      if (rpcError) {
-        console.error('get_stores_within_radius error:', rpcError);
+      // Dedup anti doppio-fetch: se siamo stati chiamati pochissimo tempo fa
+      // con coordinate praticamente identiche, è un duplicato (tipico caso:
+      // handleSelectLocation triggera un fetch esplicito + Leaflet emette poi
+      // moveend dopo flyTo). La finestra deve coprire la durata dell'animazione
+      // flyTo (~800ms) + il debounce del moveend (250ms) + buffer.
+      const now = Date.now();
+      const prev = lastFetchCenter.current;
+      if (
+        prev &&
+        now - lastFetchTsRef.current < 1500 &&
+        Math.abs(prev[0] - lat) < 1e-4 && // ~10 metri di tolleranza
+        Math.abs(prev[1] - lng) < 1e-4
+      ) {
         return;
       }
+      lastFetchTsRef.current = now;
+      lastFetchCenter.current = [lat, lng];
 
-      const visibleStores = filterStoresForUser(storesData ?? [], user.id);
+      setIsLoadingStores(true);
+      try {
+        // Legge il filtro client dal ref (non nelle deps → questa funzione non si ricrea al cambio filtro)
+        const rpcParams: { lat: number; lng: number; radius: number; p_client_id?: number; p_limit?: number } = {
+          lat,
+          lng,
+          radius: 800,
+          p_limit: 80,
+        };
+        if (selectedClientIdRef.current != null) {
+          rpcParams.p_client_id = selectedClientIdRef.current;
+        }
 
-      const storesWithLogs = await Promise.all(
-        visibleStores.map(async (store: any) => {
-          const { data: logs } = await supabase
-            .from('store_status_logs')
-            .select('modifier, created_at')
-            .eq('store_id', store.id)
-            .order('created_at', { ascending: false });
+        const { data: storesData, error: rpcError } = await supabase.rpc(
+          'get_stores_within_radius',
+          rpcParams
+        );
 
-          const modifiedByOtherUser =
-            store.status !== 'free' &&
-            logs?.some((log) => log.modifier !== user.id);
+        if (rpcError) {
+          console.error('get_stores_within_radius error:', rpcError);
+          return;
+        }
 
-          // If modified by another user, get their information
-          let modifierName = '';
-          let modifierId: string | undefined;
-          if (modifiedByOtherUser && logs && logs.length > 0) {
-            const otherUserLog = logs.find((log) => log.modifier !== user.id);
-            if (otherUserLog) {
-              modifierId = otherUserLog.modifier;
-              const userInfo = await fetchUserInfo(otherUserLog.modifier);
-              if (userInfo) {
-                modifierName = `${userInfo.name} ${userInfo.surname}`;
+        const visibleStores = filterStoresForUser(storesData ?? [], user.id);
+
+        const storesWithLogs = await Promise.all(
+          visibleStores.map(async (store: any) => {
+            const { data: logs } = await supabase
+              .from('store_status_logs')
+              .select('modifier, created_at')
+              .eq('store_id', store.id)
+              .order('created_at', { ascending: false });
+
+            const modifiedByOtherUser =
+              store.status !== 'free' &&
+              logs?.some((log) => log.modifier !== user.id);
+
+            // If modified by another user, get their information
+            let modifierName = '';
+            let modifierId: string | undefined;
+            if (modifiedByOtherUser && logs && logs.length > 0) {
+              const otherUserLog = logs.find((log) => log.modifier !== user.id);
+              if (otherUserLog) {
+                modifierId = otherUserLog.modifier;
+                const userInfo = await fetchUserInfo(otherUserLog.modifier);
+                if (userInfo) {
+                  modifierName = `${userInfo.name} ${userInfo.surname}`;
+                }
               }
             }
-          }
 
-          return { ...store, modifiedByOtherUser, modifierName, modifierId };
-        })
-      );
+            return { ...store, modifiedByOtherUser, modifierName, modifierId };
+          })
+        );
 
-      setStores(storesWithLogs);
+        // Merge "stabile": se uno store esisteva già e i campi visualizzati
+        // non sono cambiati, manteniamo la STESSA reference dell'oggetto.
+        // Così il <Marker> sottostante non viene rimontato dal MarkerClusterGroup
+        // → niente flickering, e il <Popup> eventualmente aperto resta tale.
+        setStores((prevStores) => {
+          // Nota: niente `new Map(...)` perché in questo file `Map` è il
+          // componente di react-leaflet importato sopra → conflitto di nomi.
+          const prevById: Record<number, Store> = {};
+          for (const s of prevStores) prevById[s.id] = s;
+          return storesWithLogs.map((s: Store) => {
+            const existing = prevById[s.id];
+            if (
+              existing &&
+              existing.location === s.location &&
+              existing.status === s.status &&
+              existing.tier === s.tier &&
+              existing.client_id === s.client_id &&
+              existing.client_logo === s.client_logo &&
+              existing.modifiedByOtherUser === s.modifiedByOtherUser &&
+              existing.modifierId === s.modifierId &&
+              existing.modifierName === s.modifierName
+            ) {
+              return existing;
+            }
+            return s;
+          });
+        });
+      } finally {
+        setIsLoadingStores(false);
+      }
     },
     [supabase, user.id] // selectedClientId RIMOSSO: si legge dal ref → questa callback non si ricrea al cambio filtro
   );
@@ -1010,8 +1115,22 @@ const Map = ({ user }: any) => {
           </div>
         )}
 
+        {/* Pill di loading stile Google Maps: appare durante il fetch dei pin
+            (sia per pan/zoom che per atterraggio dopo ricerca indirizzo). */}
+        {isLoadingStores && (
+          <div
+            className='pointer-events-none absolute left-1/2 top-4 z-[1000] flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-sm text-gray-700 shadow-lg backdrop-blur-sm'
+            role='status'
+            aria-live='polite'
+          >
+            <Loader className='h-4 w-4 animate-spin' style={{ color: '#224677' }} />
+            <span>Caricamento punti vendita…</span>
+          </div>
+        )}
+
         {coord ? (
           <MapContainer
+            ref={mapRef}
             style={{
               height: '100%',
               width: '100vw',
@@ -1024,6 +1143,12 @@ const Map = ({ user }: any) => {
             <MapClickHandler />
             <MapController newCenter={selectedLocation} />
             <MapEventHandler onMapMove={fetchStoresAndLogs} />
+            {Array.isArray(coord) && (
+              <UserLocationTracker
+                userCoord={coord as [number, number]}
+                onVisibilityChange={setIsAwayFromUser}
+              />
+            )}
             <TileLayer url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png' />
             <ZoomControl position='bottomright' />
 
@@ -1146,7 +1271,31 @@ const Map = ({ user }: any) => {
             })}
             </MarkerClusterGroup>
           </MapContainer>
-        ) : (
+        ) : null}
+
+        {/* Bottone "torna alla mia posizione": appare solo quando la posizione
+            utente è uscita dal viewport, scompare appena la rivedi sulla mappa.
+            Posizionato sopra il ZoomControl (bottom-right) con padding coerente. */}
+        {coord && Array.isArray(coord) && isAwayFromUser && (
+          <button
+            type='button'
+            onClick={() => {
+              const m = mapRef.current;
+              if (!m) return;
+              m.closePopup();
+              m.flyTo(coord as [number, number], Math.max(m.getZoom(), 14), {
+                duration: 0.8,
+              });
+            }}
+            aria-label='Torna alla mia posizione'
+            title='Torna alla mia posizione'
+            className='absolute bottom-24 right-2.5 z-[1000] flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-black/10 transition-colors hover:bg-gray-50 active:bg-gray-100'
+          >
+            <LocateFixed className='h-5 w-5' style={{ color: '#224677' }} />
+          </button>
+        )}
+
+        {!coord && (
           <div className='flex-1 w-full flex flex-col items-center justify-center'>
             <Loader className='h-8 w-8 animate-spin text-[#1B304E] mb-4' />
             <p className='text-lg font-medium'>Caricamento mappa...</p>
