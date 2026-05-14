@@ -740,6 +740,11 @@ const Map = ({ user }: any) => {
     setSelectedLocation(newLocation);
     setSearchResults([]);
     setSearchQuery('');
+    // Atterrando programmaticamente sulla nuova posizione tramite `setView`,
+    // l'evento `moveend` di Leaflet non è garantito (timing race con il commit
+    // di React). Triggeriamo subito il fetch così i pin compaiono senza dover
+    // muovere la mappa. Eventuale doppio fetch da moveend è idempotente.
+    fetchStoresAndLogs(newLocation[0], newLocation[1]);
   };
 
   return (
