@@ -3,7 +3,7 @@
 > **Fonte di verità** dello schema del database Supabase del progetto.
 > Aggiornare questo file **ad ogni cambio di schema** (insieme alla migration corrispondente in [`./migrations/`](./migrations/)).
 >
-> _Ultimo aggiornamento: 2026-05-14 — baseline iniziale._
+> _Ultimo aggiornamento: 2026-05-14 — aggiunto modello di visibilità per utente ([`20260514123300_user_visibility_scope`](./migrations/20260514123300_user_visibility_scope.sql))._
 
 ---
 
@@ -18,12 +18,15 @@
     - [`users`](#users)
     - [`areas`](#areas)
     - [`user_areas`](#user_areas)
+    - [`user_client_access`](#user_client_access)
+    - [`user_store_access`](#user_store_access)
     - [`stores`](#stores)
     - [`store_status_logs`](#store_status_logs)
     - [`store_visit_outcomes`](#store_visit_outcomes)
     - [`store_photos`](#store_photos)
     - [`generic_photos`](#generic_photos)
   - [Diagramma relazioni](#diagramma-relazioni)
+  - [Modello di visibilità per utente](#modello-di-visibilit%C3%A0-per-utente)
   - [Funzioni custom](#funzioni-custom)
   - [Trigger](#trigger)
   - [RLS — Row Level Security](#rls--row-level-security)
@@ -46,6 +49,7 @@ Il database supporta un'applicazione **field-sales / merchandising** che permett
 - essere assegnati ad **aree geografiche** (`areas` / `user_areas`).
 
 Ruoli applicativi (`public.users.role`): `agent`, `am`, `supervisor`.
+Il ruolo definisce solo la **gerarchia** (es. un AM vede solo gli agenti delle sue aree, via `user_areas`). La **visibilità sui dati di business** (clienti/negozi) è gestita separatamente dal campo `public.users.visibility_scope` e dalle tabelle `user_client_access` / `user_store_access` — vedi [Modello di visibilità per utente](#modello-di-visibilit%C3%A0-per-utente).
 
 Stack: **PostgreSQL** + **PostGIS** (geolocalizzazione) + **Supabase Auth** + **Supabase Storage**.
 
@@ -81,7 +85,7 @@ Anagrafica dei clienti business (es. brand committenti). Ogni `store` appartiene
 | `created_at` | `timestamptz` | YES  | `now()`                              |                            |
 | `logo`       | `text`        | YES  | —                                    | Path in bucket `client-logos` |
 
-**RLS:** abilitata. Lettura libera a tutti gli utenti `authenticated`.
+**RLS:** lettura `authenticated` vincolata a `public.user_can_see_client(auth.uid(), id)`.
 
 ---
 
@@ -98,7 +102,7 @@ Definisce il **workflow di visita** (in JSON) di ciascun cliente. _Un workflow p
 | `active`     | `boolean`     | NO   | `true`  |                                                        |
 | `created_at` | `timestamptz` | NO   | `now()` |                                                        |
 
-**RLS:** lettura ad utenti `authenticated`.
+**RLS:** lettura `authenticated` vincolata a `public.user_can_see_client(auth.uid(), client_id)` (un utente vede il workflow solo dei clienti che può vedere).
 
 ---
 
@@ -107,15 +111,18 @@ Definisce il **workflow di visita** (in JSON) di ciascun cliente. _Un workflow p
 Profilo applicativo collegato a `auth.users` (1:1 sulla PK).
 Popolato automaticamente da trigger `auth.on_auth_user_created → public.handle_new_user()`.
 
-| Colonna      | Tipo          | Null | Default   | Note                                                       |
-| ------------ | ------------- | ---- | --------- | ---------------------------------------------------------- |
-| `id`         | `uuid`        | NO   | —         | **PK**, **FK** → `auth.users.id`                          |
-| `created_at` | `timestamptz` | NO   | `now()`   |                                                            |
-| `name`       | `text`        | YES  | —         |                                                            |
-| `surname`    | `text`        | YES  | —         |                                                            |
-| `number`     | `text`        | YES  | —         | Numero di telefono                                         |
-| `email`      | `text`        | YES  | —         |                                                            |
-| `role`       | `text`        | NO   | `'agent'` | CHECK IN (`'agent'`, `'am'`, `'supervisor'`)              |
+| Colonna            | Tipo          | Null | Default        | Note                                                                                  |
+| ------------------ | ------------- | ---- | -------------- | ------------------------------------------------------------------------------------- |
+| `id`               | `uuid`        | NO   | —              | **PK**, **FK** → `auth.users.id`                                                      |
+| `created_at`       | `timestamptz` | NO   | `now()`        |                                                                                       |
+| `name`             | `text`        | YES  | —              |                                                                                       |
+| `surname`          | `text`        | YES  | —              |                                                                                       |
+| `number`           | `text`        | YES  | —              | Numero di telefono                                                                    |
+| `email`            | `text`        | YES  | —              |                                                                                       |
+| `role`             | `text`        | NO   | `'agent'`      | CHECK IN (`'agent'`, `'am'`, `'supervisor'`)                                          |
+| `visibility_scope` | `text`        | NO   | `'all'` *(¹)*  | CHECK IN (`'all'`, `'restricted'`). Vedi [Modello di visibilità per utente](#modello-di-visibilit%C3%A0-per-utente). |
+
+*(¹)* Il default di **colonna** è `'all'` per non rompere gli utenti pre-esistenti, ma il trigger `handle_new_user()` inserisce i **nuovi** utenti con `'restricted'` (fail-closed).
 
 **RLS:** lettura libera (`SELECT … USING (true)`).
 
@@ -148,6 +155,39 @@ Tabella di join M:N **utente ↔ area**.
 
 PK composta `(user_id, area_id)`.
 **RLS:** lettura ad utenti `authenticated`.
+
+> ℹ️ `user_areas` riguarda **solo la gerarchia AM ↔ agenti**, non la visibilità sui clienti/negozi. Per quella, vedi `user_client_access` / `user_store_access`.
+
+---
+
+#### `user_client_access`
+
+Lista bianca **utente → cliente** per il modello di visibilità ([dettagli](#modello-di-visibilit%C3%A0-per-utente)).
+Si applica solo se l'utente ha `users.visibility_scope = 'restricted'`. Per utenti `'all'` queste righe sono ignorate.
+
+| Colonna      | Tipo          | Null | Note                                                       |
+| ------------ | ------------- | ---- | ---------------------------------------------------------- |
+| `user_id`    | `uuid`        | NO   | **PK** + **FK** → `public.users.id` (ON DELETE CASCADE)    |
+| `client_id`  | `smallint`    | NO   | **PK** + **FK** → `public.clients.id` (ON DELETE CASCADE)  |
+| `created_at` | `timestamptz` | NO   | `now()`                                                    |
+
+PK composta `(user_id, client_id)`.
+**RLS:** un utente legge solo le proprie righe (`user_id = auth.uid()`). Gestione concessioni via service role / SQL admin.
+
+---
+
+#### `user_store_access`
+
+Lista bianca **utente → singolo negozio**. Complementare a `user_client_access` (la visibilità finale è l'**unione** delle due).
+
+| Colonna      | Tipo          | Null | Note                                                       |
+| ------------ | ------------- | ---- | ---------------------------------------------------------- |
+| `user_id`    | `uuid`        | NO   | **PK** + **FK** → `public.users.id` (ON DELETE CASCADE)    |
+| `store_id`   | `bigint`      | NO   | **PK** + **FK** → `public.stores.id` (ON DELETE CASCADE)   |
+| `created_at` | `timestamptz` | NO   | `now()`                                                    |
+
+PK composta `(user_id, store_id)`. Indice secondario `idx_user_store_access_store_id` su `(store_id)`.
+**RLS:** un utente legge solo le proprie righe.
 
 ---
 
@@ -186,7 +226,7 @@ Tabella **principale** dei negozi/POS sul territorio. Geocodificati tramite Post
 **Indici notabili:** `idx_stores_client_id` su `(client_id)`. ⚠️ Considerare in futuro un **GIST index su `location`** per le query spaziali.
 
 **RLS:**
-- `SELECT` aperto a tutti (anche `anon`).
+- `SELECT` vincolato a `public.user_can_see_store(auth.uid(), id)` — vedi [Modello di visibilità per utente](#modello-di-visibilit%C3%A0-per-utente). Gli utenti `anon` non vedono nulla.
 - `INSERT` consentito ad utenti `authenticated`.
 - `UPDATE` consentito a tutti.
 
@@ -277,6 +317,12 @@ erDiagram
     users ||--o{ user_areas : "user_id"
     areas ||--o{ user_areas : "area_id"
 
+    users   ||--o{ user_client_access : "user_id"
+    clients ||--o{ user_client_access : "client_id"
+
+    users  ||--o{ user_store_access : "user_id"
+    stores ||--o{ user_store_access : "store_id"
+
     stores ||--o{ store_status_logs : "store_id"
     stores ||--o{ store_visit_outcomes : "store_id"
     stores ||--o{ store_photos : "store_id"
@@ -287,15 +333,80 @@ erDiagram
 
 ---
 
+### Modello di visibilità per utente
+
+Indipendente da `areas` / `user_areas` (che riguardano la gerarchia AM ↔ agenti), questo meccanismo regola **quali clienti e quali negozi un utente vede** sulla mappa e nei dropdown dell'app.
+
+**Componenti**
+
+| Cosa                            | Dove                              |
+| ------------------------------- | --------------------------------- |
+| Modalità di scope per utente    | `public.users.visibility_scope`   |
+| Concessioni a livello cliente   | `public.user_client_access`       |
+| Concessioni a livello negozio   | `public.user_store_access`        |
+| Logica di scoping (predicate)   | `public.user_can_see_store(...)`, `public.user_can_see_client(...)` |
+
+**Semantica**
+
+| `visibility_scope` | `user_client_access` | `user_store_access` | Cosa vede l'utente                                                       |
+| ------------------ | -------------------- | ------------------- | ------------------------------------------------------------------------- |
+| `'all'`            | _(ignorato)_         | _(ignorato)_        | Tutti i clienti e tutti i negozi (comportamento storico).                 |
+| `'restricted'`     | vuoto                | vuoto               | **Nessuno** (fail-closed).                                                |
+| `'restricted'`     | `{A, B}`             | vuoto               | Tutti i negozi di A + tutti i negozi di B.                                |
+| `'restricted'`     | vuoto                | `{s1, s2, s3}`      | Solo `s1`, `s2`, `s3` (anche di clienti diversi).                         |
+| `'restricted'`     | `{A}`                | `{s7, s8}` (cli. C) | Tutti i negozi di A **+** `s7`, `s8` del cliente C.                       |
+
+**Regole importanti**
+
+- **Retrocompatibilità**: utenti pre-esistenti restano `'all'` → non cambia nulla per loro.
+- **Nuovi utenti**: il trigger `handle_new_user()` li crea con `'restricted'` → di default non vedono nulla finché non ricevono concessioni.
+- **Nessun ruolo bypassa lo scoping**: anche un `supervisor` con `'restricted'` vede solo ciò che è in elenco. Per dargli accesso totale → impostare `visibility_scope = 'all'`.
+- **`user_can_see_client`** considera "visibile" anche il cliente di un negozio in `user_store_access` (per coerenza UI: se vedi un pin, devi vedere il nome/logo del suo cliente).
+- **Punti di applicazione**:
+  - RLS `SELECT` su `public.clients`, `public.stores`, `public.client_workflows`;
+  - filtro esplicito dentro `public.get_stores_within_radius()` (che alimenta la mappa).
+
+**Esempi pratici (gestione concessioni)**
+
+```sql
+-- Far diventare un utente "scoped"
+update public.users
+set visibility_scope = 'restricted'
+where id = '<uuid>';
+
+-- Concedergli tutti i negozi di un cliente
+insert into public.user_client_access (user_id, client_id)
+values ('<uuid>', 2)
+on conflict do nothing;
+
+-- Concedergli singoli negozi (oltre/invece che per cliente)
+insert into public.user_store_access (user_id, store_id)
+select '<uuid>', s.id
+from public.stores s
+where s.id in (101, 102, 103)
+on conflict do nothing;
+
+-- Rimettere un utente a "tutto"
+update public.users
+set visibility_scope = 'all'
+where id = '<uuid>';
+```
+
+> ⚠️ Le tabelle dipendenti (`store_status_logs`, `store_visit_outcomes`, `store_photos`, `generic_photos`) **non** hanno una RLS che verifica direttamente lo scope. Sono accessibili agli `authenticated`, ma in pratica vengono filtrate "a monte" perché l'app parte sempre dalla lista degli stores visibili. Da rivedere se in futuro si esponessero endpoint che bypassano questa logica.
+
+---
+
 ### Funzioni custom
 
 > Esclusi i centinaia di simboli installati da PostGIS.
 
 | Funzione                              | Argomenti                                                                       | Ritorno  | Note                                                                                                                                                       |
 | ------------------------------------- | ------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `handle_new_user()`                   | —                                                                               | trigger  | **SECURITY DEFINER**. Inserisce una riga in `public.users` quando viene creato un utente in `auth.users`.                                                  |
+| `handle_new_user()`                   | —                                                                               | trigger  | **SECURITY DEFINER**. Inserisce una riga in `public.users` quando viene creato un utente in `auth.users`. I nuovi utenti vengono creati con `visibility_scope = 'restricted'`. |
 | `convert_coordinates_to_location()`   | —                                                                               | trigger  | Trasforma il campo testuale `stores.coordinates` (`"lng,lat"`) nel punto PostGIS `stores.location`.                                                        |
-| `get_stores_within_radius(...)`       | `lat double precision, lng double precision, radius double precision, p_client_id bigint, p_limit integer` | TABLE    | Ritorna negozi entro un raggio (in metri) da un punto, filtrati per cliente. Effettua JOIN con `clients` per arricchire i risultati con logo/nome cliente. |
+| `user_can_see_store(p_user_id uuid, p_store_id bigint)`     | `uuid, bigint`                                              | `boolean` | **SECURITY DEFINER / STABLE**. Predicato di visibilità sul negozio. Usato dalla RLS di `stores` e dalla RPC `get_stores_within_radius`.                    |
+| `user_can_see_client(p_user_id uuid, p_client_id smallint)` | `uuid, smallint`                                            | `boolean` | **SECURITY DEFINER / STABLE**. Predicato di visibilità sul cliente. Usato dalla RLS di `clients` e `client_workflows`.                                     |
+| `get_stores_within_radius(...)`       | `lat double precision, lng double precision, radius double precision, p_client_id bigint, p_limit integer` | TABLE    | Ritorna negozi entro un raggio (in metri) da un punto, filtrati per cliente **e** per scope di visibilità del chiamante (`auth.uid()`).                    |
 | `getstoreswithinradius(...)`          | `lat, lng, radius`                                                              | TABLE    | _Legacy / deprecato_ — versione precedente di `get_stores_within_radius`.                                                                                  |
 | `update_store_photos_updated_at()`    | —                                                                               | trigger  | Mantiene `store_photos.updated_at = now()` su UPDATE.                                                                                                      |
 | `update_generic_photos_updated_at()`  | —                                                                               | trigger  | Mantiene `generic_photos.updated_at = now()` su UPDATE.                                                                                                    |
@@ -318,12 +429,14 @@ erDiagram
 
 | Tabella                | Policy                                          | Cmd      | Ruoli           | Condizione                                                            |
 | ---------------------- | ----------------------------------------------- | -------- | --------------- | --------------------------------------------------------------------- |
-| `clients`              | _Authenticated users can read clients_          | SELECT   | `authenticated` | `true`                                                                |
-| `client_workflows`     | _Authenticated read client_workflows_           | SELECT   | `public`        | `auth.role() = 'authenticated'`                                       |
+| `clients`              | _Read clients via visibility scope_             | SELECT   | `authenticated` | `public.user_can_see_client(auth.uid(), id)`                          |
+| `client_workflows`     | _Read client_workflows via visibility scope_    | SELECT   | `authenticated` | `public.user_can_see_client(auth.uid(), client_id)`                   |
 | `users`                | _Enable read access for all users_              | SELECT   | `public`        | `true`                                                                |
 | `areas`                | _Auth read areas_                               | SELECT   | `public`        | `auth.role() = 'authenticated'`                                       |
 | `user_areas`           | _Auth read user_areas_                          | SELECT   | `public`        | `auth.role() = 'authenticated'`                                       |
-| `stores`               | _Enable read access for all users_              | SELECT   | `public`        | `true`                                                                |
+| `user_client_access`   | _Users can read own client access_              | SELECT   | `authenticated` | `user_id = auth.uid()`                                                |
+| `user_store_access`    | _Users can read own store access_               | SELECT   | `authenticated` | `user_id = auth.uid()`                                                |
+| `stores`               | _Read stores via visibility scope_              | SELECT   | `public`        | `public.user_can_see_store(auth.uid(), id)`                           |
 | `stores`               | _Enable insert for authenticated users only_    | INSERT   | `authenticated` | WITH CHECK `true`                                                     |
 | `stores`               | _Enable update for users_                       | UPDATE   | `public`        | USING `true` / WITH CHECK `true`                                      |
 | `store_status_logs`    | _Enable read access for all users_              | SELECT   | `public`        | `true`                                                                |
@@ -338,7 +451,7 @@ erDiagram
 | `generic_photos`       | _Users can insert their own generic photos_     | INSERT   | `authenticated` | WITH CHECK `auth.uid() = user_id`                                     |
 | `generic_photos`       | _Users can delete their own generic photos_     | DELETE   | `authenticated` | `auth.uid() = user_id`                                                |
 
-> ⚠️ Diverse tabelle (`stores`, `store_status_logs`, `users`, …) hanno policy con `USING (true)` per il `SELECT`, cioè lettura completamente aperta anche agli utenti `anon`. Valutare in futuro un irrigidimento, soprattutto su `users` e `stores`.
+> ⚠️ Diverse tabelle (`store_status_logs`, `users`, …) hanno ancora policy con `USING (true)` per il `SELECT`, cioè lettura completamente aperta. `stores`, `clients` e `client_workflows` sono invece vincolati dal [modello di visibilità per utente](#modello-di-visibilit%C3%A0-per-utente). Valutare in futuro un irrigidimento anche sulle tabelle dipendenti (`store_status_logs`, `store_visit_outcomes`, `store_photos`, `generic_photos`) per evitare leak di dati riferiti a negozi non visibili.
 
 ---
 

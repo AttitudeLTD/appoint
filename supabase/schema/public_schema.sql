@@ -61,14 +61,16 @@ alter table public.client_workflows enable row level security;
 -- TABLE: users (profilo applicativo, 1:1 con auth.users)
 -- ---------------------------------------------------------------------------
 create table if not exists public.users (
-  id         uuid primary key references auth.users(id),
-  created_at timestamptz not null default now(),
-  name       text,
-  surname    text,
-  number     text,
-  email      text,
-  role       text not null default 'agent'
-             check (role in ('agent','am','supervisor'))
+  id               uuid primary key references auth.users(id),
+  created_at       timestamptz not null default now(),
+  name             text,
+  surname          text,
+  number           text,
+  email            text,
+  role             text not null default 'agent'
+                   check (role in ('agent','am','supervisor')),
+  visibility_scope text not null default 'all'
+                   check (visibility_scope in ('all','restricted'))
 );
 
 alter table public.users enable row level security;
@@ -98,6 +100,38 @@ create table if not exists public.user_areas (
 );
 
 alter table public.user_areas enable row level security;
+
+
+-- ---------------------------------------------------------------------------
+-- TABLE: user_client_access (lista bianca utente → cliente)
+-- ---------------------------------------------------------------------------
+-- Usata SOLO se public.users.visibility_scope = 'restricted'.
+-- Un utente 'all' vede tutto a prescindere da queste righe.
+create table if not exists public.user_client_access (
+  user_id    uuid        not null references public.users(id)   on delete cascade,
+  client_id  smallint    not null references public.clients(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, client_id)
+);
+
+alter table public.user_client_access enable row level security;
+
+
+-- ---------------------------------------------------------------------------
+-- TABLE: user_store_access (lista bianca utente → singolo negozio)
+-- ---------------------------------------------------------------------------
+-- Idem: si applica solo a utenti 'restricted'. Indipendente da user_client_access.
+create table if not exists public.user_store_access (
+  user_id    uuid        not null references public.users(id)  on delete cascade,
+  store_id   bigint      not null references public.stores(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, store_id)
+);
+
+create index if not exists idx_user_store_access_store_id
+  on public.user_store_access (store_id);
+
+alter table public.user_store_access enable row level security;
 
 
 -- ---------------------------------------------------------------------------
@@ -220,7 +254,9 @@ alter table public.generic_photos enable row level security;
 -- FUNCTIONS & TRIGGERS
 -- ---------------------------------------------------------------------------
 
--- Crea la riga in public.users quando viene creato un nuovo auth.users
+-- Crea la riga in public.users quando viene creato un nuovo auth.users.
+-- Nota: i nuovi utenti partono `restricted` per default (fail-closed),
+-- gli utenti pre-esistenti mantengono il default di colonna 'all'.
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -228,8 +264,8 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.users (id, email)
-  values (new.id, new.email)
+  insert into public.users (id, email, visibility_scope)
+  values (new.id, new.email, 'restricted')
   on conflict (id) do nothing;
   return new;
 end;
@@ -307,7 +343,117 @@ create trigger update_generic_photos_updated_at
   for each row execute function public.update_generic_photos_updated_at();
 
 
+-- Helper: può l'utente p_user_id vedere lo store p_store_id?
+create or replace function public.user_can_see_store(
+  p_user_id  uuid,
+  p_store_id bigint
+)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v_scope text;
+begin
+  if p_user_id is null or p_store_id is null then
+    return false;
+  end if;
+
+  select visibility_scope into v_scope
+  from public.users
+  where id = p_user_id;
+
+  if v_scope is null then
+    return false;
+  end if;
+
+  if v_scope = 'all' then
+    return true;
+  end if;
+
+  if exists (
+    select 1 from public.user_store_access
+    where user_id = p_user_id and store_id = p_store_id
+  ) then
+    return true;
+  end if;
+
+  if exists (
+    select 1
+    from public.stores             s
+    join public.user_client_access uca on uca.client_id = s.client_id
+    where s.id = p_store_id and uca.user_id = p_user_id
+  ) then
+    return true;
+  end if;
+
+  return false;
+end;
+$$;
+
+revoke all  on function public.user_can_see_store(uuid, bigint) from public;
+grant execute on function public.user_can_see_store(uuid, bigint) to authenticated, anon;
+
+
+-- Helper: può l'utente p_user_id vedere il cliente p_client_id?
+-- Vero anche se vede solo un negozio di quel cliente.
+create or replace function public.user_can_see_client(
+  p_user_id   uuid,
+  p_client_id smallint
+)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v_scope text;
+begin
+  if p_user_id is null or p_client_id is null then
+    return false;
+  end if;
+
+  select visibility_scope into v_scope
+  from public.users
+  where id = p_user_id;
+
+  if v_scope is null then
+    return false;
+  end if;
+
+  if v_scope = 'all' then
+    return true;
+  end if;
+
+  if exists (
+    select 1 from public.user_client_access
+    where user_id = p_user_id and client_id = p_client_id
+  ) then
+    return true;
+  end if;
+
+  if exists (
+    select 1
+    from public.user_store_access usa
+    join public.stores            s on s.id = usa.store_id
+    where usa.user_id = p_user_id and s.client_id = p_client_id
+  ) then
+    return true;
+  end if;
+
+  return false;
+end;
+$$;
+
+revoke all  on function public.user_can_see_client(uuid, smallint) from public;
+grant execute on function public.user_can_see_client(uuid, smallint) to authenticated, anon;
+
+
 -- Geosearch: stores entro un raggio (metri) da un punto, filtrati per cliente
+-- e per scope di visibilità dell'utente chiamante.
 create or replace function public.get_stores_within_radius(
   lat         double precision,
   lng         double precision,
@@ -346,6 +492,7 @@ begin
   left join public.clients c on c.id = s.client_id
   where s.location is not null
     and (p_client_id is null or s.client_id = p_client_id)
+    and public.user_can_see_store(auth.uid(), s.id)
     and ST_DWithin(
       s.location,
       ST_SetSRID(ST_MakePoint(lng, lat), 4326)::geography,
@@ -361,15 +508,19 @@ $$;
 -- RLS Policies
 -- ---------------------------------------------------------------------------
 
--- clients
+-- clients (lettura vincolata allo scope di visibilità dell'utente)
 drop policy if exists "Authenticated users can read clients" on public.clients;
-create policy "Authenticated users can read clients"
-  on public.clients for select to authenticated using (true);
+drop policy if exists "Read clients via visibility scope"    on public.clients;
+create policy "Read clients via visibility scope"
+  on public.clients for select to authenticated
+  using (public.user_can_see_client(auth.uid(), id));
 
--- client_workflows
-drop policy if exists "Authenticated read client_workflows" on public.client_workflows;
-create policy "Authenticated read client_workflows"
-  on public.client_workflows for select using (auth.role() = 'authenticated');
+-- client_workflows (visibile se l'utente vede il cliente di riferimento)
+drop policy if exists "Authenticated read client_workflows"        on public.client_workflows;
+drop policy if exists "Read client_workflows via visibility scope" on public.client_workflows;
+create policy "Read client_workflows via visibility scope"
+  on public.client_workflows for select to authenticated
+  using (public.user_can_see_client(auth.uid(), client_id));
 
 -- users
 drop policy if exists "Enable read access for all users" on public.users;
@@ -386,13 +537,27 @@ drop policy if exists "Auth read user_areas" on public.user_areas;
 create policy "Auth read user_areas"
   on public.user_areas for select using (auth.role() = 'authenticated');
 
--- stores
-drop policy if exists "Enable read access for all users"       on public.stores;
-drop policy if exists "Enable insert for authenticated users only" on public.stores;
-drop policy if exists "Enable update for users"                on public.stores;
+-- user_client_access (ognuno legge solo le proprie righe)
+drop policy if exists "Users can read own client access" on public.user_client_access;
+create policy "Users can read own client access"
+  on public.user_client_access for select to authenticated
+  using (user_id = auth.uid());
 
-create policy "Enable read access for all users"
-  on public.stores for select using (true);
+-- user_store_access (ognuno legge solo le proprie righe)
+drop policy if exists "Users can read own store access" on public.user_store_access;
+create policy "Users can read own store access"
+  on public.user_store_access for select to authenticated
+  using (user_id = auth.uid());
+
+-- stores (lettura vincolata allo scope di visibilità dell'utente)
+drop policy if exists "Enable read access for all users"          on public.stores;
+drop policy if exists "Read stores via visibility scope"          on public.stores;
+drop policy if exists "Enable insert for authenticated users only" on public.stores;
+drop policy if exists "Enable update for users"                   on public.stores;
+
+create policy "Read stores via visibility scope"
+  on public.stores for select
+  using (public.user_can_see_store(auth.uid(), id));
 
 create policy "Enable insert for authenticated users only"
   on public.stores for insert to authenticated with check (true);
