@@ -3,7 +3,7 @@
 > **Fonte di verità** dello schema del database Supabase del progetto.
 > Aggiornare questo file **ad ogni cambio di schema** (insieme alla migration corrispondente in [`./migrations/`](./migrations/)).
 >
-> _Ultimo aggiornamento: 2026-05-14 — aggiunto modello di visibilità per utente ([`20260514123300_user_visibility_scope`](./migrations/20260514123300_user_visibility_scope.sql))._
+> _Ultimo aggiornamento: 2026-05-14 — modello di visibilità per utente ([`20260514123300_user_visibility_scope`](./migrations/20260514123300_user_visibility_scope.sql)) + conversione di tutti gli utenti esistenti a `'restricted'` con snapshot dei grants ([`20260514135200_restrict_existing_users`](./migrations/20260514135200_restrict_existing_users.sql))._
 
 ---
 
@@ -358,8 +358,9 @@ Indipendente da `areas` / `user_areas` (che riguardano la gerarchia AM ↔ agent
 
 **Regole importanti**
 
-- **Retrocompatibilità**: utenti pre-esistenti restano `'all'` → non cambia nulla per loro.
-- **Nuovi utenti**: il trigger `handle_new_user()` li crea con `'restricted'` → di default non vedono nulla finché non ricevono concessioni.
+- **Stato attuale**: TUTTI gli utenti (esistenti e nuovi) sono `'restricted'`. Gli utenti esistenti hanno ricevuto un grant "snapshot" su ogni cliente già presente al momento della migration `20260514135200_restrict_existing_users` — quindi continuano a vedere quello che vedevano prima.
+- **Nuovi utenti**: il trigger `handle_new_user()` li crea con `'restricted'` **senza grant** → di default non vedono nulla finché un admin non concede esplicitamente clienti/negozi.
+- **Nuovi clienti**: i clienti creati dopo la migration **non sono concessi automaticamente a nessuno** — vanno concessi esplicitamente agli utenti che devono vederli (è il pattern che abilita scenari come "cliente di test visibile solo a X").
 - **Nessun ruolo bypassa lo scoping**: anche un `supervisor` con `'restricted'` vede solo ciò che è in elenco. Per dargli accesso totale → impostare `visibility_scope = 'all'`.
 - **`user_can_see_client`** considera "visibile" anche il cliente di un negozio in `user_store_access` (per coerenza UI: se vedi un pin, devi vedere il nome/logo del suo cliente).
 - **Punti di applicazione**:
