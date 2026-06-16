@@ -316,7 +316,7 @@ Tabella **principale** dei negozi/POS sul territorio. Geocodificati tramite Post
 | `created_at`          | `timestamptz`         | NO   | `now()`  |                                                                           |
 | `name`                | `text`                | YES  | —        | Ragione sociale / insegna                                                 |
 | `address`             | `text`                | YES  | —        |                                                                           |
-| `coordinates`         | `text`                | YES  | —        | Input formato `"lng,lat"` — sorgente per popolare `location` via trigger  |
+| `coordinates`         | `text`                | YES  | —        | Input formato `"[lat, lng]"` (parentesi quadre + spazio dopo la virgola, come le righe storiche) — sorgente per popolare `location` via trigger. ⚠️ Il trigger reale in produzione (`convert_coordinates_to_location`) toglie le parentesi e fa `split` con part1=lat, part2=lng → `ST_Point(lng, lat)`; **solo se** `location IS NULL`. (Nota: lo snapshot in [`schema/public_schema.sql`](./schema/public_schema.sql) riporta una versione semplificata/divergente di questa funzione.) |
 | `location`            | `geography` (PostGIS) | YES  | —        | Punto geografico, calcolato dal trigger `trigger_convert_coordinates`     |
 | `phone`               | `text`                | YES  | —        |                                                                           |
 | `email`               | `text`                | YES  | —        |                                                                           |
