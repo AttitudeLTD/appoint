@@ -3,7 +3,9 @@
 > **Fonte di verità** dello schema del database Supabase del progetto.
 > Aggiornare questo file **ad ogni cambio di schema** (insieme alla migration corrispondente in [`./migrations/`](./migrations/)).
 >
-> _Ultimo aggiornamento: 2026-05-14 — modello di visibilità per utente ([`20260514123300_user_visibility_scope`](./migrations/20260514123300_user_visibility_scope.sql)) + conversione di tutti gli utenti esistenti a `'restricted'` con snapshot dei grants ([`20260514135200_restrict_existing_users`](./migrations/20260514135200_restrict_existing_users.sql)) + relazione N:N stores↔clients e tracking del creatore degli store ([`20260514151900_store_multi_client_and_created_by`](./migrations/20260514151900_store_multi_client_and_created_by.sql))._
+> _Ultimo aggiornamento: 2026-06-16 — nuovo cliente **PROGETTO AICALL** (lead generati dal partner AiCall) con workflow `manage_form` (tendina ESITO obbligatoria + campo NOTE) e import di 367 lead come `stores`. Seed: [`seed/20260616_aicall_project.sql`](./seed/20260616_aicall_project.sql) + [`seed/20260616_aicall_leads.sql`](./seed/20260616_aicall_leads.sql). Nessuna modifica di schema._
+>
+> _2026-05-14 — modello di visibilità per utente ([`20260514123300_user_visibility_scope`](./migrations/20260514123300_user_visibility_scope.sql)) + conversione di tutti gli utenti esistenti a `'restricted'` con snapshot dei grants ([`20260514135200_restrict_existing_users`](./migrations/20260514135200_restrict_existing_users.sql)) + relazione N:N stores↔clients e tracking del creatore degli store ([`20260514151900_store_multi_client_and_created_by`](./migrations/20260514151900_store_multi_client_and_created_by.sql))._
 
 ---
 
@@ -201,6 +203,21 @@ Il JSON descrive `primary_actions` (bottoni in cima), una lista di `sections` co
 ```
 
 I valori vengono persistiti in `store_visit_outcomes.outcome_data` (jsonb) come `{ "field_id": value, ... }`. Se `submit.sets_status` è valorizzato, al click di "Salva" lo store passa anche a quello status (con il dialog di conferma del legacy).
+
+##### Clienti configurati
+
+| `id` | Nome                | Workflow                                                                                  |
+| ---- | ------------------- | ----------------------------------------------------------------------------------------- |
+| 1    | Scalapay            | _legacy_ (UI hardcoded)                                                                    |
+| 2    | Amex                | `Amex Merchant Visit` (failed/non_existent reasons + sub-workflow concluded/already_client) |
+| 3    | Maintenance Amex    | _(nessun workflow dedicato)_                                                               |
+| 4    | Lead da Maintenance | `manage_form` minimale (`status_select`)                                                   |
+| 5    | **PROGETTO AICALL** | `manage_form`: tendina **ESITO obbligatoria** (9 esiti OK/KO) + campo **NOTE** libero      |
+
+**PROGETTO AICALL** (lead generati dal partner _AiCall_): i pin sono visibili a **tutti** gli agenti (grant su `user_client_access` per ogni utente). Lo Sheet "Gestisci" mostra un `select` obbligatorio `esito` con i valori:
+`OK - In trattativa`, `KO - Non interessato`, `OK - Inviata ad Amex`, `KO - Lead non valido`, `KO - Irreperibile`, `KO - Già Cliente`, `OK - Richiamare`, `KO - Blocco DAP`, `OK - Appuntamento preso`; più un `textarea` `note`. Al salvataggio i valori finiscono in `store_visit_outcomes.outcome_data` (lo status del pin non viene cambiato). Vedi [`seed/20260616_aicall_project.sql`](./seed/20260616_aicall_project.sql).
+
+> ℹ️ I **nuovi** utenti (signup successivo al seed) sono `restricted` senza grant: per far vedere loro PROGETTO AICALL va ri-eseguito lo step 3 del seed o concesso il grant in onboarding.
 
 ---
 
