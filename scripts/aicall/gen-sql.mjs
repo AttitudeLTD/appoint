@@ -16,13 +16,23 @@ const CLIENT_ID = 5;
 
 const q = (v) => (v == null || v === '' ? 'null' : `'${String(v).replace(/'/g, "''")}'`);
 
+// Formato coordinate IDENTICO alle righe storiche: "[lat, lng]" con parentesi
+// quadre, spazio dopo la virgola, parte intera a 2 cifre (zero-pad) e 8 decimali.
+// Il trigger `convert_coordinates_to_location` toglie le parentesi e fa lo split
+// con part1=lat, part2=lng → ST_Point(lng, lat). Va quindi usato QUESTO formato,
+// non "lng,lat".
+const fmt = (n) => {
+  const [i, d] = Number(n).toFixed(8).split('.');
+  return `${i.padStart(2, '0')}.${d}`;
+};
+
 const rows = JSON.parse(readFileSync(IN, 'utf8'));
 
 const valueRows = [];
 let withCoords = 0;
 let noCoords = 0;
 for (const r of rows) {
-  const coords = r.lat != null && r.lng != null ? `${r.lng},${r.lat}` : null;
+  const coords = r.lat != null && r.lng != null ? `[${fmt(r.lat)}, ${fmt(r.lng)}]` : null;
   if (coords) withCoords++; else noCoords++;
   valueRows.push(
     `  (${q(r.societa)}, ${q(r.referente)}, ${q(r.piva)}, ${q(r.address)}, ${q(coords)}, ${q(r.phone)}, ${q(r.email)}, ${q(r.comune)}, ${q(r.prov)}, ${q(r.regione)}, 'altro', 'free', ${CLIENT_ID}::smallint)`
@@ -41,6 +51,8 @@ const header = `-- =============================================================
 --   - Normalizzazione "secondo la tabella stores":
 --       name=Società · owner_name=Referente · pi=P.IVA · address=Indirizzo grezzo
 --       (mantiene l'info appuntamento APT/ORE) · comune/provincia/regione parse · category='altro'.
+--   - coordinates nel formato storico "[lat, lng]" (parentesi quadre + spazio): il
+--     trigger convert_coordinates_to_location calcola da lì il punto PostGIS location.
 --   - Backfill store_clients (is_primary = true) per ogni store del cliente.
 --
 -- Idempotenza:
