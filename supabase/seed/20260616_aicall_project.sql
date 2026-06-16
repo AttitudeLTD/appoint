@@ -42,6 +42,7 @@ select
   c.id,
   'PROGETTO AICALL',
   '{
+  "manage_form": {
     "version": 1,
     "primary_actions": [
       { "id": "go",   "type": "directions", "label": "Indicazioni", "icon": "navigation" },
@@ -80,6 +81,7 @@ select
       }
     ],
     "submit": { "label": "Salva esito", "save_to_outcomes": true }
+  }
   }'::jsonb,
   true
 from public.clients c
