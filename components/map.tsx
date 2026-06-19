@@ -321,15 +321,16 @@ const createClusterIcon = (cluster: any) => {
 };
 
 // Parametri di caricamento pin.
-// Vista libera: raggio moderato attorno al centro mappa (caricamento leggero,
-// index-assisted grazie all'indice GIST su stores.location).
+// Vista libera (nessun filtro cliente): raggio moderato attorno al centro mappa
+// (caricamento leggero, index-assisted grazie all'indice GIST su stores.location).
 const DEFAULT_RADIUS_M = 2000; // ~2 km
 const DEFAULT_LIMIT = 250;
-// Quando è attivo un filtro cliente "piccolo" carichiamo TUTTI i suoi pin in un
-// colpo solo (così il fit-bounds mostra l'intera distribuzione, non solo i pin
-// entro 2 km dal centro). Sopra questa soglia si resta sul caricamento per raggio.
-const CLIENT_LOAD_ALL_MAX = 1500;
-const WORLD_RADIUS_M = 20000000; // raggio "mondo": include tutti i pin del cliente
+// Con uno o più filtri cliente attivi carichiamo in base al VIEWPORT corrente
+// (raggio derivato dai bounds della mappa) con un cap più alto: così, dopo il
+// dezoom automatico sull'estensione dei clienti selezionati, si vede l'intera
+// distribuzione e non solo i pin entro 2 km dal centro.
+const CLIENT_LIMIT = 2000;
+const CLIENT_MAX_RADIUS_M = 2500000; // cap di sicurezza (~Italia intera)
 
 const Map = ({ user }: any) => {
   const supabase = createClient();
@@ -356,8 +357,21 @@ const Map = ({ user }: any) => {
   const [showGeoMessage, setShowGeoMessage] = useState(false);
   const [governanceLevel, setGovernanceLevel] = useState<GovernanceLevel>('am'); // populated from users.role
   const [clients, setClients] = useState<{ id: number; name: string; logo?: string | null }[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
+  // Multi-select: insieme degli id cliente selezionati. Vuoto = "Tutti".
+  const [selectedClientIds, setSelectedClientIds] = useState<Set<number>>(new Set());
   const [selectedTiers, setSelectedTiers] = useState<Set<string>>(new Set());
+
+  // Id del cliente "Scalapay" (rilevato per nome): i tier sono un suo concetto,
+  // quindi il filtro Tier compare solo quando Scalapay è tra i clienti visibili.
+  const scalapayId = useMemo(
+    () => clients.find((c) => /scalapay/i.test(c.name))?.id ?? null,
+    [clients]
+  );
+  // Il filtro Tier ha senso quando: nessun filtro cliente attivo (si vede tutto,
+  // Scalapay incluso) OPPURE Scalapay è esplicitamente selezionato.
+  const showTierFilter =
+    selectedClientIds.size === 0 ||
+    (scalapayId != null && selectedClientIds.has(scalapayId));
   const [showFilters, setShowFilters] = useState(false);
   const [showTierColors, setShowTierColors] = useState(true);
   const filtersPanelRef = useRef<HTMLDivElement>(null);
@@ -377,14 +391,10 @@ const Map = ({ user }: any) => {
   }, [showFilters]);
 
   // Ref per il filtro client: si legge dentro fetchStoresAndLogs senza metterlo nelle deps
-  const selectedClientIdRef = useRef<number | null>(null);
-  selectedClientIdRef.current = selectedClientId; // aggiornato ad ogni render, prima degli effetti
-
-  // True quando il cliente selezionato è "piccolo" (<= CLIENT_LOAD_ALL_MAX):
-  // in quel caso fetchStoresAndLogs carica TUTTI i suoi pin (raggio "mondo")
-  // così il fit-bounds copre l'intera distribuzione. Aggiornato dall'effetto
-  // sul cambio di selectedClientId, letto dentro fetchStoresAndLogs via ref.
-  const clientLoadAllRef = useRef<boolean>(false);
+  // Filtro cliente (multi) letto dentro fetchStoresAndLogs senza metterlo nelle
+  // deps → la callback non si ricrea ad ogni cambio filtro.
+  const selectedClientIdsRef = useRef<number[]>([]);
+  selectedClientIdsRef.current = Array.from(selectedClientIds);
 
   // Ultimo centro usato per la fetch dei pin (aggiornato dentro fetchStoresAndLogs)
   const lastFetchCenter = useRef<[number, number] | null>(null);
@@ -636,8 +646,18 @@ const Map = ({ user }: any) => {
     }
   };
 
+  // Raggio (in metri) che copre il viewport corrente: mezza diagonale, ovvero
+  // distanza dal centro all'angolo nord-est dei bounds. Usato in modalità filtro
+  // cliente per caricare tutta l'area visibile dopo il dezoom automatico.
+  const viewportRadiusMeters = useCallback((): number | null => {
+    const map = mapRef.current;
+    if (!map) return null;
+    const b = map.getBounds();
+    return b.getCenter().distanceTo(b.getNorthEast());
+  }, []);
+
   const fetchStoresAndLogs = useCallback(
-    async (lat: number, lng: number) => {
+    async (lat: number, lng: number, radiusOverride?: number) => {
       // Dedup anti doppio-fetch: se siamo stati chiamati pochissimo tempo fa
       // con coordinate praticamente identiche, è un duplicato (tipico caso:
       // handleSelectLocation triggera un fetch esplicito + Leaflet emette poi
@@ -658,22 +678,39 @@ const Map = ({ user }: any) => {
 
       setIsLoadingStores(true);
       try {
-        // Legge il filtro client + la modalità "carica tutti" dai ref (non nelle
-        // deps → questa funzione non si ricrea al cambio filtro).
-        const clientFilter = selectedClientIdRef.current;
-        const loadAll = clientFilter != null && clientLoadAllRef.current;
-        const rpcParams: { lat: number; lng: number; radius: number; p_client_id?: number; p_limit?: number } = {
-          lat,
-          lng,
-          // In modalità "carica tutti" usiamo un raggio enorme + cap alto: per un
-          // cliente piccolo (es. AiCall, 367) li prende tutti in un solo round-trip;
-          // altrimenti raggio moderato attorno al centro mappa.
-          radius: loadAll ? WORLD_RADIUS_M : DEFAULT_RADIUS_M,
-          p_limit: loadAll ? CLIENT_LOAD_ALL_MAX : DEFAULT_LIMIT,
-        };
-        if (clientFilter != null) {
-          rpcParams.p_client_id = clientFilter;
-        }
+        // Legge il filtro client (multi) dal ref (non nelle deps → la callback
+        // non si ricrea al cambio filtro).
+        const clientIds = selectedClientIdsRef.current;
+        const hasClientFilter = clientIds.length > 0;
+
+        const rpcParams: {
+          lat: number;
+          lng: number;
+          radius: number;
+          p_limit: number;
+          p_client_ids?: number[];
+        } = hasClientFilter
+          ? {
+              // Con filtro cliente: raggio = `radiusOverride` (passato al cambio
+              // selezione, = estensione dei clienti) oppure mezza diagonale del
+              // viewport corrente (durante pan/zoom). Capped per sicurezza. Così
+              // dopo il dezoom automatico si caricano i pin di tutta l'area.
+              lat,
+              lng,
+              radius: Math.min(
+                radiusOverride ?? viewportRadiusMeters() ?? DEFAULT_RADIUS_M,
+                CLIENT_MAX_RADIUS_M
+              ),
+              p_limit: CLIENT_LIMIT,
+              p_client_ids: clientIds,
+            }
+          : {
+              // Vista libera: raggio moderato attorno al centro.
+              lat,
+              lng,
+              radius: DEFAULT_RADIUS_M,
+              p_limit: DEFAULT_LIMIT,
+            };
 
         const { data: storesData, error: rpcError } = await supabase.rpc(
           'get_stores_within_radius',
@@ -707,13 +744,18 @@ const Map = ({ user }: any) => {
         // per i nomi dei modificatori. Sostituisce le 2·N query precedenti (un
         // round-trip log + un round-trip utente per ogni singolo pin): così il
         // costo è costante anche alzando il numero di pin caricati.
-        const storeIds = storesList.map((s) => s.id);
+        // Solo gli store NON 'free' possono avere un modificatore da mostrare:
+        // limitiamo la query batch a quegli id (tiene corta la querystring anche
+        // con il cap alto del filtro cliente, ed evita lavoro inutile).
+        const nonFreeIds = storesList
+          .filter((s) => s.status !== 'free')
+          .map((s) => s.id);
         const logsByStore: Record<number, { modifier: string; created_at: string }[]> = {};
-        if (storeIds.length > 0) {
+        if (nonFreeIds.length > 0) {
           const { data: allLogs } = await supabase
             .from('store_status_logs')
             .select('store_id, modifier, created_at')
-            .in('store_id', storeIds)
+            .in('store_id', nonFreeIds)
             .order('created_at', { ascending: false });
           for (const log of allLogs ?? []) {
             (logsByStore[log.store_id] ||= []).push(log);
@@ -787,7 +829,7 @@ const Map = ({ user }: any) => {
         setIsLoadingStores(false);
       }
     },
-    [supabase, user.id] // selectedClientId RIMOSSO: si legge dal ref → questa callback non si ricrea al cambio filtro
+    [supabase, user.id, viewportRadiusMeters] // selectedClientIds RIMOSSO: si legge dal ref → la callback non si ricrea al cambio filtro
   );
 
   useEffect(() => {
@@ -891,13 +933,16 @@ const Map = ({ user }: any) => {
     })();
   }, [governanceLevel, stores, user.id, supabase]);
 
-  // Al cambio del filtro cliente:
-  //  - cliente "piccolo" (<= CLIENT_LOAD_ALL_MAX pin): facciamo fit-bounds
-  //    sull'intera distribuzione dei suoi pin e li carichiamo TUTTI in un colpo
-  //    (raggio "mondo"), così non resta nascosto nulla fuori dai 2 km dal centro;
-  //  - cliente "grande" o filtro rimosso: ricarica in place attorno al centro
-  //    corrente con il raggio moderato di default (comportamento storico).
+  // Al cambio del filtro cliente (multi-select):
+  //  - con uno o più clienti selezionati: dezoom automatico (fit-bounds)
+  //    sull'estensione COMPLESSIVA dei clienti scelti + fetch esplicito su
+  //    quell'estensione (raggio = baricentro→angolo), così si vede subito la
+  //    distribuzione su tutta l'area, per QUALSIASI cliente (Scalapay, Amex…);
+  //  - filtro rimosso ("Tutti"): ricarica in place al centro corrente (vista
+  //    libera, raggio moderato), senza spostare la mappa.
   // La query dei bounds è una sola, index-assisted (GIST su location).
+  // NB: non ci affidiamo al `moveend` post-flyToBounds (non garantito su mappe
+  // mosse via codice → vedi handleAddressSelect), quindi il fetch è esplicito.
   useEffect(() => {
     let cancelled = false;
 
@@ -909,58 +954,70 @@ const Map = ({ user }: any) => {
     };
 
     const run = async () => {
-      const clientId = selectedClientId;
-      if (clientId == null) {
-        clientLoadAllRef.current = false;
+      const ids = Array.from(selectedClientIds);
+      if (ids.length === 0) {
         refetchInPlace();
         return;
       }
 
-      const { data, error } = await supabase.rpc('get_client_stores_bounds', {
-        p_client_id: clientId,
+      const { data, error } = await supabase.rpc('get_clients_stores_bounds', {
+        p_client_ids: ids,
       });
       if (cancelled) return;
       if (error) {
-        console.error('get_client_stores_bounds error:', error);
-        clientLoadAllRef.current = false;
+        console.error('get_clients_stores_bounds error:', error);
         refetchInPlace();
         return;
       }
 
       const b = Array.isArray(data) ? data[0] : data;
-      const n = Number(b?.n ?? 0);
-      const hasBounds = b != null && b.min_lat != null && b.max_lat != null;
-      clientLoadAllRef.current = n > 0 && n <= CLIENT_LOAD_ALL_MAX;
+      const hasBounds =
+        b != null && b.min_lat != null && b.max_lat != null && Number(b.n) > 0;
 
-      if (clientLoadAllRef.current && hasBounds) {
-        const map = mapRef.current;
-        const centerLat = (b.min_lat + b.max_lat) / 2;
-        const centerLng = (b.min_lng + b.max_lng) / 2;
-        if (map) {
-          map.closePopup();
-          map.flyToBounds(
-            [
-              [b.min_lat, b.min_lng],
-              [b.max_lat, b.max_lng],
-            ],
-            { padding: [60, 60], duration: 0.8, maxZoom: 16 }
-          );
-        }
-        // Carica tutti i pin del cliente (centro = baricentro: in modalità
-        // "carica tutti" il raggio è enorme, quindi il centro è ininfluente).
-        lastFetchCenter.current = null;
-        fetchStoresAndLogs(centerLat, centerLng);
-      } else {
-        // Cliente grande: filtra restando dove siamo.
+      if (!hasBounds) {
+        // Nessun pin visibile per i clienti selezionati: filtra restando dove
+        // siamo (la mappa mostrerà vuoto, coerente col filtro).
         refetchInPlace();
+        return;
       }
+
+      const centerLat = (b.min_lat + b.max_lat) / 2;
+      const centerLng = (b.min_lng + b.max_lng) / 2;
+      // Raggio che copre l'estensione: baricentro → angolo nord-est.
+      const extentRadius = L.latLng(centerLat, centerLng).distanceTo(
+        L.latLng(b.max_lat, b.max_lng)
+      );
+
+      const map = mapRef.current;
+      if (map) {
+        map.closePopup();
+        map.flyToBounds(
+          [
+            [b.min_lat, b.min_lng],
+            [b.max_lat, b.max_lng],
+          ],
+          { padding: [60, 60], duration: 0.8, maxZoom: 16 }
+        );
+      }
+      // Fetch esplicito sull'estensione (non dipende dall'animazione/moveend).
+      lastFetchCenter.current = null;
+      fetchStoresAndLogs(centerLat, centerLng, extentRadius);
     };
 
     run();
     return () => {
       cancelled = true;
     };
-  }, [selectedClientId, fetchStoresAndLogs, supabase]);
+  }, [selectedClientIds, fetchStoresAndLogs, supabase]);
+
+  // Se il filtro Tier non è più applicabile (Scalapay non selezionato), azzera
+  // la selezione tier: altrimenti resterebbe attiva nascondendo i pin degli
+  // altri clienti (che non hanno tier).
+  useEffect(() => {
+    if (!showTierFilter && selectedTiers.size > 0) {
+      setSelectedTiers(new Set());
+    }
+  }, [showTierFilter, selectedTiers]);
 
   // Listener per il refresh quando viene creato un nuovo store
   useEffect(() => {
@@ -1255,17 +1312,17 @@ const Map = ({ user }: any) => {
                 variant='outline'
                 className='rounded-full text-xs flex items-center gap-1.5 shadow-md'
                 style={{
-                  backgroundColor: (selectedClientId != null || selectedTiers.size > 0) ? '#224677' : 'white',
+                  backgroundColor: (selectedClientIds.size > 0 || selectedTiers.size > 0) ? '#224677' : 'white',
                   borderColor: '#224677',
-                  color: (selectedClientId != null || selectedTiers.size > 0) ? 'white' : '#224677',
+                  color: (selectedClientIds.size > 0 || selectedTiers.size > 0) ? 'white' : '#224677',
                 }}
                 onClick={() => setShowFilters((v) => !v)}
               >
                 <Filter className='h-3 w-3' />
                 Filtri
-                {(selectedClientId != null || selectedTiers.size > 0) && (
+                {(selectedClientIds.size > 0 || selectedTiers.size > 0) && (
                   <span className='bg-white text-[#224677] rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold'>
-                    {(selectedClientId != null ? 1 : 0) + selectedTiers.size}
+                    {selectedClientIds.size + selectedTiers.size}
                   </span>
                 )}
               </Button>
@@ -1282,32 +1339,40 @@ const Map = ({ user }: any) => {
                     </button>
                   </div>
 
-                  {/* Cliente */}
+                  {/* Cliente (multi-select: uno, più o tutti) */}
                   <p className='text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2'>Cliente</p>
                   <div className='flex flex-wrap gap-1.5 mb-4'>
                     <button
                       className='rounded-full text-xs px-3 py-1 border transition-colors'
                       style={{
-                        backgroundColor: selectedClientId == null ? '#224677' : 'white',
+                        backgroundColor: selectedClientIds.size === 0 ? '#224677' : 'white',
                         borderColor: '#224677',
-                        color: selectedClientId == null ? 'white' : '#224677',
+                        color: selectedClientIds.size === 0 ? 'white' : '#224677',
                       }}
-                      onClick={() => setSelectedClientId(null)}
+                      onClick={() => setSelectedClientIds(new Set())}
                     >
                       Tutti
                     </button>
                     {clients.map((c) => {
                       const logoUrl = getClientLogoUrl(c.logo);
+                      const isActive = selectedClientIds.has(c.id);
                       return (
                         <button
                           key={c.id}
                           className='rounded-full text-xs px-3 py-1 border flex items-center gap-1.5 transition-colors'
                           style={{
-                            backgroundColor: selectedClientId === c.id ? '#224677' : 'white',
+                            backgroundColor: isActive ? '#224677' : 'white',
                             borderColor: '#224677',
-                            color: selectedClientId === c.id ? 'white' : '#224677',
+                            color: isActive ? 'white' : '#224677',
                           }}
-                          onClick={() => setSelectedClientId(c.id)}
+                          onClick={() =>
+                            setSelectedClientIds((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(c.id)) next.delete(c.id);
+                              else next.add(c.id);
+                              return next;
+                            })
+                          }
                         >
                           {logoUrl && (
                             <span className='w-4 h-4 rounded-full overflow-hidden flex-shrink-0 bg-gray-200'>
@@ -1320,8 +1385,10 @@ const Map = ({ user }: any) => {
                     })}
                   </div>
 
-                  {/* Tier */}
-                  <p className='text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2'>Tier</p>
+                  {/* Tier — solo per Scalapay (gli altri clienti non hanno tier) */}
+                  {showTierFilter && (
+                  <>
+                  <p className='text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2'>Tier Scalapay</p>
                   <div className='flex flex-wrap gap-1.5'>
                     {(
                       [
@@ -1384,12 +1451,14 @@ const Map = ({ user }: any) => {
                       />
                     </button>
                   </div>
+                  </>
+                  )}
 
                   {/* Reset */}
-                  {(selectedClientId != null || selectedTiers.size > 0) && (
+                  {(selectedClientIds.size > 0 || selectedTiers.size > 0) && (
                     <button
                       className='mt-3 w-full text-xs text-gray-400 hover:text-gray-600 underline'
-                      onClick={() => { setSelectedClientId(null); setSelectedTiers(new Set()); }}
+                      onClick={() => { setSelectedClientIds(new Set()); setSelectedTiers(new Set()); }}
                     >
                       Rimuovi tutti i filtri
                     </button>
@@ -1433,7 +1502,20 @@ const Map = ({ user }: any) => {
                 onVisibilityChange={setIsAwayFromUser}
               />
             )}
-            <TileLayer url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png' />
+            {/* Tile delle strade. Ottimizzazioni di caricamento:
+                - subdomains a–d → fino a 4 host paralleli (più download in parallelo);
+                - updateWhenIdle={false} → carica i tile DURANTE il pan, non solo a fine gesto;
+                - updateWhenZooming={false} → niente fetch intermedi mentre si zooma (meno richieste sprecate);
+                - keepBuffer={4} → tiene in cache una corona di tile attorno al viewport
+                  (pan brevi non riscaricano nulla → mappa "istantanea"). */}
+            <TileLayer
+              url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+              subdomains={['a', 'b', 'c', 'd']}
+              updateWhenIdle={false}
+              updateWhenZooming={false}
+              keepBuffer={4}
+              maxZoom={20}
+            />
             <ZoomControl position='bottomright' />
 
             {/* Marker for the user's current location */}
