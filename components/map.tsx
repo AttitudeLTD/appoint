@@ -320,6 +320,17 @@ const createClusterIcon = (cluster: any) => {
   });
 };
 
+// Parametri di caricamento pin.
+// Vista libera: raggio moderato attorno al centro mappa (caricamento leggero,
+// index-assisted grazie all'indice GIST su stores.location).
+const DEFAULT_RADIUS_M = 2000; // ~2 km
+const DEFAULT_LIMIT = 250;
+// Quando è attivo un filtro cliente "piccolo" carichiamo TUTTI i suoi pin in un
+// colpo solo (così il fit-bounds mostra l'intera distribuzione, non solo i pin
+// entro 2 km dal centro). Sopra questa soglia si resta sul caricamento per raggio.
+const CLIENT_LOAD_ALL_MAX = 1500;
+const WORLD_RADIUS_M = 20000000; // raggio "mondo": include tutti i pin del cliente
+
 const Map = ({ user }: any) => {
   const supabase = createClient();
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -368,6 +379,12 @@ const Map = ({ user }: any) => {
   // Ref per il filtro client: si legge dentro fetchStoresAndLogs senza metterlo nelle deps
   const selectedClientIdRef = useRef<number | null>(null);
   selectedClientIdRef.current = selectedClientId; // aggiornato ad ogni render, prima degli effetti
+
+  // True quando il cliente selezionato è "piccolo" (<= CLIENT_LOAD_ALL_MAX):
+  // in quel caso fetchStoresAndLogs carica TUTTI i suoi pin (raggio "mondo")
+  // così il fit-bounds copre l'intera distribuzione. Aggiornato dall'effetto
+  // sul cambio di selectedClientId, letto dentro fetchStoresAndLogs via ref.
+  const clientLoadAllRef = useRef<boolean>(false);
 
   // Ultimo centro usato per la fetch dei pin (aggiornato dentro fetchStoresAndLogs)
   const lastFetchCenter = useRef<[number, number] | null>(null);
@@ -501,27 +518,6 @@ const Map = ({ user }: any) => {
     setLoadingConfirm(false);
     setDialogOpen(false);
     setSelectedNote(''); // Reset the selected note
-  };
-
-  const fetchStoreStatus = async (storeId: number) => {
-    setLoadingStatus((prev) => ({ ...prev, [storeId]: true }));
-    try {
-      const { data, error } = await supabase
-        .from('stores')
-        .select('status')
-        .eq('id', storeId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching store status:', error);
-      } else {
-        setStoreStatuses((prev) => ({ ...prev, [storeId]: data?.status }));
-      }
-    } catch (error) {
-      console.error('Unexpected error while fetching status:', error);
-    } finally {
-      setLoadingStatus((prev) => ({ ...prev, [storeId]: false }));
-    }
   };
 
   const updateStoreStatus = async (
@@ -662,15 +658,21 @@ const Map = ({ user }: any) => {
 
       setIsLoadingStores(true);
       try {
-        // Legge il filtro client dal ref (non nelle deps → questa funzione non si ricrea al cambio filtro)
+        // Legge il filtro client + la modalità "carica tutti" dai ref (non nelle
+        // deps → questa funzione non si ricrea al cambio filtro).
+        const clientFilter = selectedClientIdRef.current;
+        const loadAll = clientFilter != null && clientLoadAllRef.current;
         const rpcParams: { lat: number; lng: number; radius: number; p_client_id?: number; p_limit?: number } = {
           lat,
           lng,
-          radius: 800,
-          p_limit: 80,
+          // In modalità "carica tutti" usiamo un raggio enorme + cap alto: per un
+          // cliente piccolo (es. AiCall, 367) li prende tutti in un solo round-trip;
+          // altrimenti raggio moderato attorno al centro mappa.
+          radius: loadAll ? WORLD_RADIUS_M : DEFAULT_RADIUS_M,
+          p_limit: loadAll ? CLIENT_LOAD_ALL_MAX : DEFAULT_LIMIT,
         };
-        if (selectedClientIdRef.current != null) {
-          rpcParams.p_client_id = selectedClientIdRef.current;
+        if (clientFilter != null) {
+          rpcParams.p_client_id = clientFilter;
         }
 
         const { data: storesData, error: rpcError } = await supabase.rpc(
@@ -685,35 +687,74 @@ const Map = ({ user }: any) => {
 
         // La visibilità è ora gestita interamente lato DB (RLS + RPC),
         // quindi `storesData` contiene già solo gli store visibili all'utente.
-        const storesWithLogs = await Promise.all(
-          (storesData ?? []).map(async (store: any) => {
-            const { data: logs } = await supabase
-              .from('store_status_logs')
-              .select('modifier, created_at')
-              .eq('store_id', store.id)
-              .order('created_at', { ascending: false });
+        const storesList = (storesData ?? []) as any[];
 
-            const modifiedByOtherUser =
-              store.status !== 'free' &&
-              logs?.some((log) => log.modifier !== user.id);
-
-            // If modified by another user, get their information
-            let modifierName = '';
-            let modifierId: string | undefined;
-            if (modifiedByOtherUser && logs && logs.length > 0) {
-              const otherUserLog = logs.find((log) => log.modifier !== user.id);
-              if (otherUserLog) {
-                modifierId = otherUserLog.modifier;
-                const userInfo = await fetchUserInfo(otherUserLog.modifier);
-                if (userInfo) {
-                  modifierName = `${userInfo.name} ${userInfo.surname}`;
-                }
-              }
+        // Seed degli status dalla RPC (è la fonte di verità): evita la vecchia
+        // query per-store `fetchStoreStatus` su ogni pin. StorePopup legge poi
+        // `storeStatuses[id] || store.status`, gli update passano da storeStatuses.
+        if (storesList.length > 0) {
+          setStoreStatuses((prev) => {
+            const next = { ...prev };
+            for (const s of storesList) {
+              if (next[s.id] === undefined) next[s.id] = s.status;
             }
+            return next;
+          });
+        }
 
-            return { ...store, modifiedByOtherUser, modifierName, modifierId };
-          })
-        );
+        // --- Log + modificatori in BATCH (niente più N+1) --------------------
+        // Una sola query per TUTTI i log degli store caricati, poi una sola query
+        // per i nomi dei modificatori. Sostituisce le 2·N query precedenti (un
+        // round-trip log + un round-trip utente per ogni singolo pin): così il
+        // costo è costante anche alzando il numero di pin caricati.
+        const storeIds = storesList.map((s) => s.id);
+        const logsByStore: Record<number, { modifier: string; created_at: string }[]> = {};
+        if (storeIds.length > 0) {
+          const { data: allLogs } = await supabase
+            .from('store_status_logs')
+            .select('store_id, modifier, created_at')
+            .in('store_id', storeIds)
+            .order('created_at', { ascending: false });
+          for (const log of allLogs ?? []) {
+            (logsByStore[log.store_id] ||= []).push(log);
+          }
+        }
+
+        // Per ogni store modificato da altri, individua l'id del modificatore.
+        const modifierIdByStore: Record<number, string> = {};
+        const modifierIds = new Set<string>();
+        for (const store of storesList) {
+          if (store.status === 'free') continue;
+          const otherLog = (logsByStore[store.id] ?? []).find(
+            (l) => l.modifier !== user.id
+          );
+          if (otherLog) {
+            modifierIdByStore[store.id] = otherLog.modifier;
+            modifierIds.add(otherLog.modifier);
+          }
+        }
+
+        // Una sola query per i nomi dei modificatori.
+        const modifierNameById: Record<string, string> = {};
+        if (modifierIds.size > 0) {
+          const { data: usersData } = await supabase
+            .from('users')
+            .select('id, name, surname')
+            .in('id', Array.from(modifierIds));
+          for (const u of usersData ?? []) {
+            modifierNameById[u.id] = `${u.name} ${u.surname}`;
+          }
+        }
+
+        const storesWithLogs = storesList.map((store) => {
+          const modifierId = modifierIdByStore[store.id];
+          return {
+            ...store,
+            modifiedByOtherUser: modifierId != null,
+            modifierName: modifierId ? modifierNameById[modifierId] ?? '' : '',
+            modifierId,
+          };
+        });
 
         // Merge "stabile": se uno store esisteva già e i campi visualizzati
         // non sono cambiati, manteniamo la STESSA reference dell'oggetto.
@@ -850,12 +891,76 @@ const Map = ({ user }: any) => {
     })();
   }, [governanceLevel, stores, user.id, supabase]);
 
-  // Al cambio filtro richiama la fetch con l'ultimo centro usato (non con coord che è la posizione persona)
+  // Al cambio del filtro cliente:
+  //  - cliente "piccolo" (<= CLIENT_LOAD_ALL_MAX pin): facciamo fit-bounds
+  //    sull'intera distribuzione dei suoi pin e li carichiamo TUTTI in un colpo
+  //    (raggio "mondo"), così non resta nascosto nulla fuori dai 2 km dal centro;
+  //  - cliente "grande" o filtro rimosso: ricarica in place attorno al centro
+  //    corrente con il raggio moderato di default (comportamento storico).
+  // La query dei bounds è una sola, index-assisted (GIST su location).
   useEffect(() => {
-    if (lastFetchCenter.current) {
-      fetchStoresAndLogs(lastFetchCenter.current[0], lastFetchCenter.current[1]);
-    }
-  }, [selectedClientId, fetchStoresAndLogs]);
+    let cancelled = false;
+
+    const refetchInPlace = () => {
+      const c = lastFetchCenter.current;
+      if (!c) return;
+      lastFetchCenter.current = null; // forza il refetch (bypassa il dedup)
+      fetchStoresAndLogs(c[0], c[1]);
+    };
+
+    const run = async () => {
+      const clientId = selectedClientId;
+      if (clientId == null) {
+        clientLoadAllRef.current = false;
+        refetchInPlace();
+        return;
+      }
+
+      const { data, error } = await supabase.rpc('get_client_stores_bounds', {
+        p_client_id: clientId,
+      });
+      if (cancelled) return;
+      if (error) {
+        console.error('get_client_stores_bounds error:', error);
+        clientLoadAllRef.current = false;
+        refetchInPlace();
+        return;
+      }
+
+      const b = Array.isArray(data) ? data[0] : data;
+      const n = Number(b?.n ?? 0);
+      const hasBounds = b != null && b.min_lat != null && b.max_lat != null;
+      clientLoadAllRef.current = n > 0 && n <= CLIENT_LOAD_ALL_MAX;
+
+      if (clientLoadAllRef.current && hasBounds) {
+        const map = mapRef.current;
+        const centerLat = (b.min_lat + b.max_lat) / 2;
+        const centerLng = (b.min_lng + b.max_lng) / 2;
+        if (map) {
+          map.closePopup();
+          map.flyToBounds(
+            [
+              [b.min_lat, b.min_lng],
+              [b.max_lat, b.max_lng],
+            ],
+            { padding: [60, 60], duration: 0.8, maxZoom: 16 }
+          );
+        }
+        // Carica tutti i pin del cliente (centro = baricentro: in modalità
+        // "carica tutti" il raggio è enorme, quindi il centro è ininfluente).
+        lastFetchCenter.current = null;
+        fetchStoresAndLogs(centerLat, centerLng);
+      } else {
+        // Cliente grande: filtra restando dove siamo.
+        refetchInPlace();
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedClientId, fetchStoresAndLogs, supabase]);
 
   // Listener per il refresh quando viene creato un nuovo store
   useEffect(() => {
@@ -878,15 +983,6 @@ const Map = ({ user }: any) => {
       );
     };
   }, [coord, fetchStoresAndLogs]);
-
-  useEffect(() => {
-    // Fetch status for all stores once they are loaded
-    stores.forEach((store) => {
-      if (!storeStatuses[store.id]) {
-        fetchStoreStatus(store.id);
-      }
-    });
-  }, [stores, storeStatuses]);
 
   const handleSendEmail = useCallback((store: Store) => {
     setLoadingEmail(true); // Start loading for email
