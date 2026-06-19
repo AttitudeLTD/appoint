@@ -3,7 +3,9 @@
 > **Fonte di verità** dello schema del database Supabase del progetto.
 > Aggiornare questo file **ad ogni cambio di schema** (insieme alla migration corrispondente in [`./migrations/`](./migrations/)).
 >
-> _Ultimo aggiornamento: 2026-06-16 — nuovo cliente **PROGETTO AICALL** (lead generati dal partner AiCall) con workflow `manage_form` (tendina ESITO obbligatoria + campo NOTE) e import di 367 lead come `stores`. Seed: [`seed/20260616_aicall_project.sql`](./seed/20260616_aicall_project.sql) + [`seed/20260616_aicall_leads.sql`](./seed/20260616_aicall_leads.sql). Nessuna modifica di schema._
+> _Ultimo aggiornamento: 2026-06-19 — performance mappa: indice spaziale **GIST su `stores.location`** + indice `store_status_logs (store_id, created_at desc)` + nuova funzione **`get_client_stores_bounds(p_client_id)`** (conteggio + bounding box dei pin visibili per cliente, usata dal fit-bounds della mappa). Migration: [`migrations/20260619120000_map_perf_indexes_and_client_bounds.sql`](./migrations/20260619120000_map_perf_indexes_and_client_bounds.sql)._
+>
+> _2026-06-16 — nuovo cliente **PROGETTO AICALL** (lead generati dal partner AiCall) con workflow `manage_form` (tendina ESITO obbligatoria + campo NOTE) e import di 367 lead come `stores`. Seed: [`seed/20260616_aicall_project.sql`](./seed/20260616_aicall_project.sql) + [`seed/20260616_aicall_leads.sql`](./seed/20260616_aicall_leads.sql). Nessuna modifica di schema._
 >
 > _2026-05-14 — modello di visibilità per utente ([`20260514123300_user_visibility_scope`](./migrations/20260514123300_user_visibility_scope.sql)) + conversione di tutti gli utenti esistenti a `'restricted'` con snapshot dei grants ([`20260514135200_restrict_existing_users`](./migrations/20260514135200_restrict_existing_users.sql)) + relazione N:N stores↔clients e tracking del creatore degli store ([`20260514151900_store_multi_client_and_created_by`](./migrations/20260514151900_store_multi_client_and_created_by.sql))._
 
@@ -339,7 +341,7 @@ Tabella **principale** dei negozi/POS sul territorio. Geocodificati tramite Post
 | `client_id`           | `smallint`            | NO   | `1`      | **FK** → `clients.id` (ON DELETE RESTRICT). **Cliente "primario"**: regge UI legacy (filtro mappa, workflow popup, `store_visit_outcomes`). Per la lista completa dei clienti associati allo store vedi [`store_clients`](#store_clients). |
 | `created_by`          | `uuid`                | YES  | —        | **FK** → `public.users.id` (ON DELETE SET NULL). Utente applicativo che ha caricato il punto vendita via app. **NULL per le righe importate in bulk dal DB.** |
 
-**Indici notabili:** `idx_stores_client_id` su `(client_id)`, `idx_stores_created_by` su `(created_by) WHERE created_by IS NOT NULL`. ⚠️ Considerare in futuro un **GIST index su `location`** per le query spaziali.
+**Indici notabili:** `idx_stores_client_id` su `(client_id)`, `idx_stores_created_by` su `(created_by) WHERE created_by IS NOT NULL`, `idx_stores_location_gist` **GIST su `location`** (abilita Index Scan / KNN per `get_stores_within_radius`).
 
 **RLS:**
 - `SELECT` vincolato a `public.user_can_see_store(auth.uid(), id)` — vedi [Modello di visibilità per utente](#modello-di-visibilit%C3%A0-per-utente). Gli utenti `anon` non vedono nulla.
@@ -387,6 +389,8 @@ Storico delle transizioni di `stores.status`. Inserimento manuale lato app (ness
 | `new`        | `text`        | NO   | Stato nuovo                                           |
 | `modifier`   | `uuid`        | NO   | **FK** → `public.users.id` (autore della transizione) |
 | `notes`      | `text`        | YES  |                                                       |
+
+**Indici notabili:** `idx_store_status_logs_store_created` su `(store_id, created_at desc)` — la mappa carica i log degli store visibili in batch (`.in('store_id', …)`).
 
 **RLS:**
 - `SELECT` aperto.
@@ -554,6 +558,7 @@ where id = '<uuid>';
 | `user_can_see_store(p_user_id uuid, p_store_id bigint)`     | `uuid, bigint`                                              | `boolean` | **SECURITY DEFINER / STABLE**. Predicato di visibilità sul negozio. Considera `user_store_access`, `user_client_access` ↔ `stores.client_id` **e** `user_client_access` ↔ `store_clients.client_id`. Usato dalla RLS di `stores` / `store_clients` e dalla RPC `get_stores_within_radius`. |
 | `user_can_see_client(p_user_id uuid, p_client_id smallint)` | `uuid, smallint`                                            | `boolean` | **SECURITY DEFINER / STABLE**. Predicato di visibilità sul cliente. Considera `user_client_access` **e** la presenza del cliente tra le associazioni (`stores.client_id` o `store_clients`) di uno store visibile via `user_store_access`. Usato dalla RLS di `clients` e `client_workflows`. |
 | `get_stores_within_radius(...)`       | `lat double precision, lng double precision, radius double precision, p_client_id bigint, p_limit integer` | TABLE    | Ritorna negozi entro un raggio (in metri) da un punto, filtrati per cliente (match su `stores.client_id` **o** su `store_clients.client_id`) **e** per scope di visibilità del chiamante (`auth.uid()`). |
+| `get_client_stores_bounds(p_client_id bigint)` | `bigint`                                                              | TABLE (`n, min_lat, min_lng, max_lat, max_lng`) | **SECURITY DEFINER / STABLE**. Ritorna conteggio + bounding box dei pin **visibili al chiamante** per un cliente (match su `stores.client_id` **o** `store_clients.client_id`, filtrato da `user_can_see_store`). Usata dalla mappa per il fit-bounds automatico al cambio del filtro cliente e per decidere se caricarne tutti i pin. |
 | `getstoreswithinradius(...)`          | `lat, lng, radius`                                                              | TABLE    | _Legacy / deprecato_ — versione precedente di `get_stores_within_radius`.                                                                                  |
 | `update_store_photos_updated_at()`    | —                                                                               | trigger  | Mantiene `store_photos.updated_at = now()` su UPDATE.                                                                                                      |
 | `update_generic_photos_updated_at()`  | —                                                                               | trigger  | Mantiene `generic_photos.updated_at = now()` su UPDATE.                                                                                                    |

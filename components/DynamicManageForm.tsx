@@ -52,9 +52,10 @@ interface Props {
     checkInProgressLimit?: boolean
   ) => Promise<boolean>;
   /**
-   * Mappa storeId → status corrente (popolata da fetchStoreStatus in
-   * StorePopup). Serve al field `status_select` per riflettere lo status
-   * "in tempo reale" dopo un cambio, senza dover ricaricare lo store.
+   * Mappa storeId → status corrente (seedata dalla RPC get_stores_within_radius
+   * in map.tsx e aggiornata dagli update di stato). Serve al field
+   * `status_select` per riflettere lo status "in tempo reale" dopo un cambio,
+   * senza dover ricaricare lo store.
    */
   storeStatuses?: Record<number, string>;
 }
