@@ -683,48 +683,49 @@ const Map = ({ user }: any) => {
         const clientIds = selectedClientIdsRef.current;
         const hasClientFilter = clientIds.length > 0;
 
-        const rpcParams: {
-          lat: number;
-          lng: number;
-          radius: number;
-          p_limit: number;
-          p_client_ids?: number[];
-        } = hasClientFilter
-          ? {
-              // Con filtro cliente: raggio = `radiusOverride` (passato al cambio
-              // selezione, = estensione dei clienti) oppure mezza diagonale del
-              // viewport corrente (durante pan/zoom). Capped per sicurezza. Così
-              // dopo il dezoom automatico si caricano i pin di tutta l'area.
-              lat,
-              lng,
-              radius: Math.min(
-                radiusOverride ?? viewportRadiusMeters() ?? DEFAULT_RADIUS_M,
-                CLIENT_MAX_RADIUS_M
-              ),
-              p_limit: CLIENT_LIMIT,
-              p_client_ids: clientIds,
-            }
-          : {
-              // Vista libera: raggio moderato attorno al centro.
-              lat,
-              lng,
-              radius: DEFAULT_RADIUS_M,
-              p_limit: DEFAULT_LIMIT,
-            };
-
-        const { data: storesData, error: rpcError } = await supabase.rpc(
-          'get_stores_within_radius',
-          rpcParams
-        );
-
-        if (rpcError) {
-          console.error('get_stores_within_radius error:', rpcError);
-          return;
+        // NB: usiamo SEMPRE il parametro `p_client_id` (singolo), che PostgREST
+        // conosce da sempre → robusto rispetto alla schema-cache. Per il
+        // multi-select facciamo una chiamata per cliente in parallelo e uniamo.
+        let storesList: any[];
+        if (hasClientFilter) {
+          // Raggio = override (= estensione, passato al cambio selezione) oppure
+          // mezza diagonale del viewport corrente (durante pan/zoom). Capped.
+          const radius = Math.min(
+            radiusOverride ?? viewportRadiusMeters() ?? DEFAULT_RADIUS_M,
+            CLIENT_MAX_RADIUS_M
+          );
+          const perClient = await Promise.all(
+            clientIds.map((cid) =>
+              supabase.rpc('get_stores_within_radius', {
+                lat,
+                lng,
+                radius,
+                p_client_id: cid,
+                p_limit: CLIENT_LIMIT,
+              })
+            )
+          );
+          const firstErr = perClient.find((r) => r.error)?.error;
+          if (firstErr) {
+            console.error('get_stores_within_radius error:', firstErr);
+            return;
+          }
+          // Merge + dedup per id (uno store può appartenere a più clienti).
+          const byId: Record<number, any> = {};
+          for (const r of perClient) for (const s of r.data ?? []) byId[s.id] = s;
+          storesList = Object.values(byId);
+        } else {
+          // Vista libera: raggio moderato attorno al centro.
+          const { data, error: rpcError } = await supabase.rpc(
+            'get_stores_within_radius',
+            { lat, lng, radius: DEFAULT_RADIUS_M, p_limit: DEFAULT_LIMIT }
+          );
+          if (rpcError) {
+            console.error('get_stores_within_radius error:', rpcError);
+            return;
+          }
+          storesList = (data ?? []) as any[];
         }
-
-        // La visibilità è ora gestita interamente lato DB (RLS + RPC),
-        // quindi `storesData` contiene già solo gli store visibili all'utente.
-        const storesList = (storesData ?? []) as any[];
 
         // Seed degli status dalla RPC (è la fonte di verità): evita la vecchia
         // query per-store `fetchStoreStatus` su ogni pin. StorePopup legge poi
@@ -825,6 +826,10 @@ const Map = ({ user }: any) => {
             return s;
           });
         });
+
+        // Restituisce la lista caricata: l'effetto sul cambio filtro la usa per
+        // calcolare i bounds lato client (fit-bounds) senza una query dedicata.
+        return storesWithLogs;
       } finally {
         setIsLoadingStores(false);
       }
@@ -934,81 +939,66 @@ const Map = ({ user }: any) => {
   }, [governanceLevel, stores, user.id, supabase]);
 
   // Al cambio del filtro cliente (multi-select):
-  //  - con uno o più clienti selezionati: dezoom automatico (fit-bounds)
-  //    sull'estensione COMPLESSIVA dei clienti scelti + fetch esplicito su
-  //    quell'estensione (raggio = baricentro→angolo), così si vede subito la
-  //    distribuzione su tutta l'area, per QUALSIASI cliente (Scalapay, Amex…);
+  //  - con uno o più clienti selezionati: carica TUTTI i loro pin (raggio
+  //    massimo dal centro Italia), poi calcola l'estensione lato client e fa il
+  //    dezoom automatico (fit-bounds) su tutta la distribuzione — per QUALSIASI
+  //    cliente (AiCall, Scalapay, Amex…);
   //  - filtro rimosso ("Tutti"): ricarica in place al centro corrente (vista
   //    libera, raggio moderato), senza spostare la mappa.
-  // La query dei bounds è una sola, index-assisted (GIST su location).
-  // NB: non ci affidiamo al `moveend` post-flyToBounds (non garantito su mappe
-  // mosse via codice → vedi handleAddressSelect), quindi il fetch è esplicito.
+  // NB: il fetch è esplicito (non dipende dal `moveend` post-flyToBounds, non
+  // garantito su mappe mosse via codice) e usa solo `p_client_id` → robusto.
   useEffect(() => {
     let cancelled = false;
-
-    const refetchInPlace = () => {
-      const c = lastFetchCenter.current;
-      if (!c) return;
-      lastFetchCenter.current = null; // forza il refetch (bypassa il dedup)
-      fetchStoresAndLogs(c[0], c[1]);
-    };
 
     const run = async () => {
       const ids = Array.from(selectedClientIds);
       if (ids.length === 0) {
-        refetchInPlace();
+        // Filtro rimosso: ricarica in place al centro corrente.
+        const c = lastFetchCenter.current;
+        if (c) {
+          lastFetchCenter.current = null; // forza il refetch (bypassa il dedup)
+          fetchStoresAndLogs(c[0], c[1]);
+        }
         return;
       }
 
-      const { data, error } = await supabase.rpc('get_clients_stores_bounds', {
-        p_client_ids: ids,
-      });
-      if (cancelled) return;
-      if (error) {
-        console.error('get_clients_stores_bounds error:', error);
-        refetchInPlace();
-        return;
+      // Carica i pin dei clienti selezionati su tutta Italia (raggio massimo dal
+      // baricentro nazionale), così l'insieme è completo a prescindere da dove
+      // sia la mappa adesso.
+      lastFetchCenter.current = null;
+      const loaded = await fetchStoresAndLogs(42.0, 12.5, CLIENT_MAX_RADIUS_M);
+      if (cancelled || !loaded || loaded.length === 0) return;
+
+      // Bounds lato client dai pin caricati → fit-bounds.
+      let minLat = Infinity, minLng = Infinity, maxLat = -Infinity, maxLng = -Infinity;
+      for (const s of loaded) {
+        const c = parseCoords((s as Store).location);
+        if (!c) continue;
+        if (c[0] < minLat) minLat = c[0];
+        if (c[0] > maxLat) maxLat = c[0];
+        if (c[1] < minLng) minLng = c[1];
+        if (c[1] > maxLng) maxLng = c[1];
       }
-
-      const b = Array.isArray(data) ? data[0] : data;
-      const hasBounds =
-        b != null && b.min_lat != null && b.max_lat != null && Number(b.n) > 0;
-
-      if (!hasBounds) {
-        // Nessun pin visibile per i clienti selezionati: filtra restando dove
-        // siamo (la mappa mostrerà vuoto, coerente col filtro).
-        refetchInPlace();
-        return;
-      }
-
-      const centerLat = (b.min_lat + b.max_lat) / 2;
-      const centerLng = (b.min_lng + b.max_lng) / 2;
-      // Raggio che copre l'estensione: baricentro → angolo nord-est.
-      const extentRadius = L.latLng(centerLat, centerLng).distanceTo(
-        L.latLng(b.max_lat, b.max_lng)
-      );
+      if (!isFinite(minLat)) return;
 
       const map = mapRef.current;
       if (map) {
         map.closePopup();
         map.flyToBounds(
           [
-            [b.min_lat, b.min_lng],
-            [b.max_lat, b.max_lng],
+            [minLat, minLng],
+            [maxLat, maxLng],
           ],
           { padding: [60, 60], duration: 0.8, maxZoom: 16 }
         );
       }
-      // Fetch esplicito sull'estensione (non dipende dall'animazione/moveend).
-      lastFetchCenter.current = null;
-      fetchStoresAndLogs(centerLat, centerLng, extentRadius);
     };
 
     run();
     return () => {
       cancelled = true;
     };
-  }, [selectedClientIds, fetchStoresAndLogs, supabase]);
+  }, [selectedClientIds, fetchStoresAndLogs]);
 
   // Se il filtro Tier non è più applicabile (Scalapay non selezionato), azzera
   // la selezione tier: altrimenti resterebbe attiva nascondendo i pin degli
