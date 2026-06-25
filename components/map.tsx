@@ -402,6 +402,13 @@ const Map = ({ user }: any) => {
   // (es. handleSelectLocation che chiama il fetch + moveend che lo rifa).
   const lastFetchTsRef = useRef<number>(0);
   const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Sequence guard anti-race: ogni fetch incrementa il contatore; quando una
+  // risposta torna, se nel frattempo è partita una fetch più recente, la
+  // risposta vecchia viene scartata (evita pin "fuori ordine" sui pan veloci).
+  const fetchSeqRef = useRef(0);
+  // Diventa true dopo aver caricato i filtri salvati: evita che il primo render
+  // (stato vuoto) sovrascriva in localStorage la selezione persistita.
+  const filtersLoadedRef = useRef(false);
 
   // True mentre stiamo recuperando i pin dalla RPC: alimenta la pill di loading.
   const [isLoadingStores, setIsLoadingStores] = useState(false);
@@ -676,6 +683,8 @@ const Map = ({ user }: any) => {
       lastFetchTsRef.current = now;
       lastFetchCenter.current = [lat, lng];
 
+      const seq = ++fetchSeqRef.current; // questa è la fetch più recente
+
       setIsLoadingStores(true);
       try {
         // Legge il filtro client (multi) dal ref (non nelle deps → la callback
@@ -798,6 +807,10 @@ const Map = ({ user }: any) => {
             modifierId,
           };
         });
+
+        // Anti-race: se nel frattempo è partita una fetch più recente, scarta
+        // questo risultato (non sovrascrivere i pin con dati ormai superati).
+        if (seq !== fetchSeqRef.current) return storesWithLogs;
 
         // Merge "stabile": se uno store esisteva già e i campi visualizzati
         // non sono cambiati, manteniamo la STESSA reference dell'oggetto.
@@ -1030,6 +1043,50 @@ const Map = ({ user }: any) => {
       );
     };
   }, [coord, fetchStoresAndLogs]);
+
+  // Persistenza filtri (clienti + tier + colori tier) in localStorage: la
+  // selezione sopravvive a reload/navigazioni.
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem('appoint.mapFilters');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed.clientIds)) setSelectedClientIds(new Set(parsed.clientIds));
+        if (Array.isArray(parsed.tiers)) setSelectedTiers(new Set(parsed.tiers));
+        if (typeof parsed.showTierColors === 'boolean') setShowTierColors(parsed.showTierColors);
+      }
+    } catch {
+      /* localStorage non disponibile o JSON corrotto: si parte coi default */
+    }
+    filtersLoadedRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!filtersLoadedRef.current) return; // non salvare prima di aver caricato
+    try {
+      window.localStorage.setItem(
+        'appoint.mapFilters',
+        JSON.stringify({
+          clientIds: Array.from(selectedClientIds),
+          tiers: Array.from(selectedTiers),
+          showTierColors,
+        })
+      );
+    } catch {
+      /* quota piena o storage disabilitato: ignora */
+    }
+  }, [selectedClientIds, selectedTiers, showTierColors]);
+
+  // Numero di pin effettivamente mostrati (dopo il filtro tier), per il badge.
+  const visibleStoresCount = useMemo(
+    () =>
+      stores.filter(
+        (s) =>
+          selectedTiers.size === 0 ||
+          (s.tier != null && selectedTiers.has(s.tier))
+      ).length,
+    [stores, selectedTiers]
+  );
 
   const handleSendEmail = useCallback((store: Store) => {
     setLoadingEmail(true); // Start loading for email
@@ -1469,6 +1526,18 @@ const Map = ({ user }: any) => {
           >
             <Loader className='h-4 w-4 animate-spin' style={{ color: '#224677' }} />
             <span>Caricamento punti vendita…</span>
+          </div>
+        )}
+
+        {/* Contatore pin caricati: visibile quando non stiamo caricando e ci
+            sono pin. Con un filtro cliente attivo evidenzia quanti se ne vedono. */}
+        {!isLoadingStores && visibleStoresCount > 0 && (
+          <div
+            className='pointer-events-none absolute left-1/2 bottom-6 z-[1000] -translate-x-1/2 rounded-full bg-white/95 px-4 py-2 text-sm font-medium text-gray-700 shadow-lg backdrop-blur-sm'
+            role='status'
+            aria-live='polite'
+          >
+            {visibleStoresCount} {visibleStoresCount === 1 ? 'punto vendita' : 'punti vendita'}
           </div>
         )}
 
