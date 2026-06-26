@@ -1054,104 +1054,138 @@ export default function DashboardPage() {
                     activity.type === 'photo'
                       ? `photo-${activity.store_id}-${activity.created_at}-${index}`
                       : `status-${activity.store_id}-${activity.created_at}-${index}`;
+                  // Badge stato/tipo (colore coerente con i KPI).
+                  const badge =
+                    activity.type === 'photo'
+                      ? { label: 'Foto', Icon: Camera, text: 'text-blue-200', bg: 'bg-blue-500/20' }
+                      : activity.type === 'outcome'
+                        ? {
+                            label: activity.esito_label || 'Esito',
+                            Icon: ClipboardCheck,
+                            text: 'text-purple-200',
+                            bg: 'bg-purple-500/20',
+                          }
+                        : (() => {
+                            const cfg = STATUS_KPI_CONFIG[activity.status];
+                            return {
+                              label: getStatusLabel(activity.status),
+                              Icon: cfg?.icon ?? Store,
+                              text: cfg?.color ?? 'text-white/80',
+                              bg: cfg?.bgColor ?? 'bg-white/10',
+                            };
+                          })();
+                  const BadgeIcon = badge.Icon;
+                  const showAgent =
+                    (dashboardRole === 'am' || dashboardRole === 'supervisor') &&
+                    !!activity.modifier_display_name;
+                  const dateLabel = new Date(activity.created_at).toLocaleDateString('it-IT', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  });
+                  const addressLine = [
+                    activity.address,
+                    [activity.cap, activity.comune].filter(Boolean).join(' '),
+                  ]
+                    .filter(Boolean)
+                    .join(', ');
+                  const dest = activity.location ? parseCoords(activity.location) : null;
+
                   return (
                     <div
                       key={entryKey}
-                      className='flex items-center justify-between gap-3 p-3 rounded-lg border border-white/20 hover:bg-white/10 transition-colors'
+                      className='rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-colors p-3'
                     >
-                      <div className='flex items-start gap-3 flex-1 min-w-0'>
-                        {activity.type === 'photo' ? (
-                          <Camera className='h-4 w-4 text-blue-300 mt-0.5 flex-shrink-0' />
-                        ) : activity.type === 'outcome' ? (
-                          <ClipboardCheck className='h-4 w-4 text-purple-300 mt-0.5 flex-shrink-0' />
-                        ) : (
-                          <Store className='h-4 w-4 text-white/80 mt-0.5 flex-shrink-0' />
-                        )}
-                        <div className='flex-1 min-w-0'>
-                          <p className='font-medium text-sm truncate text-white'>
-                            {activity.store_name}
-                          </p>
-                          {activity.client_name ? (
-                            <span className='inline-flex items-center mt-0.5 text-[11px] font-medium text-white/90 bg-white/10 border border-white/20 rounded-full px-2 py-0.5'>
-                              {activity.client_name}
+                      <div className='flex items-start gap-3'>
+                        <div className='min-w-0 flex-1'>
+                          {/* Riga 1: nome + badge stato */}
+                          <div className='flex items-center gap-2'>
+                            <h3 className='text-sm font-semibold text-white truncate'>
+                              {activity.store_name}
+                            </h3>
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium flex-shrink-0 ${badge.bg} ${badge.text}`}
+                            >
+                              <BadgeIcon className='h-3 w-3' />
+                              <span className='truncate max-w-[160px]'>{badge.label}</span>
                             </span>
-                          ) : null}
-                          {activity.pi ? (
-                            <p className='text-xs text-white/70 truncate'>
-                              P.IVA: {activity.pi}
-                            </p>
-                          ) : null}
-                          <p className='text-xs text-white/80 truncate'>
-                            {activity.address}
-                            {activity.cap && `, ${activity.cap}`}
-                            {activity.comune && ` ${activity.comune}`}
+                          </div>
+
+                          {/* Riga 2: cliente · indirizzo */}
+                          <p className='text-xs text-white/55 mt-1 truncate'>
+                            {activity.client_name && (
+                              <span className='text-white/75 font-medium'>
+                                {activity.client_name}
+                              </span>
+                            )}
+                            {activity.client_name && addressLine && (
+                              <span className='mx-1.5 text-white/25'>·</span>
+                            )}
+                            {addressLine}
                           </p>
-                          {activity.type === 'photo' ? (
-                            <p className='text-xs text-blue-300 mt-1'>Foto scattata</p>
-                          ) : activity.type === 'outcome' ? (
-                            <>
-                              <p className='text-xs text-purple-200 mt-1'>
-                                {activity.esito_label || 'Esito'}
-                              </p>
-                              {activity.note && (
-                                <p className='text-xs text-white/60 mt-0.5 break-words'>
-                                  {activity.note}
-                                </p>
-                              )}
-                            </>
-                          ) : (
-                            <p className='text-xs text-white/80 mt-1'>
-                              {getStatusLabel(activity.status)}
+
+                          {/* Nota esito (solo outcome) */}
+                          {activity.type === 'outcome' && activity.note && (
+                            <p className='text-xs text-white/50 mt-1 line-clamp-2'>
+                              {activity.note}
                             </p>
                           )}
-                          {(dashboardRole === 'am' || dashboardRole === 'supervisor') &&
-                            activity.modifier_display_name && (
-                            <p className='text-xs text-amber-200/90 mt-0.5'>
-                              Agente: {activity.modifier_display_name}
-                            </p>
-                          )}
-                          <p className='text-xs text-white/60 mt-0.5'>
-                            {new Date(activity.created_at).toLocaleDateString('it-IT', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </p>
+
+                          {/* Riga 3: meta (P.IVA · agente · data) */}
+                          <div className='flex items-center flex-wrap mt-1.5 text-[11px] text-white/45'>
+                            {activity.pi && <span>P.IVA {activity.pi}</span>}
+                            {activity.pi && (showAgent || true) && (
+                              <span className='mx-1.5 text-white/20'>·</span>
+                            )}
+                            {showAgent && (
+                              <>
+                                <span className='text-amber-200/80'>
+                                  {activity.modifier_display_name}
+                                </span>
+                                <span className='mx-1.5 text-white/20'>·</span>
+                              </>
+                            )}
+                            <span>{dateLabel}</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className='flex gap-2 flex-shrink-0'>
-                        {activity.type === 'photo' && activity.photo_url && (
-                          <Button
-                            variant='outline'
-                            size='icon'
-                            className='h-8 w-8'
-                            onClick={() => window.open(activity.photo_url, '_blank')}
-                            title='Visualizza foto'
-                          >
-                            <Camera className='h-4 w-4' />
-                          </Button>
-                        )}
-                        <Button
-                          variant='outline'
-                          size='icon'
-                          className='h-8 w-8'
-                          onClick={() => {
-                            if (
-                              Array.isArray(coord) &&
-                              coord.length === 2 &&
-                              activity.coordinates
-                            ) {
-                              const [lat, lng] = coord;
-                              const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${activity.coordinates[0]},${activity.coordinates[1]}`;
-                              window.open(gmapsUrl, '_blank');
-                            }
-                          }}
-                          title='Indicazioni'
-                        >
-                          <Navigation className='h-4 w-4' />
-                        </Button>
+
+                        {/* Azioni */}
+                        <div className='flex gap-1.5 flex-shrink-0'>
+                          {activity.type === 'photo' && activity.photo_url && (
+                            <Button
+                              variant='outline'
+                              size='icon'
+                              className='h-8 w-8'
+                              onClick={() => window.open(activity.photo_url, '_blank')}
+                              title='Visualizza foto'
+                            >
+                              <Camera className='h-4 w-4' />
+                            </Button>
+                          )}
+                          {dest && (
+                            <Button
+                              variant='outline'
+                              size='icon'
+                              className='h-8 w-8'
+                              onClick={() => {
+                                const [dlat, dlng] = dest;
+                                const origin =
+                                  Array.isArray(coord) && coord.length === 2
+                                    ? `&origin=${coord[0]},${coord[1]}`
+                                    : '';
+                                window.open(
+                                  `https://www.google.com/maps/dir/?api=1${origin}&destination=${dlat},${dlng}`,
+                                  '_blank'
+                                );
+                              }}
+                              title='Indicazioni'
+                            >
+                              <Navigation className='h-4 w-4' />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
