@@ -189,10 +189,13 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
     new Set([...statusStoreIds, ...photoStoreIds, ...genericPhotoStoreIds, ...outcomeStoreIds])
   );
 
-  // Fetch store details for these IDs (with client name)
+  // Fetch store details for these IDs (with client name).
+  // NB: esistono DUE relazioni stores↔clients (FK diretta `stores.client_id` e
+  // N:N via `store_clients`), quindi va disambiguata la FK nell'embed, altrimenti
+  // PostgREST risponde PGRST201 e la query fallisce (storico vuoto).
   const { data: storeDetails, error: storeError } = await supabase
     .from('stores')
-    .select('*, client:clients(id, name)')
+    .select('*, client:clients!stores_client_id_fkey(id, name)')
     .in('id', uniqueStoreIds);
 
   if (storeError) {
