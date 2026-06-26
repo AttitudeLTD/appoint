@@ -194,8 +194,6 @@ export default function DashboardPage() {
   // Clienti visibili all'utente (RLS) per le tendine client (es. prospect).
   const [visibleClients, setVisibleClients] = useState<{ id: number; name: string }[]>([]);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [calendarDraftFrom, setCalendarDraftFrom] = useState<Date | undefined>(undefined);
-  const [calendarDraftTo, setCalendarDraftTo] = useState<Date | undefined>(undefined);
 
   // ── Export negozi per supervisor ────────────────────────────────────────────
   // Lista di tutti i clienti per il select dell'export (caricata solo per supervisor).
@@ -723,16 +721,7 @@ export default function DashboardPage() {
         <div className='flex flex-wrap items-end gap-3'>
           <div className='flex flex-col gap-1'>
             <label className='text-xs text-white/80'>Periodo</label>
-            <Popover
-              open={calendarOpen}
-              onOpenChange={(open) => {
-                setCalendarOpen(open);
-                if (open) {
-                  setCalendarDraftFrom(undefined);
-                  setCalendarDraftTo(undefined);
-                }
-              }}
-            >
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant='outline'
@@ -756,16 +745,6 @@ export default function DashboardPage() {
                 style={{ backgroundColor: '#224677' }}
                 align='start'
               >
-                {/* Periodo attualmente attivo (chiaro a colpo d'occhio) */}
-                <p className='text-xs text-white/70 mb-2'>
-                  Periodo:{' '}
-                  <span className='font-semibold text-white'>
-                    {format(new Date(historyDateFrom + 'T12:00:00'), 'd MMM yyyy', { locale: it })}
-                    {' – '}
-                    {format(new Date(historyDateTo + 'T12:00:00'), 'd MMM yyyy', { locale: it })}
-                  </span>
-                </p>
-
                 {/* #3 — Preset rapidi */}
                 <div className='flex flex-wrap gap-1.5 mb-3'>
                   {(
@@ -785,8 +764,6 @@ export default function DashboardPage() {
                         onClick={() => {
                           setHistoryDateFrom(r.fromStr);
                           setHistoryDateTo(r.toStr);
-                          setCalendarDraftFrom(undefined);
-                          setCalendarDraftTo(undefined);
                           setCalendarOpen(false);
                         }}
                         className='rounded-full text-xs px-3 py-1 border transition-colors'
@@ -831,25 +808,25 @@ export default function DashboardPage() {
                     mode='range'
                     locale={it}
                     defaultMonth={new Date(historyDateTo + 'T12:00:00')}
+                    // Il range selezionato è SEMPRE quello applicato: così resta
+                    // evidenziato sul calendario e si vede a colpo d'occhio.
                     selected={{
-                      from: calendarDraftFrom,
-                      to: calendarDraftTo,
+                      from: new Date(historyDateFrom + 'T12:00:00'),
+                      to: new Date(historyDateTo + 'T12:00:00'),
                     }}
                     onSelect={(range) => {
-                      const hadFirstSelection = calendarDraftFrom != null;
-                      setCalendarDraftFrom(range?.from);
-                      setCalendarDraftTo(range?.to ?? undefined);
-                      if (
-                        range?.from != null &&
-                        range?.to != null &&
-                        hadFirstSelection
-                      ) {
-                        setHistoryDateFrom(format(range.from, 'yyyy-MM-dd'));
-                        setHistoryDateTo(format(range.to, 'yyyy-MM-dd'));
+                      if (!range?.from) return;
+                      const from = range.from;
+                      const to = range.to ?? range.from;
+                      // Applica subito (la fetch dipende da queste date).
+                      setHistoryDateFrom(format(from, 'yyyy-MM-dd'));
+                      setHistoryDateTo(format(to, 'yyyy-MM-dd'));
+                      // Chiude solo quando è stato scelto un range completo (2 click).
+                      if (range.to && range.to.getTime() !== range.from.getTime()) {
                         setCalendarOpen(false);
                       }
                     }}
-                    numberOfMonths={1}
+                    numberOfMonths={2}
                   />
                 </div>
               </PopoverContent>
