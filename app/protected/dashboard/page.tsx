@@ -17,6 +17,7 @@ import {
   TrendingUp,
   ClipboardCheck,
   Phone,
+  ChevronDown,
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores, getDashboardContext } from '@/utils/stores';
@@ -69,6 +70,101 @@ function getDefaultDateRange() {
 
 type DashboardRole = 'agent' | 'am' | 'supervisor';
 
+// Preset rapidi di periodo per il filtro date (#3).
+function rangeForPreset(preset: 'today' | '7d' | '30d' | 'month'): {
+  fromStr: string;
+  toStr: string;
+} {
+  const now = new Date();
+  const toStr = now.toISOString().slice(0, 10);
+  let from: Date;
+  if (preset === 'today') {
+    from = new Date(now);
+  } else if (preset === '7d') {
+    from = new Date(now);
+    from.setDate(from.getDate() - 7);
+  } else if (preset === '30d') {
+    from = new Date(now);
+    from.setDate(from.getDate() - 30);
+  } else {
+    from = new Date(now.getFullYear(), now.getMonth(), 1);
+  }
+  return { fromStr: from.toISOString().slice(0, 10), toStr };
+}
+
+// Multiselect riutilizzabile (stessa UI per Agenti / Clienti / Esiti):
+// label sopra, trigger con freccetta, popover con checkbox + voce "Tutti".
+function MultiSelectPopover({
+  label,
+  allLabel,
+  options,
+  selected,
+  onChange,
+  widthClass = 'w-[180px]',
+}: {
+  label: string;
+  allLabel: string;
+  options: { value: string; label: string }[];
+  selected: string[];
+  onChange: (next: string[]) => void;
+  widthClass?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const triggerLabel =
+    selected.length === 0
+      ? allLabel
+      : selected.length === 1
+        ? options.find((o) => o.value === selected[0])?.label ?? '1 selezionato'
+        : `${selected.length} selezionati`;
+  return (
+    <div className='flex flex-col gap-1'>
+      <label className='text-xs text-white/80'>{label}</label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant='outline'
+            className={`h-9 ${widthClass} justify-between gap-1 bg-white/10 border-white/20 text-white hover:bg-white/20`}
+          >
+            <span className='truncate'>{triggerLabel}</span>
+            <ChevronDown className='h-4 w-4 shrink-0 opacity-70' />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className='w-64 p-2 bg-slate-900 border-white/20' align='start'>
+          <div className='space-y-1 max-h-64 overflow-y-auto'>
+            <label className='flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-white/10 text-sm text-white'>
+              <Checkbox
+                checked={selected.length === 0}
+                onCheckedChange={(checked) => {
+                  if (checked) onChange([]);
+                }}
+              />
+              {allLabel}
+            </label>
+            {options.map((o) => (
+              <label
+                key={o.value}
+                className='flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-white/10 text-sm text-white'
+              >
+                <Checkbox
+                  checked={selected.includes(o.value)}
+                  onCheckedChange={(checked) => {
+                    onChange(
+                      checked
+                        ? [...selected, o.value]
+                        : selected.filter((x) => x !== o.value)
+                    );
+                  }}
+                />
+                {o.label}
+              </label>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [nearbyProspects, setNearbyProspects] = useState<any[]>([]);
@@ -87,15 +183,15 @@ export default function DashboardPage() {
   const [historyDateTo, setHistoryDateTo] = useState<string>(() =>
     getDefaultDateRange().toStr
   );
-  const [historyClientId, setHistoryClientId] = useState<string | null>(null);
-  const [historyEsitoFilter, setHistoryEsitoFilter] = useState<string>('all');
+  // Filtri multiselect (vuoto = tutti). Esiti accetta status, 'photo' e 'outcome'.
+  const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
+  const [selectedEsiti, setSelectedEsiti] = useState<string[]>([]);
   const [historyActivities, setHistoryActivities] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [coord, setCoord] = useState<[number, number] | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarDraftFrom, setCalendarDraftFrom] = useState<Date | undefined>(undefined);
   const [calendarDraftTo, setCalendarDraftTo] = useState<Date | undefined>(undefined);
-  const [agentFilterOpen, setAgentFilterOpen] = useState(false);
 
   // ── Export negozi per supervisor ────────────────────────────────────────────
   // Lista di tutti i clienti per il select dell'export (caricata solo per supervisor).
@@ -152,10 +248,11 @@ export default function DashboardPage() {
         (dashboardRole === 'am' || dashboardRole === 'supervisor') && selectedAgentIds.length > 0
           ? selectedAgentIds
           : undefined;
+      // Il filtro cliente è ora multiselect e viene applicato lato client (sotto),
+      // così la fetch resta unica e la tendina clienti mostra tutti i clienti del periodo.
       const data = await fetchUserStores(user.id, {
         dateFrom,
         dateTo,
-        clientId: historyClientId || undefined,
         agentIds,
       });
       setHistoryActivities(data);
@@ -164,7 +261,7 @@ export default function DashboardPage() {
     } finally {
       setHistoryLoading(false);
     }
-  }, [historyDateFrom, historyDateTo, historyClientId, dashboardRole, selectedAgentIds, supabase]);
+  }, [historyDateFrom, historyDateTo, dashboardRole, selectedAgentIds, supabase]);
 
   useEffect(() => {
     loadHistory();
@@ -233,19 +330,25 @@ export default function DashboardPage() {
     return Array.from(m.entries()).map(([id, name]) => ({ id, name }));
   }, [historyActivities]);
 
-  // Storico filtrato per esito (per lista e CSV)
-  const filteredHistoryActivities = useMemo(() => {
-    if (historyEsitoFilter === 'all') return historyActivities;
-    if (historyEsitoFilter === 'photo') {
-      return historyActivities.filter((a) => a.type === 'photo');
-    }
-    if (historyEsitoFilter === 'outcome') {
-      return historyActivities.filter((a) => a.type === 'outcome');
-    }
+  // Filtro cliente (multiselect) applicato lato client. I KPI usano questo set.
+  const clientFiltered = useMemo(() => {
+    if (selectedClientIds.length === 0) return historyActivities;
+    const set = new Set(selectedClientIds);
     return historyActivities.filter(
-      (a) => a.type === 'status' && a.status === historyEsitoFilter
+      (a) => a.client_id != null && set.has(String(a.client_id))
     );
-  }, [historyActivities, historyEsitoFilter]);
+  }, [historyActivities, selectedClientIds]);
+
+  // Storico filtrato per cliente + esiti (multiselect) → per lista e CSV.
+  const filteredHistoryActivities = useMemo(() => {
+    if (selectedEsiti.length === 0) return clientFiltered;
+    const set = new Set(selectedEsiti);
+    return clientFiltered.filter((a) => {
+      if (a.type === 'photo') return set.has('photo');
+      if (a.type === 'outcome') return set.has('outcome');
+      return a.type === 'status' && set.has(a.status);
+    });
+  }, [clientFiltered, selectedEsiti]);
 
   const handleDownloadHistoryCSV = useCallback(() => {
     if (filteredHistoryActivities.length === 0) return;
@@ -481,20 +584,12 @@ export default function DashboardPage() {
     }
   }, [exportClientId, supabase, allClients]);
 
-  // Aggrega per store: uno per store (prima occorrenza = più recente), poi conta per esito.
-  // Fonte unica: `historyActivities` (stessa fetch della lista → niente doppione di query).
+  // KPI: un record per store (stato più recente), conteggi per esito + tasso di
+  // conversione + percentuali. Fonte: `clientFiltered` (riflette periodo, agenti
+  // e clienti selezionati; indipendente dal filtro esiti, che agisce sulla lista).
   const kpis = useMemo(() => {
-    const kpiActivities =
-      historyEsitoFilter === 'all'
-        ? historyActivities
-        : historyEsitoFilter === 'photo'
-          ? historyActivities.filter((a) => a.type === 'photo')
-          : historyEsitoFilter === 'outcome'
-            ? historyActivities.filter((a) => a.type === 'outcome')
-            : historyActivities.filter((a) => a.type === 'status' && a.status === historyEsitoFilter);
-
     const storeToStatus = new Map<number, string>();
-    for (const e of kpiActivities) {
+    for (const e of clientFiltered) {
       if (!storeToStatus.has(e.store_id)) {
         storeToStatus.set(e.store_id, e.status || 'free');
       }
@@ -528,7 +623,6 @@ export default function DashboardPage() {
         bgColor: 'bg-blue-500/20',
       },
     ];
-    if (historyEsitoFilter === 'photo' || historyEsitoFilter === 'outcome') return items;
 
     // Tasso di conversione = contratti sottoscritti / visite totali del periodo.
     const concluded = byStatus['concluded'] ?? 0;
@@ -559,18 +653,25 @@ export default function DashboardPage() {
       }
     }
     return items;
-  }, [historyActivities, historyEsitoFilter]);
+  }, [clientFiltered]);
+
+  // #6 — Andamento visite per giorno nel periodo (mini-grafico a barre, no librerie).
+  const dailyTrend = useMemo(() => {
+    const byDay = new Map<string, Set<number>>();
+    for (const e of clientFiltered) {
+      const day = String(e.created_at).slice(0, 10);
+      if (!byDay.has(day)) byDay.set(day, new Set<number>());
+      byDay.get(day)!.add(e.store_id);
+    }
+    const days = Array.from(byDay.entries())
+      .map(([day, set]) => ({ day, count: set.size }))
+      .sort((a, b) => (a.day < b.day ? -1 : 1));
+    const max = days.reduce((m, d) => Math.max(m, d.count), 0);
+    return { days, max };
+  }, [clientFiltered]);
 
 
   const showAgentFilter = dashboardRole === 'am' || dashboardRole === 'supervisor';
-  const agentFilterLabel =
-    selectedAgentIds.length === 0
-      ? 'Tutti gli agenti'
-      : selectedAgentIds.length === 1
-        ? agentsForFilter.find((a) => a.id === selectedAgentIds[0])
-          ? `${agentsForFilter.find((a) => a.id === selectedAgentIds[0])!.name} ${agentsForFilter.find((a) => a.id === selectedAgentIds[0])!.surname}`.trim()
-          : '1 agente'
-        : `${selectedAgentIds.length} agenti`;
 
   return (
     <div className='container mx-auto px-4 py-8 max-w-7xl' style={{ backgroundColor: '#224677', minHeight: '100vh' }}>
@@ -582,50 +683,20 @@ export default function DashboardPage() {
       {/* Filtro agenti (solo AM e Supervisor) */}
       <div className='mb-6 flex flex-wrap items-end gap-3'>
         {showAgentFilter && agentsForFilter.length > 0 && (
-          <Popover open={agentFilterOpen} onOpenChange={setAgentFilterOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant='outline'
-                className='h-9 min-w-[200px] justify-between bg-white/10 border-white/20 text-white hover:bg-white/20'
-              >
-                <span className='truncate'>{agentFilterLabel}</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className='w-64 p-2 bg-slate-900 border-white/20' align='start'>
-              <div className='space-y-1 max-h-64 overflow-y-auto'>
-                <label className='flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-white/10 text-sm text-white'>
-                  <Checkbox
-                    checked={selectedAgentIds.length === 0}
-                    onCheckedChange={(checked) => {
-                      if (checked) setSelectedAgentIds([]);
-                    }}
-                  />
-                  Tutti gli agenti
-                </label>
-                {agentsForFilter.map((agent) => (
-                  <label
-                    key={agent.id}
-                    className='flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-white/10 text-sm text-white'
-                  >
-                    <Checkbox
-                      checked={selectedAgentIds.includes(agent.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedAgentIds((prev) => [...prev, agent.id]);
-                        } else {
-                          setSelectedAgentIds((prev) => prev.filter((id) => id !== agent.id));
-                        }
-                      }}
-                    />
-                    {[agent.name, agent.surname].filter(Boolean).join(' ').trim() || agent.id}
-                  </label>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
+          <MultiSelectPopover
+            label='Agenti'
+            allLabel='Tutti gli agenti'
+            widthClass='w-[200px]'
+            options={agentsForFilter.map((a) => ({
+              value: a.id,
+              label: [a.name, a.surname].filter(Boolean).join(' ').trim() || a.id,
+            }))}
+            selected={selectedAgentIds}
+            onChange={setSelectedAgentIds}
+          />
         )}
 
-        {/* Filtri globali dashboard: periodo, cliente, esito (valgono per KPI + storico) */}
+        {/* Filtri globali dashboard: periodo, clienti, esiti (valgono per KPI + storico) */}
         <div className='flex flex-wrap items-end gap-3'>
           <div className='flex flex-col gap-1'>
             <label className='text-xs text-white/80'>Periodo</label>
@@ -642,7 +713,7 @@ export default function DashboardPage() {
               <PopoverTrigger asChild>
                 <Button
                   variant='outline'
-                  className='h-8 w-[155px] min-w-0 justify-start gap-1 overflow-hidden px-2 bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs'
+                  className='h-9 w-[180px] min-w-0 justify-start gap-1 overflow-hidden px-2 bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs'
                 >
                   <CalendarIcon className='h-3.5 w-3.5 shrink-0' />
                   <span className='min-w-0 truncate'>
@@ -662,23 +733,72 @@ export default function DashboardPage() {
                 style={{ backgroundColor: '#224677' }}
                 align='start'
               >
+                {/* Periodo attualmente attivo (chiaro a colpo d'occhio) */}
+                <p className='text-xs text-white/70 mb-2'>
+                  Periodo:{' '}
+                  <span className='font-semibold text-white'>
+                    {format(new Date(historyDateFrom + 'T12:00:00'), 'd MMM yyyy', { locale: it })}
+                    {' – '}
+                    {format(new Date(historyDateTo + 'T12:00:00'), 'd MMM yyyy', { locale: it })}
+                  </span>
+                </p>
+
+                {/* #3 — Preset rapidi */}
+                <div className='flex flex-wrap gap-1.5 mb-3'>
+                  {(
+                    [
+                      { id: 'today', label: 'Oggi' },
+                      { id: '7d', label: '7 giorni' },
+                      { id: '30d', label: '30 giorni' },
+                      { id: 'month', label: 'Questo mese' },
+                    ] as { id: 'today' | '7d' | '30d' | 'month'; label: string }[]
+                  ).map((p) => {
+                    const r = rangeForPreset(p.id);
+                    const active = historyDateFrom === r.fromStr && historyDateTo === r.toStr;
+                    return (
+                      <button
+                        key={p.id}
+                        type='button'
+                        onClick={() => {
+                          setHistoryDateFrom(r.fromStr);
+                          setHistoryDateTo(r.toStr);
+                          setCalendarDraftFrom(undefined);
+                          setCalendarDraftTo(undefined);
+                          setCalendarOpen(false);
+                        }}
+                        className='rounded-full text-xs px-3 py-1 border transition-colors'
+                        style={{
+                          backgroundColor: active ? '#CBACF9' : 'transparent',
+                          borderColor: '#CBACF9',
+                          color: active ? '#224677' : '#CBACF9',
+                        }}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <div
                   className='rdp-root rdp-dashboard-theme'
                   style={
                     {
                       ['--rdp-accent-color']: '#CBACF9',
-                      ['--rdp-accent-background-color']: 'transparent',
+                      ['--rdp-accent-background-color']: 'rgba(203,172,249,0.22)',
                       ['--rdp-day_button-border']: 'none',
                       ['--rdp-day_button-border-radius']: '9999px',
-                      ['--rdp-today-color']: 'white',
-                      ['--rdp-range_middle-background-color']: 'transparent',
-                      ['--rdp-range_middle-color']: '#CBACF9',
+                      ['--rdp-today-color']: '#CBACF9',
+                      // Range "in mezzo": fondo tenue leggibile, testo bianco.
+                      ['--rdp-range_middle-background-color']: 'rgba(203,172,249,0.22)',
+                      ['--rdp-range_middle-color']: '#ffffff',
+                      // Estremi del range: pillola piena viola con testo scuro.
                       ['--rdp-range_start-background']: 'transparent',
-                      ['--rdp-range_start-date-background-color']: 'transparent',
-                      ['--rdp-range_start-color']: '#CBACF9',
+                      ['--rdp-range_start-date-background-color']: '#CBACF9',
+                      ['--rdp-range_start-color']: '#224677',
                       ['--rdp-range_end-background']: 'transparent',
-                      ['--rdp-range_end-date-background-color']: 'transparent',
-                      ['--rdp-range_end-color']: '#CBACF9',
+                      ['--rdp-range_end-date-background-color']: '#CBACF9',
+                      ['--rdp-range_end-color']: '#224677',
+                      ['--rdp-selected-color']: '#224677',
                       ['--rdp-outside-opacity']: '0.4',
                       color: 'white',
                     } as React.CSSProperties
@@ -687,6 +807,7 @@ export default function DashboardPage() {
                   <DayPicker
                     mode='range'
                     locale={it}
+                    defaultMonth={new Date(historyDateTo + 'T12:00:00')}
                     selected={{
                       from: calendarDraftFrom,
                       to: calendarDraftTo,
@@ -712,44 +833,27 @@ export default function DashboardPage() {
             </Popover>
           </div>
 
-          <div className='flex flex-col gap-1'>
-            <label className='text-xs text-white/80'>Cliente</label>
-            <Select
-              value={historyClientId ?? 'all'}
-              onValueChange={(v) => setHistoryClientId(v === 'all' ? null : v)}
-            >
-              <SelectTrigger className='bg-white/10 border-white/20 text-white h-9 w-[180px]'>
-                <SelectValue placeholder='Tutti i clienti' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='all'>Tutti i clienti</SelectItem>
-                {historyClients.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <MultiSelectPopover
+            label='Clienti'
+            allLabel='Tutti i clienti'
+            options={historyClients.map((c) => ({ value: c.id, label: c.name }))}
+            selected={selectedClientIds}
+            onChange={setSelectedClientIds}
+          />
 
-          <div className='flex flex-col gap-1'>
-            <label className='text-xs text-white/80'>Esito</label>
-            <Select value={historyEsitoFilter} onValueChange={setHistoryEsitoFilter}>
-              <SelectTrigger className='bg-white/10 border-white/20 text-white h-9 w-[180px]'>
-                <SelectValue placeholder='Tutti gli esiti' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='all'>Tutti gli esiti</SelectItem>
-                {statuses.filter((s) => s.value !== 'free').map((s) => (
-                  <SelectItem key={s.value} value={s.value}>
-                    {s.label}
-                  </SelectItem>
-                ))}
-                <SelectItem value='outcome'>Esiti AiCall</SelectItem>
-                <SelectItem value='photo'>Foto scattata</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <MultiSelectPopover
+            label='Esiti'
+            allLabel='Tutti gli esiti'
+            options={[
+              ...statuses
+                .filter((s) => s.value !== 'free')
+                .map((s) => ({ value: s.value, label: s.label })),
+              { value: 'outcome', label: 'Esiti AiCall' },
+              { value: 'photo', label: 'Foto scattata' },
+            ]}
+            selected={selectedEsiti}
+            onChange={setSelectedEsiti}
+          />
         </div>
       </div>
 
@@ -779,6 +883,41 @@ export default function DashboardPage() {
             </div>
           );
         })}
+      </div>
+
+      {/* #6 — Andamento visite per giorno (mini-grafico a barre) */}
+      <div className='bg-white/10 rounded-lg border border-white/20 p-6 shadow-sm mb-8'>
+        <div className='flex items-center gap-2 mb-4'>
+          <TrendingUp className='h-5 w-5 text-emerald-300' />
+          <h2 className='text-xl font-semibold text-white'>Andamento visite</h2>
+        </div>
+        {dailyTrend.days.length === 0 ? (
+          <p className='text-sm text-white/60 py-6 text-center'>
+            Nessun dato nel periodo selezionato
+          </p>
+        ) : (
+          <div className='flex items-end gap-1 h-40 overflow-x-auto pb-1'>
+            {dailyTrend.days.map((d) => {
+              const hPct = dailyTrend.max > 0 ? Math.round((d.count / dailyTrend.max) * 100) : 0;
+              return (
+                <div
+                  key={d.day}
+                  className='flex flex-col items-center justify-end gap-1 flex-1 min-w-[18px] h-full'
+                  title={`${format(new Date(d.day + 'T12:00:00'), 'd MMM yyyy', { locale: it })}: ${d.count} visite`}
+                >
+                  <span className='text-[10px] text-white/70 leading-none'>{d.count}</span>
+                  <div
+                    className='w-full rounded-t bg-emerald-400/70 hover:bg-emerald-300 transition-colors'
+                    style={{ height: `${Math.max(hPct, 3)}%` }}
+                  />
+                  <span className='text-[9px] text-white/50 leading-none whitespace-nowrap'>
+                    {format(new Date(d.day + 'T12:00:00'), 'd/M', { locale: it })}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Due riquadri affiancati: stessa altezza, area lista riempie fino in fondo e scrolla se serve */}
