@@ -14,10 +14,13 @@ import {
   History,
   Download,
   CalendarIcon,
+  TrendingUp,
+  ClipboardCheck,
+  Phone,
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores, getDashboardContext } from '@/utils/stores';
-import { getMyLoc } from '@/utils/navigation';
+import { getMyLoc, parseCoords } from '@/utils/navigation';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { getStatusLabel, statuses } from '@/utils/utils';
 import { Button } from '@/components/ui/button';
@@ -67,7 +70,6 @@ function getDefaultDateRange() {
 type DashboardRole = 'agent' | 'am' | 'supervisor';
 
 export default function DashboardPage() {
-  const [allActivities, setAllActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [nearbyProspects, setNearbyProspects] = useState<any[]>([]);
   const [nearbyLoading, setNearbyLoading] = useState(true);
@@ -88,7 +90,7 @@ export default function DashboardPage() {
   const [historyClientId, setHistoryClientId] = useState<string | null>(null);
   const [historyEsitoFilter, setHistoryEsitoFilter] = useState<string>('all');
   const [historyActivities, setHistoryActivities] = useState<any[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [coord, setCoord] = useState<[number, number] | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarDraftFrom, setCalendarDraftFrom] = useState<Date | undefined>(undefined);
@@ -112,10 +114,6 @@ export default function DashboardPage() {
           const ctx = await getDashboardContext(user.id);
           setDashboardRole(ctx.role ?? null);
           setAgentsForFilter(ctx.agents);
-          if (ctx.role === 'agent') {
-            const data = await fetchUserStores(user.id);
-            setAllActivities(data);
-          }
         }
       } catch (error) {
         console.error('Error loading activities:', error);
@@ -127,33 +125,6 @@ export default function DashboardPage() {
     load();
   }, []);
 
-  const loadAllActivities = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    const agentIds = selectedAgentIds.length > 0 ? selectedAgentIds : undefined;
-    const defaultRange = getDefaultDateRange();
-    const fromDate = historyDateFrom || defaultRange.fromStr;
-    const toDate = historyDateTo || defaultRange.toStr;
-    const dateFrom = new Date(fromDate + 'T00:00:00').toISOString();
-    const dateTo = new Date(toDate + 'T23:59:59').toISOString();
-
-    const data = await fetchUserStores(user.id, {
-      agentIds,
-      dateFrom,
-      dateTo,
-      clientId: historyClientId || undefined,
-    });
-    setAllActivities(data);
-  }, [selectedAgentIds, historyDateFrom, historyDateTo, historyClientId, supabase]);
-
-  useEffect(() => {
-    if (dashboardRole === 'am' || dashboardRole === 'supervisor') {
-      loadAllActivities();
-    }
-  }, [dashboardRole, selectedAgentIds, loadAllActivities]);
-
   // Posizione utente per indicazioni
   useEffect(() => {
     getMyLoc((coords) => {
@@ -162,6 +133,10 @@ export default function DashboardPage() {
   }, []);
 
   const loadHistory = useCallback(async () => {
+    // Attendiamo che il ruolo sia noto: così la singola fetch parte già con il
+    // set corretto di agenti (per AM/supervisor) ed evitiamo un fetch iniziale
+    // "sbagliato" con ruolo nullo. Questa fetch alimenta sia KPI che storico.
+    if (!dashboardRole) return;
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -264,6 +239,9 @@ export default function DashboardPage() {
     if (historyEsitoFilter === 'photo') {
       return historyActivities.filter((a) => a.type === 'photo');
     }
+    if (historyEsitoFilter === 'outcome') {
+      return historyActivities.filter((a) => a.type === 'outcome');
+    }
     return historyActivities.filter(
       (a) => a.type === 'status' && a.status === historyEsitoFilter
     );
@@ -286,15 +264,27 @@ export default function DashboardPage() {
       'URL Foto',
     ];
     const csvRows = filteredHistoryActivities.map((entry) => {
+      const tipo =
+        entry.type === 'photo'
+          ? 'Foto'
+          : entry.type === 'outcome'
+            ? 'Esito AiCall'
+            : 'Stato';
+      const stato =
+        entry.type === 'photo'
+          ? 'Foto scattata'
+          : entry.type === 'outcome'
+            ? `${entry.esito_label || ''}${entry.note ? ` — ${entry.note}` : ''}`.trim()
+            : getStatusLabel(entry.status);
       return [
-        entry.type === 'photo' ? 'Foto' : 'Stato',
+        tipo,
         entry.store_name || '',
         entry.pi || '',
         entry.address || '',
         entry.cap || '',
         entry.comune || '',
         entry.provincia || '',
-        entry.type === 'photo' ? 'Foto scattata' : getStatusLabel(entry.status),
+        stato,
         ...(withAgent ? [entry.modifier_display_name ?? ''] : []),
         new Date(entry.created_at).toLocaleString('it-IT'),
         entry.type === 'photo' ? entry.photo_url || '' : '',
@@ -491,14 +481,17 @@ export default function DashboardPage() {
     }
   }, [exportClientId, supabase, allClients]);
 
-  // Aggrega per store: uno per store (prima occorrenza = più recente), poi conta per esito
+  // Aggrega per store: uno per store (prima occorrenza = più recente), poi conta per esito.
+  // Fonte unica: `historyActivities` (stessa fetch della lista → niente doppione di query).
   const kpis = useMemo(() => {
     const kpiActivities =
       historyEsitoFilter === 'all'
-        ? allActivities
+        ? historyActivities
         : historyEsitoFilter === 'photo'
-          ? allActivities.filter((a) => a.type === 'photo')
-          : allActivities.filter((a) => a.type === 'status' && a.status === historyEsitoFilter);
+          ? historyActivities.filter((a) => a.type === 'photo')
+          : historyEsitoFilter === 'outcome'
+            ? historyActivities.filter((a) => a.type === 'outcome')
+            : historyActivities.filter((a) => a.type === 'status' && a.status === historyEsitoFilter);
 
     const storeToStatus = new Map<number, string>();
     for (const e of kpiActivities) {
@@ -514,7 +507,18 @@ export default function DashboardPage() {
       }
     });
 
-    const items: { id: string; label: string; value: string; icon: typeof Store; color: string; bgColor: string }[] = [
+    const pct = (n: number) => (total > 0 ? `${Math.round((n / total) * 100)}%` : '0%');
+
+    type KpiItem = {
+      id: string;
+      label: string;
+      value: string;
+      sub?: string;
+      icon: typeof Store;
+      color: string;
+      bgColor: string;
+    };
+    const items: KpiItem[] = [
       {
         id: 'visite',
         label: 'Numero visite',
@@ -524,7 +528,20 @@ export default function DashboardPage() {
         bgColor: 'bg-blue-500/20',
       },
     ];
-    if (historyEsitoFilter === 'photo') return items;
+    if (historyEsitoFilter === 'photo' || historyEsitoFilter === 'outcome') return items;
+
+    // Tasso di conversione = contratti sottoscritti / visite totali del periodo.
+    const concluded = byStatus['concluded'] ?? 0;
+    items.push({
+      id: 'conversion',
+      label: 'Tasso conversione',
+      value: pct(concluded),
+      sub: `${concluded}/${total}`,
+      icon: TrendingUp,
+      color: 'text-emerald-400',
+      bgColor: 'bg-emerald-500/20',
+    });
+
     for (const s of statuses) {
       if (s.value === 'free') continue;
       const count = byStatus[s.value] ?? 0;
@@ -534,6 +551,7 @@ export default function DashboardPage() {
           id: s.value,
           label: s.label,
           value: String(count),
+          sub: pct(count),
           icon: config.icon,
           color: config.color,
           bgColor: config.bgColor,
@@ -541,7 +559,7 @@ export default function DashboardPage() {
       }
     }
     return items;
-  }, [allActivities, historyEsitoFilter]);
+  }, [historyActivities, historyEsitoFilter]);
 
 
   const showAgentFilter = dashboardRole === 'am' || dashboardRole === 'supervisor';
@@ -727,6 +745,7 @@ export default function DashboardPage() {
                     {s.label}
                   </SelectItem>
                 ))}
+                <SelectItem value='outcome'>Esiti AiCall</SelectItem>
                 <SelectItem value='photo'>Foto scattata</SelectItem>
               </SelectContent>
             </Select>
@@ -745,6 +764,11 @@ export default function DashboardPage() {
             >
               <div className='flex items-center justify-between mb-2'>
                 <Icon className={`h-5 w-5 ${kpi.color}`} />
+                {kpi.sub && (
+                  <span className='text-xs font-medium text-white/70'>
+                    {kpi.sub}
+                  </span>
+                )}
               </div>
               <p className='text-2xl font-bold text-white mb-1'>
                 {kpi.value}
@@ -795,6 +819,8 @@ export default function DashboardPage() {
                       <div className='flex items-start gap-3 flex-1 min-w-0'>
                         {activity.type === 'photo' ? (
                           <Camera className='h-4 w-4 text-blue-300 mt-0.5 flex-shrink-0' />
+                        ) : activity.type === 'outcome' ? (
+                          <ClipboardCheck className='h-4 w-4 text-purple-300 mt-0.5 flex-shrink-0' />
                         ) : (
                           <Store className='h-4 w-4 text-white/80 mt-0.5 flex-shrink-0' />
                         )}
@@ -814,6 +840,17 @@ export default function DashboardPage() {
                           </p>
                           {activity.type === 'photo' ? (
                             <p className='text-xs text-blue-300 mt-1'>Foto scattata</p>
+                          ) : activity.type === 'outcome' ? (
+                            <>
+                              <p className='text-xs text-purple-200 mt-1'>
+                                {activity.esito_label || 'Esito'}
+                              </p>
+                              {activity.note && (
+                                <p className='text-xs text-white/60 mt-0.5 break-words'>
+                                  {activity.note}
+                                </p>
+                              )}
+                            </>
                           ) : (
                             <p className='text-xs text-white/80 mt-1'>
                               {getStatusLabel(activity.status)}
@@ -931,6 +968,42 @@ export default function DashboardPage() {
                         {prospect.fatturato}
                       </p>
                     )}
+                  </div>
+                  <div className='flex gap-2 flex-shrink-0'>
+                    {prospect.phone && (
+                      <Button
+                        variant='outline'
+                        size='icon'
+                        className='h-8 w-8'
+                        onClick={() => window.open(`tel:${prospect.phone}`, '_self')}
+                        title={`Chiama ${prospect.phone}`}
+                      >
+                        <Phone className='h-4 w-4' />
+                      </Button>
+                    )}
+                    <Button
+                      variant='outline'
+                      size='icon'
+                      className='h-8 w-8'
+                      onClick={() => {
+                        const dest = prospect.location
+                          ? parseCoords(prospect.location)
+                          : null;
+                        if (!dest) return;
+                        const [dlat, dlng] = dest;
+                        const origin =
+                          Array.isArray(coord) && coord.length === 2
+                            ? `&origin=${coord[0]},${coord[1]}`
+                            : '';
+                        window.open(
+                          `https://www.google.com/maps/dir/?api=1${origin}&destination=${dlat},${dlng}`,
+                          '_blank'
+                        );
+                      }}
+                      title='Indicazioni'
+                    >
+                      <Navigation className='h-4 w-4' />
+                    </Button>
                   </div>
                 </div>
               ))}

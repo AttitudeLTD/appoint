@@ -149,6 +149,23 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
     console.error('Error fetching generic photos:', genericPhotosError);
   }
 
+  // Esiti dei workflow "manage_form" (es. PROGETTO AICALL / AiCall): l'esito
+  // viene salvato in `store_visit_outcomes.outcome_data` e NON cambia lo status
+  // del pin, quindi non comparirebbe nello storico basato su status_logs. Lo
+  // recuperiamo a parte per renderlo visibile in dashboard/CSV.
+  let outcomesQuery = supabase
+    .from('store_visit_outcomes')
+    .select('store_id, client_id, user_id, outcome_data, created_at')
+    .in('user_id', targetIds)
+    .order('created_at', { ascending: false });
+  if (dateFrom) outcomesQuery = outcomesQuery.gte('created_at', dateFrom);
+  if (dateTo) outcomesQuery = outcomesQuery.lte('created_at', dateTo);
+  const { data: visitOutcomes, error: outcomesError } = await outcomesQuery;
+
+  if (outcomesError) {
+    console.error('Error fetching store visit outcomes:', outcomesError);
+  }
+
   // History mode: use all entries; otherwise keep only latest status per store
   const storeMap = new Map();
   if (isHistoryMode) {
@@ -163,11 +180,14 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
 
   const statusValues = Array.from(storeMap.values());
 
-  // Get unique store IDs from status logs, store photos, and generic photos
+  // Get unique store IDs from status logs, store photos, generic photos and outcomes
   const photoStoreIds = storePhotos?.map((photo) => photo.store_id) || [];
   const genericPhotoStoreIds = genericPhotos?.map((photo) => photo.store_id) || [];
   const statusStoreIds = statusValues.map((s: { store_id: number }) => s.store_id);
-  const uniqueStoreIds = Array.from(new Set([...statusStoreIds, ...photoStoreIds, ...genericPhotoStoreIds]));
+  const outcomeStoreIds = (visitOutcomes ?? []).map((o: { store_id: number }) => o.store_id);
+  const uniqueStoreIds = Array.from(
+    new Set([...statusStoreIds, ...photoStoreIds, ...genericPhotoStoreIds, ...outcomeStoreIds])
+  );
 
   // Fetch store details for these IDs (with client name)
   const { data: storeDetails, error: storeError } = await supabase
@@ -198,6 +218,7 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
   statusValues.forEach((s: { modifier: string }) => modifierIds.add(s.modifier));
   (storePhotos ?? []).forEach((p: { user_id: string }) => modifierIds.add(p.user_id));
   (genericPhotos ?? []).forEach((p: { user_id: string }) => modifierIds.add(p.user_id));
+  (visitOutcomes ?? []).forEach((o: { user_id: string }) => modifierIds.add(o.user_id));
   const modifierIdList = Array.from(modifierIds);
   const modifierMap = new Map<string, string>();
   if (modifierIdList.length > 0) {
@@ -294,10 +315,75 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
     })
     .filter(byClient);
 
-  // Combine and sort by created_at (most recent first)
-  const allEntries = [...statusEntries, ...photoEntries, ...genericPhotoEntries].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  // Esiti dei workflow manage_form: costruiamo la mappa value→label leggendo le
+  // `options` dei field del workflow dei clienti coinvolti (così l'etichetta
+  // mostrata è quella configurata, non lo slug grezzo). Chiave: `${client_id}:${value}`.
+  const esitoLabelByClientValue = new Map<string, string>();
+  const outcomeClientIds = Array.from(
+    new Set((visitOutcomes ?? []).map((o: { client_id: number }) => o.client_id))
   );
+  if (outcomeClientIds.length > 0) {
+    const { data: wfs } = await supabase
+      .from('client_workflows')
+      .select('client_id, workflow')
+      .in('client_id', outcomeClientIds);
+    for (const wf of wfs ?? []) {
+      const sections = (wf as any)?.workflow?.manage_form?.sections ?? [];
+      for (const sec of sections) {
+        for (const f of sec?.fields ?? []) {
+          for (const opt of f?.options ?? []) {
+            if (opt?.value != null) {
+              esitoLabelByClientValue.set(`${wf.client_id}:${opt.value}`, opt.label ?? String(opt.value));
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Add outcome entries (esiti dei workflow manage_form, es. AiCall)
+  const outcomeEntries = (visitOutcomes ?? [])
+    .map((o: any) => {
+      const store = storeDetailsMap.get(o.store_id);
+      const data = (o.outcome_data ?? {}) as Record<string, unknown>;
+      const esitoVal = (data.esito as string | undefined) ?? null;
+      const esitoLabel = esitoVal
+        ? esitoLabelByClientValue.get(`${o.client_id}:${esitoVal}`) ?? String(esitoVal)
+        : '';
+      const clientId = o.client_id ?? store?.client_id ?? null;
+      return {
+        type: 'outcome' as const,
+        store_id: o.store_id,
+        store_name: store?.name,
+        address: store?.address,
+        cap: store?.cap,
+        comune: store?.comune,
+        provincia: store?.provincia,
+        pi: store?.pi,
+        status: store?.status || '',
+        esito: esitoVal,
+        esito_label: esitoLabel,
+        note: (data.note as string | undefined) ?? '',
+        created_at: o.created_at,
+        owner_name: store?.owner_name,
+        phone: store?.phone,
+        category: store?.category,
+        location: store?.location,
+        coordinates: store?.coordinates,
+        client_id: clientId,
+        client_name: getClientName(store),
+        modifier_display_name: modifierMap.get(o.user_id) ?? '',
+      };
+    })
+    .filter(byClient);
+
+  // Combine and sort by created_at (most recent first)
+  const allEntries = [
+    ...statusEntries,
+    ...photoEntries,
+    ...genericPhotoEntries,
+    ...outcomeEntries,
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   return allEntries;
 }
