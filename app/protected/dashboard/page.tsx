@@ -118,7 +118,7 @@ function MultiSelectPopover({
         : `${selected.length} selezionati`;
   return (
     <div className='flex flex-col gap-1'>
-      <label className='text-xs text-white/80'>{label}</label>
+      {label ? <label className='text-xs text-white/80'>{label}</label> : null}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -189,6 +189,10 @@ export default function DashboardPage() {
   const [historyActivities, setHistoryActivities] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [coord, setCoord] = useState<[number, number] | null>(null);
+  // Filtro clienti per i "Prospect vicini" (multiselect; vuoto = tutti).
+  const [selectedNearbyClientIds, setSelectedNearbyClientIds] = useState<string[]>([]);
+  // Clienti visibili all'utente (RLS) per le tendine client (es. prospect).
+  const [visibleClients, setVisibleClients] = useState<{ id: number; name: string }[]>([]);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarDraftFrom, setCalendarDraftFrom] = useState<Date | undefined>(undefined);
   const [calendarDraftTo, setCalendarDraftTo] = useState<Date | undefined>(undefined);
@@ -221,12 +225,31 @@ export default function DashboardPage() {
     load();
   }, []);
 
-  // Posizione utente per indicazioni
+  // Posizione utente (per indicazioni + prospect vicini)
   useEffect(() => {
     getMyLoc((coords) => {
-      if (coords && Array.isArray(coords)) setCoord(coords as [number, number]);
+      if (coords && Array.isArray(coords)) {
+        setCoord(coords as [number, number]);
+      } else {
+        setNearbyError('Posizione non disponibile');
+        setNearbyLoading(false);
+      }
     });
   }, []);
+
+  // Clienti visibili all'utente (per la tendina dei prospect). RLS limita a ciò
+  // che l'utente può vedere.
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, name')
+        .order('name', { ascending: true });
+      if (!error && data) {
+        setVisibleClients(data.map((c: any) => ({ id: c.id, name: c.name })));
+      }
+    })();
+  }, [supabase]);
 
   const loadHistory = useCallback(async () => {
     // Attendiamo che il ruolo sia noto: così la singola fetch parte già con il
@@ -267,60 +290,60 @@ export default function DashboardPage() {
     loadHistory();
   }, [loadHistory]);
 
-  // Prospect vicini: posizione utente + RPC get_stores_within_radius, solo status free
-  useEffect(() => {
+  // Prospect vicini: RPC get_stores_within_radius (solo status free), con filtro
+  // cliente opzionale (multiselect → p_client_ids). Si ri-esegue al cambio filtro.
+  const loadNearby = useCallback(async () => {
+    if (!coord) return;
     setNearbyLoading(true);
     setNearbyError(null);
-    getMyLoc((coords) => {
-      if (!coords || !Array.isArray(coords)) {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
         setNearbyLoading(false);
-        setNearbyError('Posizione non disponibile');
+        return;
+      }
+      const [lat, lng] = coord;
+      const params: {
+        lat: number;
+        lng: number;
+        radius: number;
+        p_limit: number;
+        p_client_ids?: number[];
+      } = { lat, lng, radius: NEARBY_RADIUS_M, p_limit: 60 };
+      if (selectedNearbyClientIds.length > 0) {
+        params.p_client_ids = selectedNearbyClientIds.map(Number);
+      }
+
+      const { data: storesData, error: rpcError } = await supabase.rpc(
+        'get_stores_within_radius',
+        params
+      );
+
+      if (rpcError) {
+        console.error('get_stores_within_radius error:', rpcError);
+        setNearbyError('Errore nel caricamento');
         setNearbyProspects([]);
         return;
       }
-      const [lat, lng] = coords;
-      const params: { lat: number; lng: number; radius: number; p_limit?: number } = {
-        lat,
-        lng,
-        radius: NEARBY_RADIUS_M,
-        p_limit: 30,
-      };
 
-      (async () => {
-        try {
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
-          if (!user) {
-            setNearbyLoading(false);
-            return;
-          }
+      // Visibilità gestita lato DB (RLS + RPC), niente filtro client-side.
+      const stores = (storesData ?? []).filter((s: any) => s.status === 'free');
+      setNearbyProspects(stores.slice(0, NEARBY_LIMIT));
+      setNearbyError(null);
+    } catch (error) {
+      console.error('Unexpected error in get_stores_within_radius:', error);
+      setNearbyError('Errore nel caricamento');
+      setNearbyProspects([]);
+    } finally {
+      setNearbyLoading(false);
+    }
+  }, [coord, selectedNearbyClientIds, supabase]);
 
-          const { data: storesData, error: rpcError } = await Promise.resolve(
-            supabase.rpc('get_stores_within_radius', params)
-          );
-
-          if (rpcError) {
-            console.error('get_stores_within_radius error:', rpcError);
-            setNearbyError('Errore nel caricamento');
-            setNearbyProspects([]);
-            return;
-          }
-
-          // Visibilità gestita lato DB (RLS + RPC), niente filtro client-side.
-          const stores = (storesData ?? []).filter((s: any) => s.status === 'free');
-          setNearbyProspects(stores.slice(0, NEARBY_LIMIT));
-          setNearbyError(null);
-        } catch (error) {
-          console.error('Unexpected error in get_stores_within_radius:', error);
-          setNearbyError('Errore nel caricamento');
-          setNearbyProspects([]);
-        } finally {
-          setNearbyLoading(false);
-        }
-      })();
-    });
-  }, []);
+  useEffect(() => {
+    if (coord) loadNearby();
+  }, [coord, loadNearby]);
 
   const historyClients = useMemo(() => {
     const m = new Map<string, string>();
@@ -1060,9 +1083,19 @@ export default function DashboardPage() {
 
         {/* Riquadro Prospect vicini a te */}
         <div className='bg-white/10 rounded-lg border border-white/20 p-6 shadow-sm flex flex-col min-h-0 overflow-hidden max-h-[32rem]'>
-          <div className='flex items-center gap-2 mb-4 flex-shrink-0'>
-            <MapPin className='h-5 w-5 text-green-300' />
-            <h2 className='text-xl font-semibold text-white'>Prospect vicini a te</h2>
+          <div className='flex items-center justify-between gap-2 mb-4 flex-shrink-0'>
+            <div className='flex items-center gap-2 min-w-0'>
+              <MapPin className='h-5 w-5 text-green-300 flex-shrink-0' />
+              <h2 className='text-xl font-semibold text-white truncate'>Prospect vicini a te</h2>
+            </div>
+            <MultiSelectPopover
+              label=''
+              allLabel='Tutti i clienti'
+              widthClass='w-[150px]'
+              options={visibleClients.map((c) => ({ value: String(c.id), label: c.name }))}
+              selected={selectedNearbyClientIds}
+              onChange={setSelectedNearbyClientIds}
+            />
           </div>
           <div className='min-h-0 flex-1 overflow-y-auto min-h-[280px]'>
             {nearbyLoading ? (
