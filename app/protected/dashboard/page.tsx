@@ -807,12 +807,23 @@ export default function DashboardPage() {
                   })}
                 </div>
 
-                <div className='appoint-cal'>
-                  {/* Stili calendario: leggibili su sfondo blu, niente bordi,
-                      frecce bianche, range ben evidenziato. */}
+                <div
+                  className='appoint-cal'
+                  style={
+                    {
+                      ['--rdp-day-width']: '40px',
+                      ['--rdp-day-height']: '40px',
+                      ['--rdp-day_button-width']: '36px',
+                      ['--rdp-day_button-height']: '36px',
+                    } as React.CSSProperties
+                  }
+                >
+                  {/* Stili calendario: sfondo blu, frecce bianche, banda del range
+                      continua con estremità arrotondate che coincidono coi cerchi. */}
                   <style>{`
                     .appoint-cal { color:#fff; }
                     .appoint-cal .rdp-months { gap:1.25rem; }
+                    .appoint-cal .rdp-month_grid { border-collapse:collapse; }
                     .appoint-cal .rdp-month_caption,
                     .appoint-cal .rdp-caption_label {
                       color:#fff; font-weight:700; text-transform:capitalize; font-size:.95rem;
@@ -830,31 +841,35 @@ export default function DashboardPage() {
                       color:rgba(255,255,255,0.55); font-weight:600;
                       font-size:.7rem; text-transform:uppercase;
                     }
+                    .appoint-cal .rdp-day { padding:0; }
                     .appoint-cal .rdp-day_button {
                       border:none; color:#fff; border-radius:9999px;
-                      width:38px; height:38px;
+                      width:36px; height:36px; margin:0 auto;
                     }
                     .appoint-cal .rdp-day_button:hover { background:rgba(255,255,255,0.16); }
                     .appoint-cal .rdp-today .rdp-day_button {
                       box-shadow: inset 0 0 0 1.5px #CBACF9; color:#CBACF9; font-weight:700;
                     }
-                    /* reset: i giorni selezionati NON sono cerchi pieni di default */
+                    /* Banda del range: stessa tinta su start/middle/end → continua.
+                       Le estremità sono arrotondate (raggio = mezzo cerchio) così
+                       coincidono con i cerchi di prima/ultima data. */
+                    .appoint-cal .rdp-range_start,
+                    .appoint-cal .rdp-range_middle,
+                    .appoint-cal .rdp-range_end {
+                      background:linear-gradient(180deg, rgba(203,172,249,0.16), rgba(203,172,249,0.32));
+                    }
+                    .appoint-cal .rdp-range_start {
+                      border-top-left-radius:9999px; border-bottom-left-radius:9999px;
+                    }
+                    .appoint-cal .rdp-range_end {
+                      border-top-right-radius:9999px; border-bottom-right-radius:9999px;
+                    }
+                    .appoint-cal .rdp-range_start.rdp-range_end { border-radius:9999px; }
+                    /* reset: i giorni selezionati non sono cerchi pieni di default */
                     .appoint-cal .rdp-selected .rdp-day_button {
-                      background:transparent; color:#fff; font-weight:500;
+                      background:transparent; color:#fff; font-weight:600;
                     }
-                    /* banda del range: gradiente verticale tenue, continuo lungo la riga */
-                    .appoint-cal .rdp-range_middle {
-                      background:linear-gradient(180deg, rgba(203,172,249,0.12), rgba(203,172,249,0.30));
-                    }
-                    .appoint-cal .rdp-range_middle .rdp-day_button { background:transparent; color:#fff; }
-                    /* collega gli estremi alla banda (mezza cella verso il centro) */
-                    .appoint-cal .rdp-range_start:not(.rdp-range_end) {
-                      background:linear-gradient(90deg, transparent 50%, rgba(203,172,249,0.30) 50%);
-                    }
-                    .appoint-cal .rdp-range_end:not(.rdp-range_start) {
-                      background:linear-gradient(90deg, rgba(203,172,249,0.30) 50%, transparent 50%);
-                    }
-                    /* estremi: pillola chiara piena (start/end) — dopo il reset, così vince */
+                    /* estremi: pillola chiara piena (dopo il reset → vince) */
                     .appoint-cal .rdp-range_start .rdp-day_button,
                     .appoint-cal .rdp-range_end .rdp-day_button {
                       background:#CBACF9; color:#1B304E; font-weight:700;
@@ -874,17 +889,24 @@ export default function DashboardPage() {
                           <ChevronRight className='h-4 w-4' />
                         ),
                     }}
-                    // Mostra la selezione "in corso": il 1° click azzera il range
-                    // e imposta solo l'inizio; il 2° click lo completa.
                     selected={draftRange}
-                    onSelect={(range) => {
-                      setDraftRange(range);
-                      // Applica + chiudi SOLO quando il range è completo (2 date).
-                      if (range?.from && range?.to) {
-                        setHistoryDateFrom(format(range.from, 'yyyy-MM-dd'));
-                        setHistoryDateTo(format(range.to, 'yyyy-MM-dd'));
-                        setCalendarOpen(false);
+                    // Gestione click manuale per UX a 2 click:
+                    //  • 1° click (o dopo un range completo) → azzera e imposta solo
+                    //    l'inizio, il calendario RESTA aperto;
+                    //  • 2° click → completa il range (ordinato), applica e chiude.
+                    onDayClick={(day) => {
+                      const hasComplete = !!(draftRange?.from && draftRange?.to);
+                      if (!draftRange?.from || hasComplete) {
+                        setDraftRange({ from: day, to: undefined });
+                        return;
                       }
+                      const start = draftRange.from;
+                      const from = start <= day ? start : day;
+                      const to = start <= day ? day : start;
+                      setDraftRange({ from, to });
+                      setHistoryDateFrom(format(from, 'yyyy-MM-dd'));
+                      setHistoryDateTo(format(to, 'yyyy-MM-dd'));
+                      setCalendarOpen(false);
                     }}
                     numberOfMonths={2}
                   />
