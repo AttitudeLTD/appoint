@@ -383,6 +383,7 @@ export default function DashboardPage() {
     const headers = [
       'Tipo',
       'Nome Attività',
+      'Cliente',
       'Partita IVA',
       'Indirizzo',
       'CAP',
@@ -409,6 +410,7 @@ export default function DashboardPage() {
       return [
         tipo,
         entry.store_name || '',
+        entry.client_name || '',
         entry.pi || '',
         entry.address || '',
         entry.cap || '',
@@ -1069,6 +1071,11 @@ export default function DashboardPage() {
                           <p className='font-medium text-sm truncate text-white'>
                             {activity.store_name}
                           </p>
+                          {activity.client_name ? (
+                            <span className='inline-flex items-center mt-0.5 text-[11px] font-medium text-white/90 bg-white/10 border border-white/20 rounded-full px-2 py-0.5'>
+                              {activity.client_name}
+                            </span>
+                          ) : null}
                           {activity.pi ? (
                             <p className='text-xs text-white/70 truncate'>
                               P.IVA: {activity.pi}
