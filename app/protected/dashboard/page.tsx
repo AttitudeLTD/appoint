@@ -20,6 +20,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores, getDashboardContext } from '@/utils/stores';
@@ -702,8 +703,18 @@ export default function DashboardPage() {
   return (
     <div className='container mx-auto px-4 py-8 max-w-7xl' style={{ backgroundColor: '#224677', minHeight: '100vh' }}>
       {/* Header */}
-      <div className='mb-8'>
+      <div className='mb-8 flex items-center gap-3 flex-wrap'>
         <h1 className='text-3xl font-bold text-white'>Dashboard</h1>
+        {historyLoading && (
+          <span
+            className='inline-flex items-center gap-2 text-sm text-white bg-white/10 border border-white/20 rounded-full px-3 py-1'
+            role='status'
+            aria-live='polite'
+          >
+            <Loader2 className='h-4 w-4 animate-spin' />
+            Aggiornamento dati…
+          </span>
+        )}
       </div>
 
       {/* Filtro agenti (solo AM e Supervisor) */}
@@ -907,7 +918,11 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Section */}
-      <div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-8'>
+      <div
+        className={`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 mb-8 transition-opacity duration-200 ${
+          historyLoading ? 'opacity-40' : 'opacity-100'
+        }`}
+      >
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
@@ -940,7 +955,12 @@ export default function DashboardPage() {
           <TrendingUp className='h-5 w-5 text-emerald-300' />
           <h2 className='text-xl font-semibold text-white'>Andamento visite</h2>
         </div>
-        {dailyTrend.days.length === 0 ? (
+        {historyLoading ? (
+          <div className='flex items-center justify-center gap-2 text-sm text-white/80 py-10'>
+            <Loader2 className='h-5 w-5 animate-spin' />
+            Caricamento dati…
+          </div>
+        ) : dailyTrend.days.length === 0 ? (
           <p className='text-sm text-white/60 py-6 text-center'>
             Nessun dato nel periodo selezionato
           </p>
@@ -991,7 +1011,18 @@ export default function DashboardPage() {
           </div>
           <div className='min-h-0 flex-1 overflow-y-auto min-h-[280px]'>
             {historyLoading ? (
-              <div className='text-center text-white/80 py-8'>Caricamento...</div>
+              <div className='space-y-3'>
+                <div className='flex items-center justify-center gap-2 text-sm text-white/80 pb-1'>
+                  <Loader2 className='h-4 w-4 animate-spin' />
+                  Caricamento attività…
+                </div>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className='h-16 rounded-lg border border-white/10 bg-white/5 animate-pulse'
+                  />
+                ))}
+              </div>
             ) : filteredHistoryActivities.length > 0 ? (
               <div className='space-y-3'>
                 {filteredHistoryActivities.map((activity, index) => {
