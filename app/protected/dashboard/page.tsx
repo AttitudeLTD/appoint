@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DayPicker } from 'react-day-picker';
+import { DayPicker, type DateRange } from 'react-day-picker';
 import { it } from 'date-fns/locale';
 import { format } from 'date-fns';
 import 'react-day-picker/style.css';
@@ -196,6 +196,9 @@ export default function DashboardPage() {
   // Clienti visibili all'utente (RLS) per le tendine client (es. prospect).
   const [visibleClients, setVisibleClients] = useState<{ id: number; name: string }[]>([]);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  // Selezione "in corso" nel calendario: 1° click azzera e imposta solo l'inizio,
+  // 2° click completa il range → applica e chiude.
+  const [draftRange, setDraftRange] = useState<DateRange | undefined>(undefined);
 
   // ── Export negozi per supervisor ────────────────────────────────────────────
   // Lista di tutti i clienti per il select dell'export (caricata solo per supervisor).
@@ -723,7 +726,19 @@ export default function DashboardPage() {
         <div className='flex flex-wrap items-end gap-3'>
           <div className='flex flex-col gap-1'>
             <label className='text-xs text-white/80'>Periodo</label>
-            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <Popover
+              open={calendarOpen}
+              onOpenChange={(open) => {
+                setCalendarOpen(open);
+                // All'apertura mostra il periodo applicato come selezione iniziale.
+                if (open) {
+                  setDraftRange({
+                    from: new Date(historyDateFrom + 'T12:00:00'),
+                    to: new Date(historyDateTo + 'T12:00:00'),
+                  });
+                }
+              }}
+            >
               <PopoverTrigger asChild>
                 <Button
                   variant='outline'
@@ -812,11 +827,25 @@ export default function DashboardPage() {
                     .appoint-cal .rdp-today .rdp-day_button {
                       box-shadow: inset 0 0 0 1.5px #CBACF9; color:#CBACF9; font-weight:700;
                     }
-                    .appoint-cal .rdp-range_middle { background:rgba(203,172,249,0.22); }
-                    .appoint-cal .rdp-range_middle .rdp-day_button { background:transparent; color:#fff; }
-                    .appoint-cal .rdp-range_start .rdp-day_button,
-                    .appoint-cal .rdp-range_end .rdp-day_button,
+                    /* reset: i giorni selezionati NON sono cerchi pieni di default */
                     .appoint-cal .rdp-selected .rdp-day_button {
+                      background:transparent; color:#fff; font-weight:500;
+                    }
+                    /* banda del range: gradiente verticale tenue, continuo lungo la riga */
+                    .appoint-cal .rdp-range_middle {
+                      background:linear-gradient(180deg, rgba(203,172,249,0.12), rgba(203,172,249,0.30));
+                    }
+                    .appoint-cal .rdp-range_middle .rdp-day_button { background:transparent; color:#fff; }
+                    /* collega gli estremi alla banda (mezza cella verso il centro) */
+                    .appoint-cal .rdp-range_start:not(.rdp-range_end) {
+                      background:linear-gradient(90deg, transparent 50%, rgba(203,172,249,0.30) 50%);
+                    }
+                    .appoint-cal .rdp-range_end:not(.rdp-range_start) {
+                      background:linear-gradient(90deg, rgba(203,172,249,0.30) 50%, transparent 50%);
+                    }
+                    /* estremi: pillola chiara piena (start/end) — dopo il reset, così vince */
+                    .appoint-cal .rdp-range_start .rdp-day_button,
+                    .appoint-cal .rdp-range_end .rdp-day_button {
                       background:#CBACF9; color:#1B304E; font-weight:700;
                     }
                     .appoint-cal .rdp-outside { opacity:.35; }
@@ -834,21 +863,15 @@ export default function DashboardPage() {
                           <ChevronRight className='h-4 w-4' />
                         ),
                     }}
-                    // Il range selezionato è SEMPRE quello applicato: così resta
-                    // evidenziato sul calendario e si vede a colpo d'occhio.
-                    selected={{
-                      from: new Date(historyDateFrom + 'T12:00:00'),
-                      to: new Date(historyDateTo + 'T12:00:00'),
-                    }}
+                    // Mostra la selezione "in corso": il 1° click azzera il range
+                    // e imposta solo l'inizio; il 2° click lo completa.
+                    selected={draftRange}
                     onSelect={(range) => {
-                      if (!range?.from) return;
-                      const from = range.from;
-                      const to = range.to ?? range.from;
-                      // Applica subito (la fetch dipende da queste date).
-                      setHistoryDateFrom(format(from, 'yyyy-MM-dd'));
-                      setHistoryDateTo(format(to, 'yyyy-MM-dd'));
-                      // Chiude solo quando è stato scelto un range completo (2 click).
-                      if (range.to && range.to.getTime() !== range.from.getTime()) {
+                      setDraftRange(range);
+                      // Applica + chiudi SOLO quando il range è completo (2 date).
+                      if (range?.from && range?.to) {
+                        setHistoryDateFrom(format(range.from, 'yyyy-MM-dd'));
+                        setHistoryDateTo(format(range.to, 'yyyy-MM-dd'));
                         setCalendarOpen(false);
                       }
                     }}
