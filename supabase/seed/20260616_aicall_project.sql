@@ -1,10 +1,15 @@
 -- =============================================================================
--- Seed: PROGETTO AICALL — nuovo cliente + workflow + visibilità
--- Date: 2026-06-16
+-- Seed: PROGETTO AICALL / AiCall — nuovo cliente + workflow + visibilità
+-- Date: 2026-06-16 (agg. 2026-06-26: rename → "AiCall" + logo Amex condiviso)
 -- Author: egidiosalinaro
 --
+-- NOTA rename: il cliente è stato creato come "PROGETTO AICALL" e in seguito
+--   rinominato "AiCall". Le condizioni di esistenza considerano entrambi i nomi
+--   così il seed resta idempotente sia su DB nuovo che su quello già rinominato.
+--   Il rename è solo un'etichetta: il runtime referenzia il cliente per `id`.
+--
 -- Cosa fa:
---   1. Crea il cliente "PROGETTO AICALL" (lead generati dal partner AiCall).
+--   1. Crea il cliente "AiCall" (lead generati dal partner AiCall).
 --   2. Crea il relativo `client_workflows.workflow` con un `manage_form`
 --      dichiarativo: una tendina ESITO obbligatoria (9 esiti OK/KO) + un campo
 --      NOTE libero. Al salvataggio l'esito viene persistito in
@@ -32,15 +37,17 @@ begin;
 
 -- ---- 1) Cliente -------------------------------------------------------------
 insert into public.clients (name)
-select 'PROGETTO AICALL'
-where not exists (select 1 from public.clients where name = 'PROGETTO AICALL');
+select 'AiCall'
+where not exists (
+  select 1 from public.clients where name in ('AiCall', 'PROGETTO AICALL')
+);
 
 
 -- ---- 2) Workflow (manage_form: tendina ESITO obbligatoria + NOTE) -----------
 insert into public.client_workflows (client_id, name, workflow, active)
 select
   c.id,
-  'PROGETTO AICALL',
+  'AiCall',
   '{
   "manage_form": {
     "version": 1,
@@ -85,7 +92,7 @@ select
   }'::jsonb,
   true
 from public.clients c
-where c.name = 'PROGETTO AICALL'
+where c.name in ('AiCall', 'PROGETTO AICALL')
   and not exists (
     select 1 from public.client_workflows w where w.client_id = c.id
   );
@@ -96,15 +103,25 @@ insert into public.user_client_access (user_id, client_id)
 select u.id, c.id
 from public.users u
 cross join public.clients c
-where c.name = 'PROGETTO AICALL'
+where c.name in ('AiCall', 'PROGETTO AICALL')
 on conflict do nothing;
+
+
+-- ---- 4) Nome finale "AiCall" + logo (riusa lo stesso file logo di Amex) ------
+--    Il bucket `client-logos` è pubblico: puntare allo stesso path mostra il
+--    logo Amex anche per i pin/filtro di AiCall. (Non esiste copia del file: si
+--    condivide il path '2/logo.png'.)
+update public.clients
+set name = 'AiCall',
+    logo = (select logo from public.clients where name = 'Amex' limit 1)
+where name in ('AiCall', 'PROGETTO AICALL');
 
 commit;
 
 -- ---- rollback (riferimento, non eseguito) -----------------------------------
 -- begin;
---   delete from public.user_client_access where client_id = (select id from public.clients where name = 'PROGETTO AICALL');
---   delete from public.client_workflows  where client_id = (select id from public.clients where name = 'PROGETTO AICALL');
+--   delete from public.user_client_access where client_id = (select id from public.clients where name = 'AiCall');
+--   delete from public.client_workflows  where client_id = (select id from public.clients where name = 'AiCall');
 --   -- ATTENZIONE: cancellare il cliente fallisce se esistono stores collegati.
---   -- delete from public.clients where name = 'PROGETTO AICALL';
+--   -- delete from public.clients where name = 'AiCall';
 -- commit;

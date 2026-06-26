@@ -218,9 +218,9 @@ I valori vengono persistiti in `store_visit_outcomes.outcome_data` (jsonb) come 
 | 2    | Amex                | `Amex Merchant Visit` (failed/non_existent reasons + sub-workflow concluded/already_client) |
 | 3    | Maintenance Amex    | _(nessun workflow dedicato)_                                                               |
 | 4    | Lead da Maintenance | `manage_form` minimale (`status_select`)                                                   |
-| 5    | **PROGETTO AICALL** | `manage_form`: tendina **ESITO obbligatoria** (9 esiti OK/KO) + campo **NOTE** libero      |
+| 5    | **AiCall** _(ex "PROGETTO AICALL")_ | `manage_form`: tendina **ESITO obbligatoria** (9 esiti OK/KO) + campo **NOTE** libero. Logo: riusa `2/logo.png` (stesso di Amex). |
 
-**PROGETTO AICALL** (lead generati dal partner _AiCall_): i pin sono visibili a **tutti** gli agenti (grant su `user_client_access` per ogni utente). Lo Sheet "Gestisci" mostra un `select` obbligatorio `esito` con i valori:
+**AiCall** _(creato come "PROGETTO AICALL", poi rinominato)_ — lead generati dal partner _AiCall_: i pin sono visibili a **tutti** gli agenti (grant su `user_client_access` per ogni utente). Lo Sheet "Gestisci" mostra un `select` obbligatorio `esito` con i valori:
 `OK - In trattativa`, `KO - Non interessato`, `OK - Inviata ad Amex`, `KO - Lead non valido`, `KO - Irreperibile`, `KO - Già Cliente`, `OK - Richiamare`, `KO - Blocco DAP`, `OK - Appuntamento preso`; più un `textarea` `note`. Al salvataggio i valori finiscono in `store_visit_outcomes.outcome_data` (lo status del pin non viene cambiato). Vedi [`seed/20260616_aicall_project.sql`](./seed/20260616_aicall_project.sql).
 
 > ℹ️ I **nuovi** utenti (signup successivo al seed) sono `restricted` senza grant: per far vedere loro PROGETTO AICALL va ri-eseguito lo step 3 del seed o concesso il grant in onboarding.
