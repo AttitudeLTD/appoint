@@ -18,6 +18,8 @@ import {
   ClipboardCheck,
   Phone,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores, getDashboardContext } from '@/utils/stores';
@@ -779,35 +781,59 @@ export default function DashboardPage() {
                   })}
                 </div>
 
-                <div
-                  className='rdp-root rdp-dashboard-theme'
-                  style={
-                    {
-                      ['--rdp-accent-color']: '#CBACF9',
-                      ['--rdp-accent-background-color']: 'rgba(203,172,249,0.22)',
-                      ['--rdp-day_button-border']: 'none',
-                      ['--rdp-day_button-border-radius']: '9999px',
-                      ['--rdp-today-color']: '#CBACF9',
-                      // Range "in mezzo": fondo tenue leggibile, testo bianco.
-                      ['--rdp-range_middle-background-color']: 'rgba(203,172,249,0.22)',
-                      ['--rdp-range_middle-color']: '#ffffff',
-                      // Estremi del range: pillola piena viola con testo scuro.
-                      ['--rdp-range_start-background']: 'transparent',
-                      ['--rdp-range_start-date-background-color']: '#CBACF9',
-                      ['--rdp-range_start-color']: '#224677',
-                      ['--rdp-range_end-background']: 'transparent',
-                      ['--rdp-range_end-date-background-color']: '#CBACF9',
-                      ['--rdp-range_end-color']: '#224677',
-                      ['--rdp-selected-color']: '#224677',
-                      ['--rdp-outside-opacity']: '0.4',
-                      color: 'white',
-                    } as React.CSSProperties
-                  }
-                >
+                <div className='appoint-cal'>
+                  {/* Stili calendario: leggibili su sfondo blu, niente bordi,
+                      frecce bianche, range ben evidenziato. */}
+                  <style>{`
+                    .appoint-cal { color:#fff; }
+                    .appoint-cal .rdp-months { gap:1.25rem; }
+                    .appoint-cal .rdp-month_caption,
+                    .appoint-cal .rdp-caption_label {
+                      color:#fff; font-weight:700; text-transform:capitalize; font-size:.95rem;
+                    }
+                    .appoint-cal .rdp-nav { gap:.35rem; }
+                    .appoint-cal .rdp-button_previous,
+                    .appoint-cal .rdp-button_next {
+                      color:#fff; background:rgba(255,255,255,0.12);
+                      border-radius:9999px; width:30px; height:30px;
+                    }
+                    .appoint-cal .rdp-button_previous:hover,
+                    .appoint-cal .rdp-button_next:hover { background:rgba(255,255,255,0.28); }
+                    .appoint-cal .rdp-chevron { fill:#fff; }
+                    .appoint-cal .rdp-weekday {
+                      color:rgba(255,255,255,0.55); font-weight:600;
+                      font-size:.7rem; text-transform:uppercase;
+                    }
+                    .appoint-cal .rdp-day_button {
+                      border:none; color:#fff; border-radius:9999px;
+                      width:38px; height:38px;
+                    }
+                    .appoint-cal .rdp-day_button:hover { background:rgba(255,255,255,0.16); }
+                    .appoint-cal .rdp-today .rdp-day_button {
+                      box-shadow: inset 0 0 0 1.5px #CBACF9; color:#CBACF9; font-weight:700;
+                    }
+                    .appoint-cal .rdp-range_middle { background:rgba(203,172,249,0.22); }
+                    .appoint-cal .rdp-range_middle .rdp-day_button { background:transparent; color:#fff; }
+                    .appoint-cal .rdp-range_start .rdp-day_button,
+                    .appoint-cal .rdp-range_end .rdp-day_button,
+                    .appoint-cal .rdp-selected .rdp-day_button {
+                      background:#CBACF9; color:#1B304E; font-weight:700;
+                    }
+                    .appoint-cal .rdp-outside { opacity:.35; }
+                    .appoint-cal .rdp-disabled { opacity:.25; }
+                  `}</style>
                   <DayPicker
                     mode='range'
                     locale={it}
                     defaultMonth={new Date(historyDateTo + 'T12:00:00')}
+                    components={{
+                      Chevron: (props) =>
+                        props.orientation === 'left' ? (
+                          <ChevronLeft className='h-4 w-4' />
+                        ) : (
+                          <ChevronRight className='h-4 w-4' />
+                        ),
+                    }}
                     // Il range selezionato è SEMPRE quello applicato: così resta
                     // evidenziato sul calendario e si vede a colpo d'occhio.
                     selected={{
