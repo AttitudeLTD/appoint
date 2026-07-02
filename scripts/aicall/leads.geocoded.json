@@ -13,7 +13,8 @@
     "lat": 45.5675031,
     "lng": 10.0796414,
     "geocode_quality": "street",
-    "geocode_display": "Via Adua, Vallosa, Passirano, Brescia, Lombardia, 25050, Italia"
+    "geocode_display": "Via Adua, Vallosa, Passirano, Brescia, Lombardia, 25050, Italia",
+    "data_setup": "2026-04-09"
   },
   {
     "piva": "02923580985",
@@ -29,7 +30,8 @@
     "lat": 45.4738067,
     "lng": 10.1287701,
     "geocode_quality": "street",
-    "geocode_display": "Via Trento, Caprianella, Fenili Belasi, Capriano del Colle, Brescia, Lombardia, 25020, Italia"
+    "geocode_display": "Via Trento, Caprianella, Fenili Belasi, Capriano del Colle, Brescia, Lombardia, 25020, Italia",
+    "data_setup": "2026-04-09"
   },
   {
     "piva": "04075480980",
@@ -45,7 +47,8 @@
     "lat": 45.5635064,
     "lng": 10.0094931,
     "geocode_quality": "street",
-    "geocode_display": "Via San Fermo, Lodetto, Rovato, Brescia, Lombardia, 25038, Italia"
+    "geocode_display": "Via San Fermo, Lodetto, Rovato, Brescia, Lombardia, 25038, Italia",
+    "data_setup": "2026-04-09"
   },
   {
     "piva": "03898760982",
@@ -61,7 +64,8 @@
     "lat": 45.472354,
     "lng": 10.2994532,
     "geocode_quality": "street",
-    "geocode_display": "Via Giuseppe Mazzini, Castenedolo, Brescia, Lombardia, 25014, Italia"
+    "geocode_display": "Via Giuseppe Mazzini, Castenedolo, Brescia, Lombardia, 25014, Italia",
+    "data_setup": "2026-04-09"
   },
   {
     "piva": "02089270983",
@@ -77,7 +81,8 @@
     "lat": 45.6351736,
     "lng": 10.5996464,
     "geocode_quality": "street",
-    "geocode_display": "Piazza San Marco, Vigole, Maderno, Toscolano Maderno, Comunità Montana Parco Alto Garda bresciano, Brescia, Lombardia, 25088, Italia"
+    "geocode_display": "Piazza San Marco, Vigole, Maderno, Toscolano Maderno, Comunità Montana Parco Alto Garda bresciano, Brescia, Lombardia, 25088, Italia",
+    "data_setup": "2026-04-09"
   },
   {
     "piva": "07550120724",
@@ -93,7 +98,8 @@
     "lat": 40.8492021,
     "lng": 17.1226371,
     "geocode_quality": "comune",
-    "geocode_display": "Putignano, Bari, Puglia, 70017, Italia"
+    "geocode_display": "Putignano, Bari, Puglia, 70017, Italia",
+    "data_setup": "2026-04-09"
   },
   {
     "piva": "03248470407",
@@ -109,7 +115,8 @@
     "lat": 44.0739686,
     "lng": 12.5671238,
     "geocode_quality": "street",
-    "geocode_display": "11, Via Giovanni Briolini, San Giuliano Mare, Rimini, Emilia-Romagna, 47921, Italia"
+    "geocode_display": "11, Via Giovanni Briolini, San Giuliano Mare, Rimini, Emilia-Romagna, 47921, Italia",
+    "data_setup": "2026-04-09"
   },
   {
     "piva": "00609900394",
@@ -125,7 +132,8 @@
     "lat": 44.423289,
     "lng": 12.2259579,
     "geocode_quality": "street",
-    "geocode_display": "Via Trieste, Gulli, Porto Fuori, Ravenna, Emilia-Romagna, 48020, Italia"
+    "geocode_display": "Via Trieste, Gulli, Porto Fuori, Ravenna, Emilia-Romagna, 48020, Italia",
+    "data_setup": "2026-04-09"
   },
   {
     "piva": "05087810650",
@@ -141,7 +149,8 @@
     "lat": 40.6469711,
     "lng": 14.8709702,
     "geocode_quality": "street",
-    "geocode_display": "Corso Umberto I, Pontecagnano, Pontecagnano Faiano, Salerno, Campania, 84141, Italia"
+    "geocode_display": "Corso Umberto I, Pontecagnano, Pontecagnano Faiano, Salerno, Campania, 84141, Italia",
+    "data_setup": "2026-04-09"
   },
   {
     "piva": "02434730392",
@@ -157,7 +166,8 @@
     "lat": 44.4192527,
     "lng": 11.9176967,
     "geocode_quality": "street",
-    "geocode_display": "108/1, Via Albertino Acquacalda, Lugo, Unione dei comuni della Bassa Romagna, Ravenna, Emilia-Romagna, 48022, Italia"
+    "geocode_display": "108/1, Via Albertino Acquacalda, Lugo, Unione dei comuni della Bassa Romagna, Ravenna, Emilia-Romagna, 48022, Italia",
+    "data_setup": "2026-04-09"
   },
   {
     "piva": "03289790754",
@@ -173,7 +183,8 @@
     "lat": 39.9673776,
     "lng": 18.1276654,
     "geocode_quality": "street",
-    "geocode_display": "Via Felline, Melissano, Lecce, Puglia, 73055, Italia"
+    "geocode_display": "Via Felline, Melissano, Lecce, Puglia, 73055, Italia",
+    "data_setup": "2026-04-09"
   },
   {
     "piva": "03600711216",
@@ -189,7 +200,8 @@
     "lat": 40.7887694,
     "lng": 14.3674562,
     "geocode_quality": "street",
-    "geocode_display": "Via Diego Colamarino, Sant'Antonio, Torre del Greco, Napoli, Campania, 80056, Italia"
+    "geocode_display": "Via Diego Colamarino, Sant'Antonio, Torre del Greco, Napoli, Campania, 80056, Italia",
+    "data_setup": "2026-04-09"
   },
   {
     "piva": "04185630409",
@@ -205,7 +217,8 @@
     "lat": 44.0339134,
     "lng": 12.4740968,
     "geocode_quality": "street",
-    "geocode_display": "Tecnodam, 1350, Via Marecchiese, Sant'Ermete, Santarcangelo di Romagna, Unione di comuni Valmarecchia, Rimini, Emilia-Romagna, 47822, Italia"
+    "geocode_display": "Tecnodam, 1350, Via Marecchiese, Sant'Ermete, Santarcangelo di Romagna, Unione di comuni Valmarecchia, Rimini, Emilia-Romagna, 47822, Italia",
+    "data_setup": "2026-04-10"
   },
   {
     "piva": "02220380758",
@@ -221,7 +234,8 @@
     "lat": 40.3570373,
     "lng": 18.1718482,
     "geocode_quality": "comune",
-    "geocode_display": "Lecce, Puglia, 73100, Italia"
+    "geocode_display": "Lecce, Puglia, 73100, Italia",
+    "data_setup": "2026-04-10"
   },
   {
     "piva": "07731321217",
@@ -237,7 +251,8 @@
     "lat": 40.923212,
     "lng": 14.423933,
     "geocode_quality": "comune",
-    "geocode_display": "Brusciano, Napoli, Campania, Italia"
+    "geocode_display": "Brusciano, Napoli, Campania, Italia",
+    "data_setup": "2026-04-10"
   },
   {
     "piva": "00535970552",
@@ -253,7 +268,8 @@
     "lat": 42.568806,
     "lng": 12.5946928,
     "geocode_quality": "street",
-    "geocode_display": "Strada di Casanova, Colleluna II, Terni, Umbria, 05100, Italia"
+    "geocode_display": "Strada di Casanova, Colleluna II, Terni, Umbria, 05100, Italia",
+    "data_setup": "2026-04-10"
   },
   {
     "piva": "04148430400",
@@ -269,7 +285,8 @@
     "lat": 44.2180139,
     "lng": 12.0746266,
     "geocode_quality": "street",
-    "geocode_display": "103g, Via Nicolò Copernico, Musicisti, Coriano, Forlì, Unione di Comuni della Romagna Forlivese, Forlì-Cesena, Emilia-Romagna, 47122, Italia"
+    "geocode_display": "103g, Via Nicolò Copernico, Musicisti, Coriano, Forlì, Unione di Comuni della Romagna Forlivese, Forlì-Cesena, Emilia-Romagna, 47122, Italia",
+    "data_setup": "2026-04-10"
   },
   {
     "piva": "04077160408",
@@ -285,7 +302,8 @@
     "lat": 44.1662468,
     "lng": 12.2448785,
     "geocode_quality": "street",
-    "geocode_display": "180, Via Otello Fusconi, Quartiere Ravennate, Martorano, Cesena, Unione dei comuni Valle del Savio, Forlì-Cesena, Emilia-Romagna, 47522, Italia"
+    "geocode_display": "180, Via Otello Fusconi, Quartiere Ravennate, Martorano, Cesena, Unione dei comuni Valle del Savio, Forlì-Cesena, Emilia-Romagna, 47522, Italia",
+    "data_setup": "2026-04-10"
   },
   {
     "piva": "03412531208",
@@ -301,7 +319,8 @@
     "lat": 44.4387478,
     "lng": 11.4654488,
     "geocode_quality": "street",
-    "geocode_display": "Via Salvo D'Acquisto, Ozzano dell'Emilia, Unione dei comuni Savena-Idice, Bologna, Emilia-Romagna, 40064, Italia"
+    "geocode_display": "Via Salvo D'Acquisto, Ozzano dell'Emilia, Unione dei comuni Savena-Idice, Bologna, Emilia-Romagna, 40064, Italia",
+    "data_setup": "2026-04-10"
   },
   {
     "piva": "03275090235",
@@ -317,7 +336,8 @@
     "lat": 45.5787967,
     "lng": 10.6848253,
     "geocode_quality": "street",
-    "geocode_display": "Garda, Verona, Veneto, 37016, Italia"
+    "geocode_display": "Garda, Verona, Veneto, 37016, Italia",
+    "data_setup": "2026-04-10"
   },
   {
     "piva": "00263950289",
@@ -333,7 +353,8 @@
     "lat": 45.3652399,
     "lng": 11.7959957,
     "geocode_quality": "street",
-    "geocode_display": "Via Carabinieri, Abano Terme, Padova, Veneto, 35031, Italia"
+    "geocode_display": "Via Carabinieri, Abano Terme, Padova, Veneto, 35031, Italia",
+    "data_setup": "2026-04-10"
   },
   {
     "piva": "02358240980",
@@ -349,7 +370,8 @@
     "lat": 45.346975,
     "lng": 9.968467,
     "geocode_quality": "comune",
-    "geocode_display": "Borgo San Giacomo, Brescia, Lombardia, 25022, Italia"
+    "geocode_display": "Borgo San Giacomo, Brescia, Lombardia, 25022, Italia",
+    "data_setup": "2026-04-10"
   },
   {
     "piva": "02065740173",
@@ -365,7 +387,8 @@
     "lat": 45.5398022,
     "lng": 10.2200214,
     "geocode_quality": "comune",
-    "geocode_display": "Brescia, Lombardia, 25121-25136, Italia"
+    "geocode_display": "Brescia, Lombardia, 25121-25136, Italia",
+    "data_setup": "2026-04-10"
   },
   {
     "piva": "00684380983",
@@ -381,7 +404,8 @@
     "lat": 45.351936,
     "lng": 10.4364571,
     "geocode_quality": "comune",
-    "geocode_display": "Carpenedolo, Brescia, Lombardia, 25013, Italia"
+    "geocode_display": "Carpenedolo, Brescia, Lombardia, 25013, Italia",
+    "data_setup": "2026-04-10"
   },
   {
     "piva": "04328460987",
@@ -397,7 +421,8 @@
     "lat": 45.5670977,
     "lng": 9.9986143,
     "geocode_quality": "street",
-    "geocode_display": "Piazza Cavour, Rovato, Brescia, Lombardia, 25038, Italia"
+    "geocode_display": "Piazza Cavour, Rovato, Brescia, Lombardia, 25038, Italia",
+    "data_setup": "2026-04-10"
   },
   {
     "piva": "04691270757",
@@ -413,7 +438,8 @@
     "lat": 40.3434537,
     "lng": 18.1343607,
     "geocode_quality": "street",
-    "geocode_display": "Via Francesco d'Onofrio, Lecce, Puglia, 73100, Italia"
+    "geocode_display": "Via Francesco d'Onofrio, Lecce, Puglia, 73100, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "01180870113",
@@ -429,7 +455,8 @@
     "lat": 44.1111081,
     "lng": 9.8524836,
     "geocode_quality": "street",
-    "geocode_display": "Viale San Bartolomeo, Boschetti, Bragarina, La Spezia, Liguria, 19126, Italia"
+    "geocode_display": "Viale San Bartolomeo, Boschetti, Bragarina, La Spezia, Liguria, 19126, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "02388020394",
@@ -445,7 +472,8 @@
     "lat": 44.3043221,
     "lng": 12.3445136,
     "geocode_quality": "street",
-    "geocode_display": "152, Viale Romagna, Lido di Savio, Lido di Classe, Ravenna, Emilia-Romagna, 48016, Italia"
+    "geocode_display": "152, Viale Romagna, Lido di Savio, Lido di Classe, Ravenna, Emilia-Romagna, 48016, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "05344560650",
@@ -461,7 +489,8 @@
     "lat": 40.6286581,
     "lng": 14.4854955,
     "geocode_quality": "comune",
-    "geocode_display": "Positano, Salerno, Campania, 84017, Italia"
+    "geocode_display": "Positano, Salerno, Campania, 84017, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "01405320332",
@@ -477,7 +506,8 @@
     "lat": 45.4902028,
     "lng": 9.1836283,
     "geocode_quality": "street",
-    "geocode_display": "40, Via Carlo Farini, La Fontana, Isola, Municipio 9, Milano, Rodano, Milano, Lombardia, 20159, Italia"
+    "geocode_display": "40, Via Carlo Farini, La Fontana, Isola, Municipio 9, Milano, Rodano, Milano, Lombardia, 20159, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "09421370587",
@@ -493,7 +523,8 @@
     "lat": 41.9514045,
     "lng": 12.5156321,
     "geocode_quality": "street",
-    "geocode_display": "Via Vaglia, Val Melaina, Municipio Roma III, Roma, Lazio, 00139, Italia"
+    "geocode_display": "Via Vaglia, Val Melaina, Municipio Roma III, Roma, Lazio, 00139, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "11029070155",
@@ -509,7 +540,8 @@
     "lat": 45.5085339,
     "lng": 9.1702171,
     "geocode_quality": "street",
-    "geocode_display": "Via privata Don Bartolomeo Grazioli, Affori, Municipio 9, Milano, Rodano, Milano, Lombardia, 20158, Italia"
+    "geocode_display": "Via privata Don Bartolomeo Grazioli, Affori, Municipio 9, Milano, Rodano, Milano, Lombardia, 20158, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "02205100395",
@@ -525,7 +557,8 @@
     "lat": 44.3691538,
     "lng": 11.9045243,
     "geocode_quality": "street",
-    "geocode_display": "29, Via Agrippina, San Severo, Cotignola, Unione dei comuni della Bassa Romagna, Ravenna, Emilia-Romagna, 48033, Italia"
+    "geocode_display": "29, Via Agrippina, San Severo, Cotignola, Unione dei comuni della Bassa Romagna, Ravenna, Emilia-Romagna, 48033, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "00876890062",
@@ -541,7 +574,8 @@
     "lat": 44.9007043,
     "lng": 8.8716469,
     "geocode_quality": "comune",
-    "geocode_display": "Largo Carabinieri d'Italia, Tortona, Alessandria, Piemonte, 15057, Italia"
+    "geocode_display": "Largo Carabinieri d'Italia, Tortona, Alessandria, Piemonte, 15057, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "07597110720",
@@ -557,7 +591,8 @@
     "lat": 41.063448,
     "lng": 16.9216976,
     "geocode_quality": "street",
-    "geocode_display": "Triggiano, Bari, Puglia, 70019, Italia"
+    "geocode_display": "Triggiano, Bari, Puglia, 70019, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "02269320988",
@@ -573,7 +608,8 @@
     "lat": 45.5230384,
     "lng": 10.0741673,
     "geocode_quality": "street",
-    "geocode_display": "8, Via Giovanni Uboldi, Travagliato, Corte Franca, Brescia, Lombardia, 25039, Italia"
+    "geocode_display": "8, Via Giovanni Uboldi, Travagliato, Corte Franca, Brescia, Lombardia, 25039, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "00323820985",
@@ -589,7 +625,8 @@
     "lat": 45.3993489,
     "lng": 10.3953749,
     "geocode_quality": "street",
-    "geocode_display": "Via dell'Artigianato, Boschetti, Montichiari, Brescia, Lombardia, 25018, Italia"
+    "geocode_display": "Via dell'Artigianato, Boschetti, Montichiari, Brescia, Lombardia, 25018, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "08103180728",
@@ -605,7 +642,8 @@
     "lat": 40.9914849,
     "lng": 17.2236466,
     "geocode_quality": "street",
-    "geocode_display": "Via Don Giovanni Minzoni, Pozziglioni, Polignano a Mare, Bari, Puglia, 70044, Italia"
+    "geocode_display": "Via Don Giovanni Minzoni, Pozziglioni, Polignano a Mare, Bari, Puglia, 70044, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "00725210629",
@@ -621,7 +659,8 @@
     "lat": 41.2844718,
     "lng": 14.5589453,
     "geocode_quality": "street",
-    "geocode_display": "Cerreto Sannita, Benevento, Campania, 82032, Italia"
+    "geocode_display": "Cerreto Sannita, Benevento, Campania, 82032, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "05845770725",
@@ -637,7 +676,8 @@
     "lat": 41.0322873,
     "lng": 16.9877123,
     "geocode_quality": "comune",
-    "geocode_display": "Noicattaro, Bari, Puglia, 70016, Italia"
+    "geocode_display": "Noicattaro, Bari, Puglia, 70016, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "02455470407",
@@ -653,7 +693,8 @@
     "lat": 44.2020736,
     "lng": 12.4025643,
     "geocode_quality": "street",
-    "geocode_display": "3, Viale Ferrara, Cesenatico, Unione Rubicone e mare, Forlì-Cesena, Emilia-Romagna, 47042, Italia"
+    "geocode_display": "3, Viale Ferrara, Cesenatico, Unione Rubicone e mare, Forlì-Cesena, Emilia-Romagna, 47042, Italia",
+    "data_setup": "2026-04-13"
   },
   {
     "piva": "04077070284",
@@ -669,7 +710,8 @@
     "lat": 45.4039312,
     "lng": 11.776839,
     "geocode_quality": "street",
-    "geocode_display": "Via Vegri, Polese, Pralungo, Selvazzano Dentro, Padova, Veneto, 35030, Italia"
+    "geocode_display": "Via Vegri, Polese, Pralungo, Selvazzano Dentro, Padova, Veneto, 35030, Italia",
+    "data_setup": "2026-04-10"
   },
   {
     "piva": "03087290650",
@@ -685,7 +727,8 @@
     "lat": 40.4071268,
     "lng": 15.5741525,
     "geocode_quality": "street",
-    "geocode_display": "Via Pendinello, Sant'Antonio, Sala Consilina, Salerno, Campania, 84034, Italia"
+    "geocode_display": "Via Pendinello, Sant'Antonio, Sala Consilina, Salerno, Campania, 84034, Italia",
+    "data_setup": "2026-04-14"
   },
   {
     "piva": "04324330754",
@@ -701,7 +744,8 @@
     "lat": 40.0640467,
     "lng": 17.9988464,
     "geocode_quality": "street",
-    "geocode_display": "Via Lecce, Gallipoli, Lecce, Puglia, 73014, Italia"
+    "geocode_display": "Via Lecce, Gallipoli, Lecce, Puglia, 73014, Italia",
+    "data_setup": "2026-04-14"
   },
   {
     "piva": "03384080754",
@@ -717,7 +761,8 @@
     "lat": 40.2066921,
     "lng": 18.2515243,
     "geocode_quality": "street",
-    "geocode_display": "Piazza San Pietro, Zollino, Lecce, Puglia, 73020, Italia"
+    "geocode_display": "Piazza San Pietro, Zollino, Lecce, Puglia, 73020, Italia",
+    "data_setup": "2026-04-14"
   },
   {
     "piva": "05897531215",
@@ -733,7 +778,8 @@
     "lat": 41.1299243,
     "lng": 16.838676,
     "geocode_quality": "street",
-    "geocode_display": "Trans Italia - Deposito di Bari, Municipio 3, Bari, Puglia, Italia"
+    "geocode_display": "Trans Italia - Deposito di Bari, Municipio 3, Bari, Puglia, Italia",
+    "data_setup": "2026-04-14"
   },
   {
     "piva": "05683481211",
@@ -749,7 +795,8 @@
     "lat": 40.8358846,
     "lng": 14.2487679,
     "geocode_quality": "comune",
-    "geocode_display": "Napoli, Campania, Italia"
+    "geocode_display": "Napoli, Campania, Italia",
+    "data_setup": "2026-04-14"
   },
   {
     "piva": "03455460752",
@@ -765,7 +812,8 @@
     "lat": 40.1831007,
     "lng": 18.0314267,
     "geocode_quality": "street",
-    "geocode_display": "Via Principi di Savoia, Nardò, Lecce, Puglia, 73048, Italia"
+    "geocode_display": "Via Principi di Savoia, Nardò, Lecce, Puglia, 73048, Italia",
+    "data_setup": "2026-04-14"
   },
   {
     "piva": "02327090599",
@@ -781,7 +829,8 @@
     "lat": 40.8940943,
     "lng": 12.9666605,
     "geocode_quality": "street",
-    "geocode_display": "Corso Carlo Pisacane, Salita Croce, Ponza, Latina, Lazio, 04027, Italia"
+    "geocode_display": "Corso Carlo Pisacane, Salita Croce, Ponza, Latina, Lazio, 04027, Italia",
+    "data_setup": "2026-04-14"
   },
   {
     "piva": "00790980122",
@@ -797,7 +846,8 @@
     "lat": 45.6345897,
     "lng": 8.888204,
     "geocode_quality": "street",
-    "geocode_display": "Piazza San Gregorio, Gerbone, Olgiate Olona, Varese, Lombardia, 21058, Italia"
+    "geocode_display": "Piazza San Gregorio, Gerbone, Olgiate Olona, Varese, Lombardia, 21058, Italia",
+    "data_setup": "2026-04-14"
   },
   {
     "piva": "07911380967",
@@ -813,7 +863,8 @@
     "lat": 45.5884556,
     "lng": 9.2684616,
     "geocode_quality": "street",
-    "geocode_display": "11, Vicolo Borghetto, Borghetto, San Biagio, Monza, Monza e Brianza, Lombardia, 20900, Italia"
+    "geocode_display": "11, Vicolo Borghetto, Borghetto, San Biagio, Monza, Monza e Brianza, Lombardia, 20900, Italia",
+    "data_setup": "2026-04-14"
   },
   {
     "piva": "05150690757",
@@ -829,7 +880,8 @@
     "lat": 40.3481355,
     "lng": 18.0407699,
     "geocode_quality": "street",
-    "geocode_display": "Via Montesanto, Magliano, Carmiano, Lecce, Puglia, 73041, Italia"
+    "geocode_display": "Via Montesanto, Magliano, Carmiano, Lecce, Puglia, 73041, Italia",
+    "data_setup": "2026-04-14"
   },
   {
     "piva": "06619940726",
@@ -845,7 +897,8 @@
     "lat": 41.1425756,
     "lng": 16.4014588,
     "geocode_quality": "street",
-    "geocode_display": "Via Castel del Monte, Corato, Bari, Puglia, 70033, Italia"
+    "geocode_display": "Via Castel del Monte, Corato, Bari, Puglia, 70033, Italia",
+    "data_setup": "2026-04-15"
   },
   {
     "piva": "03525270983",
@@ -861,7 +914,8 @@
     "lat": 45.9414695,
     "lng": 10.4475635,
     "geocode_quality": "comune",
-    "geocode_display": "Breno, Comunità montana della valle Camonica, Brescia, Lombardia, 25043, Italia"
+    "geocode_display": "Breno, Comunità montana della valle Camonica, Brescia, Lombardia, 25043, Italia",
+    "data_setup": "2026-04-15"
   },
   {
     "piva": "02106230986",
@@ -877,7 +931,8 @@
     "lat": 45.2679989,
     "lng": 10.2174131,
     "geocode_quality": "comune",
-    "geocode_display": "Pralboino, Brescia, Lombardia, 25020, Italia"
+    "geocode_display": "Pralboino, Brescia, Lombardia, 25020, Italia",
+    "data_setup": "2026-04-15"
   },
   {
     "piva": "06886210720",
@@ -893,7 +948,8 @@
     "lat": 40.8157935,
     "lng": 16.5417852,
     "geocode_quality": "street",
-    "geocode_display": "Via Selva, Altamura, Bari, Puglia, 70022, Italia"
+    "geocode_display": "Via Selva, Altamura, Bari, Puglia, 70022, Italia",
+    "data_setup": "2026-04-15"
   },
   {
     "piva": "03345850170",
@@ -909,7 +965,8 @@
     "lat": 45.5244935,
     "lng": 10.1932769,
     "geocode_quality": "street",
-    "geocode_display": "Via Rovigo, Chiesanuova, Zona Sud, Brescia, Lombardia, 25125, Italia"
+    "geocode_display": "Via Rovigo, Chiesanuova, Zona Sud, Brescia, Lombardia, 25125, Italia",
+    "data_setup": "2026-04-15"
   },
   {
     "piva": "02810080230",
@@ -925,7 +982,8 @@
     "lat": 45.4694851,
     "lng": 10.5389467,
     "geocode_quality": "comune",
-    "geocode_display": "Desenzano del Garda, Brescia, Lombardia, 25015, Italia"
+    "geocode_display": "Desenzano del Garda, Brescia, Lombardia, 25015, Italia",
+    "data_setup": "2026-04-15"
   },
   {
     "piva": "03860250988",
@@ -941,7 +999,8 @@
     "lat": 45.6467546,
     "lng": 9.998543,
     "geocode_quality": "street",
-    "geocode_display": "Via dei Carretti, Colombaro, Corte Franca, Brescia, Lombardia, 25040, Italia"
+    "geocode_display": "Via dei Carretti, Colombaro, Corte Franca, Brescia, Lombardia, 25040, Italia",
+    "data_setup": "2026-04-15"
   },
   {
     "piva": "03679200729",
@@ -957,7 +1016,8 @@
     "lat": 40.8492021,
     "lng": 17.1226371,
     "geocode_quality": "comune",
-    "geocode_display": "Putignano, Bari, Puglia, 70017, Italia"
+    "geocode_display": "Putignano, Bari, Puglia, 70017, Italia",
+    "data_setup": "2026-04-15"
   },
   {
     "piva": "02422310728",
@@ -973,7 +1033,8 @@
     "lat": 41.039803,
     "lng": 16.7469729,
     "geocode_quality": "street",
-    "geocode_display": "Via Beato Giacomo, Bitetto, Bari, Puglia, 70020, Italia"
+    "geocode_display": "Via Beato Giacomo, Bitetto, Bari, Puglia, 70020, Italia",
+    "data_setup": "2026-04-15"
   },
   {
     "piva": "01404530139",
@@ -989,7 +1050,8 @@
     "lat": 45.7669055,
     "lng": 9.2409249,
     "geocode_quality": "street",
-    "geocode_display": "Via Cesare Battisti, Lambrugo, Como, Lombardia, 22045, Italia"
+    "geocode_display": "Via Cesare Battisti, Lambrugo, Como, Lombardia, 22045, Italia",
+    "data_setup": "2026-04-15"
   },
   {
     "piva": "04616290401",
@@ -1005,7 +1067,8 @@
     "lat": 44.1931018,
     "lng": 12.3843289,
     "geocode_quality": "street",
-    "geocode_display": "42, Via don Giovanni Minzoni, Madonnina - Santa Teresa, Cella, Cesenatico, Unione Rubicone e mare, Forlì-Cesena, Emilia-Romagna, 47042, Italia"
+    "geocode_display": "42, Via don Giovanni Minzoni, Madonnina - Santa Teresa, Cella, Cesenatico, Unione Rubicone e mare, Forlì-Cesena, Emilia-Romagna, 47042, Italia",
+    "data_setup": "2026-04-15"
   },
   {
     "piva": "03312010360",
@@ -1021,7 +1084,8 @@
     "lat": 44.4784141,
     "lng": 11.0090928,
     "geocode_quality": "comune",
-    "geocode_display": "Vignola, Unione di comuni Terre di Castelli, Modena, Emilia-Romagna, Italia"
+    "geocode_display": "Vignola, Unione di comuni Terre di Castelli, Modena, Emilia-Romagna, Italia",
+    "data_setup": "2026-04-15"
   },
   {
     "piva": "02941920759",
@@ -1037,7 +1101,8 @@
     "lat": 40.2738343,
     "lng": 18.2651075,
     "geocode_quality": "street",
-    "geocode_display": "Piazza Municipio, Castri di Lecce, Lecce, Puglia, 73021, Italia"
+    "geocode_display": "Piazza Municipio, Castri di Lecce, Lecce, Puglia, 73021, Italia",
+    "data_setup": "2026-04-15"
   },
   {
     "piva": "02431110366",
@@ -1053,7 +1118,8 @@
     "lat": 44.913174,
     "lng": 10.983297,
     "geocode_quality": "street",
-    "geocode_display": "Concordia sulla Secchia, Unione Comuni Modenesi Area Nord, Modena, Emilia-Romagna, 41033, Italia"
+    "geocode_display": "Concordia sulla Secchia, Unione Comuni Modenesi Area Nord, Modena, Emilia-Romagna, 41033, Italia",
+    "data_setup": "2026-04-16"
   },
   {
     "piva": "04905030757",
@@ -1069,7 +1135,8 @@
     "lat": 40.1456661,
     "lng": 18.490757,
     "geocode_quality": "comune",
-    "geocode_display": "Otranto, Lecce, Puglia, 73028, Italia"
+    "geocode_display": "Otranto, Lecce, Puglia, 73028, Italia",
+    "data_setup": "2026-04-16"
   },
   {
     "piva": "04503530653",
@@ -1085,7 +1152,8 @@
     "lat": 40.6977854,
     "lng": 14.6258044,
     "geocode_quality": "comune",
-    "geocode_display": "Via Pisacane Figlino, Figlino, Polvica, Tramonti, Salerno, Campania, 84010, Italia"
+    "geocode_display": "Via Pisacane Figlino, Figlino, Polvica, Tramonti, Salerno, Campania, 84010, Italia",
+    "data_setup": "2026-04-16"
   },
   {
     "piva": "05122900961",
@@ -1101,7 +1169,8 @@
     "lat": 45.5725439,
     "lng": 9.4268416,
     "geocode_quality": "comune",
-    "geocode_display": "Cambiago, Rodano, Milano, Lombardia, 20400, Italia"
+    "geocode_display": "Cambiago, Rodano, Milano, Lombardia, 20400, Italia",
+    "data_setup": "2026-04-16"
   },
   {
     "piva": "01097320178",
@@ -1117,7 +1186,8 @@
     "lat": 45.548391,
     "lng": 10.220407,
     "geocode_quality": "street",
-    "geocode_display": "Galleria dell'incisione, 4, Via Bezzecca, Borgo Trento, Zona Nord, Brescia, Lombardia, 25122, Italia"
+    "geocode_display": "Galleria dell'incisione, 4, Via Bezzecca, Borgo Trento, Zona Nord, Brescia, Lombardia, 25122, Italia",
+    "data_setup": "2026-04-16"
   },
   {
     "piva": "06724940728",
@@ -1133,7 +1203,8 @@
     "lat": 41.1257843,
     "lng": 16.8620293,
     "geocode_quality": "comune",
-    "geocode_display": "Bari, Puglia, Italia"
+    "geocode_display": "Bari, Puglia, Italia",
+    "data_setup": "2026-04-16"
   },
   {
     "piva": "02194500597",
@@ -1149,7 +1220,8 @@
     "lat": 41.406115,
     "lng": 13.459406,
     "geocode_quality": "street",
-    "geocode_display": "Lenola, Latina, Lazio, 04025, Italia"
+    "geocode_display": "Lenola, Latina, Lazio, 04025, Italia",
+    "data_setup": "2026-04-16"
   },
   {
     "piva": "13374290156",
@@ -1165,7 +1237,8 @@
     "lat": 45.3260895,
     "lng": 9.02637,
     "geocode_quality": "comune",
-    "geocode_display": "Calvignasco, Bubbiano, Bettola, Milano, Lombardia, Italia"
+    "geocode_display": "Calvignasco, Bubbiano, Bettola, Milano, Lombardia, Italia",
+    "data_setup": "2026-04-16"
   },
   {
     "piva": "02864610544",
@@ -1181,7 +1254,8 @@
     "lat": 42.9105115,
     "lng": 12.3377232,
     "geocode_quality": "comune",
-    "geocode_display": "Marsciano, Perugia, Umbria, 06055, Italia"
+    "geocode_display": "Marsciano, Perugia, Umbria, 06055, Italia",
+    "data_setup": "2026-04-16"
   },
   {
     "piva": "09428160965",
@@ -1197,7 +1271,8 @@
     "lat": 45.5886239,
     "lng": 8.8986201,
     "geocode_quality": "street",
-    "geocode_display": "Via Giosuè Carducci, Santi Martiri, La Flora, Oltrestazione, Legnano, Milano, Lombardia, 20025, Italia"
+    "geocode_display": "Via Giosuè Carducci, Santi Martiri, La Flora, Oltrestazione, Legnano, Milano, Lombardia, 20025, Italia",
+    "data_setup": "2026-04-16"
   },
   {
     "piva": "01121620544",
@@ -1213,7 +1288,8 @@
     "lat": 42.9559744,
     "lng": 12.7034782,
     "geocode_quality": "street",
-    "geocode_display": "Foligno, Perugia, Umbria, 06034, Italia"
+    "geocode_display": "Foligno, Perugia, Umbria, 06034, Italia",
+    "data_setup": "2026-04-16"
   },
   {
     "piva": "04743830756",
@@ -1229,7 +1305,8 @@
     "lat": 40.3565902,
     "lng": 18.1737753,
     "geocode_quality": "street",
-    "geocode_display": "Via Marco Aurelio, Lecce, Puglia, 73100, Italia"
+    "geocode_display": "Via Marco Aurelio, Lecce, Puglia, 73100, Italia",
+    "data_setup": "2026-04-17"
   },
   {
     "piva": "03790100758",
@@ -1245,7 +1322,8 @@
     "lat": 40.2741681,
     "lng": 18.0464725,
     "geocode_quality": "comune",
-    "geocode_display": "Via Re Galantuomo, Copertino, Lecce, Puglia, 73043, Italia"
+    "geocode_display": "Via Re Galantuomo, Copertino, Lecce, Puglia, 73043, Italia",
+    "data_setup": "2026-04-17"
   },
   {
     "piva": "03605520752",
@@ -1261,7 +1339,8 @@
     "lat": 40.3486346,
     "lng": 18.1774329,
     "geocode_quality": "street",
-    "geocode_display": "Via Sindaco Guariglia, Lecce, Puglia, 73100, Italia"
+    "geocode_display": "Via Sindaco Guariglia, Lecce, Puglia, 73100, Italia",
+    "data_setup": "2026-04-17"
   },
   {
     "piva": "04228370757",
@@ -1277,7 +1356,8 @@
     "lat": 40.0081132,
     "lng": 18.1619738,
     "geocode_quality": "street",
-    "geocode_display": "Via Cavour Camillo Benso Conte, Casarano, Lecce, Puglia, 73042, Italia"
+    "geocode_display": "Via Cavour Camillo Benso Conte, Casarano, Lecce, Puglia, 73042, Italia",
+    "data_setup": "2026-04-17"
   },
   {
     "piva": "00237060397",
@@ -1293,7 +1373,8 @@
     "lat": 44.4161925,
     "lng": 12.13914,
     "geocode_quality": "street",
-    "geocode_display": "12, Via Louis Braille, Fornace Zarattini, Ravenna, Emilia-Romagna, 48120, Italia"
+    "geocode_display": "12, Via Louis Braille, Fornace Zarattini, Ravenna, Emilia-Romagna, 48120, Italia",
+    "data_setup": "2026-04-17"
   },
   {
     "piva": "08178330729",
@@ -1309,7 +1390,8 @@
     "lat": 40.8275352,
     "lng": 16.557963,
     "geocode_quality": "street",
-    "geocode_display": "Via Genova, Altamura, Bari, Puglia, 70022, Italia"
+    "geocode_display": "Via Genova, Altamura, Bari, Puglia, 70022, Italia",
+    "data_setup": "2026-04-17"
   },
   {
     "piva": "04040240980",
@@ -1325,7 +1407,8 @@
     "lat": 45.504384,
     "lng": 10.3576099,
     "geocode_quality": "comune",
-    "geocode_display": "Mazzano, Brescia, Lombardia, 25080, Italia"
+    "geocode_display": "Mazzano, Brescia, Lombardia, 25080, Italia",
+    "data_setup": "2026-04-17"
   },
   {
     "piva": "05001750750",
@@ -1341,7 +1424,8 @@
     "lat": 39.9443352,
     "lng": 18.096051,
     "geocode_quality": "street",
-    "geocode_display": "Via Felline, Alliste, Lecce, Puglia, 73055, Italia"
+    "geocode_display": "Via Felline, Alliste, Lecce, Puglia, 73055, Italia",
+    "data_setup": "2026-04-17"
   },
   {
     "piva": "01853060547",
@@ -1357,7 +1441,8 @@
     "lat": 43.1119613,
     "lng": 12.3890104,
     "geocode_quality": "street",
-    "geocode_display": "Perugia, Umbria, Italia"
+    "geocode_display": "Perugia, Umbria, Italia",
+    "data_setup": "2026-04-17"
   },
   {
     "piva": "04455290405",
@@ -1373,7 +1458,8 @@
     "lat": 43.8552981,
     "lng": 11.9764814,
     "geocode_quality": "street",
-    "geocode_display": "Via Cesare Battisti, Castellina, San Piero in Bagno, Bagno di Romagna, Forlì-Cesena, Emilia-Romagna, 47026, Italia"
+    "geocode_display": "Via Cesare Battisti, Castellina, San Piero in Bagno, Bagno di Romagna, Forlì-Cesena, Emilia-Romagna, 47026, Italia",
+    "data_setup": "2026-04-17"
   },
   {
     "piva": "02699800393",
@@ -1389,7 +1475,8 @@
     "lat": 44.4181073,
     "lng": 12.2066536,
     "geocode_quality": "street",
-    "geocode_display": "30, Via Giosuè Carducci, San Rocco, Ravenna, Emilia-Romagna, 48121, Italia"
+    "geocode_display": "30, Via Giosuè Carducci, San Rocco, Ravenna, Emilia-Romagna, 48121, Italia",
+    "data_setup": "2026-04-17"
   },
   {
     "piva": "03374880403",
@@ -1405,7 +1492,8 @@
     "lat": 44.2056499,
     "lng": 12.251046,
     "geocode_quality": "street",
-    "geocode_display": "Via Cerchia di San Martino, Quartiere Ravennate, San Martino in Fiume, Cesena, Unione dei comuni Valle del Savio, Forlì-Cesena, Emilia-Romagna, Italia"
+    "geocode_display": "Via Cerchia di San Martino, Quartiere Ravennate, San Martino in Fiume, Cesena, Unione dei comuni Valle del Savio, Forlì-Cesena, Emilia-Romagna, Italia",
+    "data_setup": "2026-04-17"
   },
   {
     "piva": "03825600756",
@@ -1421,7 +1509,8 @@
     "lat": 39.9791073,
     "lng": 18.086963,
     "geocode_quality": "street",
-    "geocode_display": "Via Vittorio Emanuele III, Taviano, Lecce, Puglia, 73057, Italia"
+    "geocode_display": "Via Vittorio Emanuele III, Taviano, Lecce, Puglia, 73057, Italia",
+    "data_setup": "2026-04-20"
   },
   {
     "piva": "13381920159",
@@ -1437,7 +1526,8 @@
     "lat": 45.4442037,
     "lng": 9.2417834,
     "geocode_quality": "street",
-    "geocode_display": "82, Via Romualdo Bonfadini, Mecenate, Municipio 4, Milano, Rodano, Milano, Lombardia, 20138, Italia"
+    "geocode_display": "82, Via Romualdo Bonfadini, Mecenate, Municipio 4, Milano, Rodano, Milano, Lombardia, 20138, Italia",
+    "data_setup": "2026-04-20"
   },
   {
     "piva": "02709170753",
@@ -1453,7 +1543,8 @@
     "lat": 40.0061377,
     "lng": 18.1580658,
     "geocode_quality": "street",
-    "geocode_display": "Via Scoglio di Quarto, Casarano, Lecce, Puglia, 73042, Italia"
+    "geocode_display": "Via Scoglio di Quarto, Casarano, Lecce, Puglia, 73042, Italia",
+    "data_setup": "2026-04-20"
   },
   {
     "piva": "01402410391",
@@ -1469,7 +1560,8 @@
     "lat": 44.3155871,
     "lng": 11.7956818,
     "geocode_quality": "street",
-    "geocode_display": "Via Giovanni Bagnaresi, Boccaccio, Castel Bolognese, Unione della Romagna Faentina, Ravenna, Emilia-Romagna, 48014, Italia"
+    "geocode_display": "Via Giovanni Bagnaresi, Boccaccio, Castel Bolognese, Unione della Romagna Faentina, Ravenna, Emilia-Romagna, 48014, Italia",
+    "data_setup": "2026-04-20"
   },
   {
     "piva": "02127430599",
@@ -1485,7 +1577,8 @@
     "lat": 41.2636077,
     "lng": 13.5526158,
     "geocode_quality": "street",
-    "geocode_display": "Via Appia, Formia, Latina, Lazio, 04020, Italia"
+    "geocode_display": "Via Appia, Formia, Latina, Lazio, 04020, Italia",
+    "data_setup": "2026-04-20"
   },
   {
     "piva": "04527380408",
@@ -1501,7 +1594,8 @@
     "lat": 43.8352272,
     "lng": 11.9595985,
     "geocode_quality": "comune",
-    "geocode_display": "Bagno di Romagna, Forlì-Cesena, Emilia-Romagna, Italia"
+    "geocode_display": "Bagno di Romagna, Forlì-Cesena, Emilia-Romagna, Italia",
+    "data_setup": "2026-04-20"
   },
   {
     "piva": "02783080399",
@@ -1517,7 +1611,8 @@
     "lat": 44.4989563,
     "lng": 11.8864361,
     "geocode_quality": "street",
-    "geocode_display": "18, Via Sottofiume, Santa Dorotea, San Bernardino, Belricetto, Lugo, Unione dei comuni della Bassa Romagna, Ravenna, Emilia-Romagna, 48022, Italia"
+    "geocode_display": "18, Via Sottofiume, Santa Dorotea, San Bernardino, Belricetto, Lugo, Unione dei comuni della Bassa Romagna, Ravenna, Emilia-Romagna, 48022, Italia",
+    "data_setup": "2026-04-20"
   },
   {
     "piva": "02381660428",
@@ -1533,7 +1628,8 @@
     "lat": 43.5856797,
     "lng": 13.3413957,
     "geocode_quality": "street",
-    "geocode_display": "Via San Giuseppe, Piane, Camerata Picena, Ancona, Marche, 60020, Italia"
+    "geocode_display": "Via San Giuseppe, Piane, Camerata Picena, Ancona, Marche, 60020, Italia",
+    "data_setup": "2026-04-20"
   },
   {
     "piva": "02287800391",
@@ -1549,7 +1645,8 @@
     "lat": 44.2425278,
     "lng": 12.3626939,
     "geocode_quality": "street",
-    "geocode_display": "Pizzeria da mariano, 5, Viale Emilia, Pinarella di Cervia, Cervia, Ravenna, Emilia-Romagna, 48015, Italia"
+    "geocode_display": "Pizzeria da mariano, 5, Viale Emilia, Pinarella di Cervia, Cervia, Ravenna, Emilia-Romagna, 48015, Italia",
+    "data_setup": "2026-04-20"
   },
   {
     "piva": "04751280753",
@@ -1565,7 +1662,8 @@
     "lat": 40.1726639,
     "lng": 18.1678647,
     "geocode_quality": "street",
-    "geocode_display": "Via Mazzini, Noha, Galatina, Lecce, Puglia, 73013, Italia"
+    "geocode_display": "Via Mazzini, Noha, Galatina, Lecce, Puglia, 73013, Italia",
+    "data_setup": "2026-04-20"
   },
   {
     "piva": "03362740403",
@@ -1581,7 +1679,8 @@
     "lat": 44.2227278,
     "lng": 12.041273,
     "geocode_quality": "comune",
-    "geocode_display": "Forlì, Unione di Comuni della Romagna Forlivese, Forlì-Cesena, Emilia-Romagna, 47121-47122, Italia"
+    "geocode_display": "Forlì, Unione di Comuni della Romagna Forlivese, Forlì-Cesena, Emilia-Romagna, 47121-47122, Italia",
+    "data_setup": "2026-04-20"
   },
   {
     "piva": "02530320395",
@@ -1597,7 +1696,8 @@
     "lat": 44.423442,
     "lng": 11.9115808,
     "geocode_quality": "street",
-    "geocode_display": "20, Via Concordia, Lugo, Unione dei comuni della Bassa Romagna, Ravenna, Emilia-Romagna, 48022, Italia"
+    "geocode_display": "20, Via Concordia, Lugo, Unione dei comuni della Bassa Romagna, Ravenna, Emilia-Romagna, 48022, Italia",
+    "data_setup": "2026-04-20"
   },
   {
     "piva": "05095850722",
@@ -1613,7 +1713,8 @@
     "lat": 40.824268,
     "lng": 17.127725,
     "geocode_quality": "street",
-    "geocode_display": "Via San Cataldo, Putignano, Bari, Puglia, 70017, Italia"
+    "geocode_display": "Via San Cataldo, Putignano, Bari, Puglia, 70017, Italia",
+    "data_setup": "2026-04-21"
   },
   {
     "piva": "08203040723",
@@ -1629,7 +1730,8 @@
     "lat": 41.0649068,
     "lng": 16.917366,
     "geocode_quality": "street",
-    "geocode_display": "Via Enrico Fermi, Triggiano, Bari, Puglia, 70019, Italia"
+    "geocode_display": "Via Enrico Fermi, Triggiano, Bari, Puglia, 70019, Italia",
+    "data_setup": "2026-04-21"
   },
   {
     "piva": "08703850720",
@@ -1645,7 +1747,8 @@
     "lat": 41.0013098,
     "lng": 16.8706713,
     "geocode_quality": "street",
-    "geocode_display": "Via Conella, Adelfia, Bari, Puglia, Italia"
+    "geocode_display": "Via Conella, Adelfia, Bari, Puglia, Italia",
+    "data_setup": "2026-04-21"
   },
   {
     "piva": "03841570728",
@@ -1661,7 +1764,8 @@
     "lat": 40.9715304,
     "lng": 17.1111008,
     "geocode_quality": "street",
-    "geocode_display": "Via Bari, Contrada Bari, Conversano, Bari, Puglia, 70014, Italia"
+    "geocode_display": "Via Bari, Contrada Bari, Conversano, Bari, Puglia, 70014, Italia",
+    "data_setup": "2026-04-21"
   },
   {
     "piva": "04088010980",
@@ -1677,7 +1781,8 @@
     "lat": 45.5936718,
     "lng": 9.8885855,
     "geocode_quality": "street",
-    "geocode_display": "Via San Rocco, Piazza, San Rocco, Palazzolo sull'Oglio, Corte Franca, Brescia, Lombardia, 25036, Italia"
+    "geocode_display": "Via San Rocco, Piazza, San Rocco, Palazzolo sull'Oglio, Corte Franca, Brescia, Lombardia, 25036, Italia",
+    "data_setup": "2026-04-21"
   },
   {
     "piva": "02615560139",
@@ -1693,7 +1798,8 @@
     "lat": 45.807869,
     "lng": 9.0772612,
     "geocode_quality": "street",
-    "geocode_display": "34, Via Gerolamo Borsieri, San Giovanni, Sant'Agostino, Como, Lombardia, 22100, Italia"
+    "geocode_display": "34, Via Gerolamo Borsieri, San Giovanni, Sant'Agostino, Como, Lombardia, 22100, Italia",
+    "data_setup": "2026-04-21"
   },
   {
     "piva": "04008220982",
@@ -1709,7 +1815,8 @@
     "lat": 45.4764387,
     "lng": 10.3267907,
     "geocode_quality": "street",
-    "geocode_display": "Via dei Ponticelli, Castenedolo, Brescia, Lombardia, 25014, Italia"
+    "geocode_display": "Via dei Ponticelli, Castenedolo, Brescia, Lombardia, 25014, Italia",
+    "data_setup": "2026-04-21"
   },
   {
     "piva": "02099870988",
@@ -1725,7 +1832,8 @@
     "lat": 45.935562,
     "lng": 10.2947906,
     "geocode_quality": "comune",
-    "geocode_display": "Bienno, Comunità montana della valle Camonica, Brescia, Lombardia, 25040, Italia"
+    "geocode_display": "Bienno, Comunità montana della valle Camonica, Brescia, Lombardia, 25040, Italia",
+    "data_setup": "2026-04-21"
   },
   {
     "piva": "02398880985",
@@ -1741,7 +1849,8 @@
     "lat": 45.5700308,
     "lng": 10.1574228,
     "geocode_quality": "street",
-    "geocode_display": "Via Mandolossa, Sale, Gussago, Brescia, Lombardia, 25064, Italia"
+    "geocode_display": "Via Mandolossa, Sale, Gussago, Brescia, Lombardia, 25064, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "03608440982",
@@ -1757,7 +1866,8 @@
     "lat": 45.6424285,
     "lng": 10.0130596,
     "geocode_quality": "street",
-    "geocode_display": "Le Torbiere, 78, Via Roma, Timoline, Corte Franca, Brescia, Lombardia, 25040, Italia"
+    "geocode_display": "Le Torbiere, 78, Via Roma, Timoline, Corte Franca, Brescia, Lombardia, 25040, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "06562980729",
@@ -1773,7 +1883,8 @@
     "lat": 40.793027,
     "lng": 16.755286,
     "geocode_quality": "comune",
-    "geocode_display": "Santeramo in Colle, Bari, Puglia, 70029, Italia"
+    "geocode_display": "Santeramo in Colle, Bari, Puglia, 70029, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "01172040139",
@@ -1789,7 +1900,8 @@
     "lat": 45.7036985,
     "lng": 9.0933299,
     "geocode_quality": "street",
-    "geocode_display": "Via Risorgimento, Asnago di Cermenate, Cermenate, Como, Lombardia, 22072, Italia"
+    "geocode_display": "Via Risorgimento, Asnago di Cermenate, Cermenate, Como, Lombardia, 22072, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "02961060981",
@@ -1805,7 +1917,8 @@
     "lat": 45.5451505,
     "lng": 10.2229988,
     "geocode_quality": "street",
-    "geocode_display": "Via Pusterla, Centro Storico Nord, Crocifissa di Rosa, Zona Centro, Brescia, Lombardia, 25122, Italia"
+    "geocode_display": "Via Pusterla, Centro Storico Nord, Crocifissa di Rosa, Zona Centro, Brescia, Lombardia, 25122, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "00851610725",
@@ -1821,7 +1934,8 @@
     "lat": 41.1136534,
     "lng": 16.8673598,
     "geocode_quality": "street",
-    "geocode_display": "Via Paolo Lembo, Picone, Bari, Puglia, 70124, Italia"
+    "geocode_display": "Via Paolo Lembo, Picone, Bari, Puglia, 70124, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "07972970722",
@@ -1837,7 +1951,8 @@
     "lat": 40.7945994,
     "lng": 16.9210754,
     "geocode_quality": "street",
-    "geocode_display": "Via Carlo Soria, Gioia del Colle, Bari, Puglia, 70023, Italia"
+    "geocode_display": "Via Carlo Soria, Gioia del Colle, Bari, Puglia, 70023, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "08345130721",
@@ -1853,7 +1968,8 @@
     "lat": 40.9522369,
     "lng": 17.299948,
     "geocode_quality": "comune",
-    "geocode_display": "Monopoli, Bari, Puglia, Italia"
+    "geocode_display": "Monopoli, Bari, Puglia, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "05205430720",
@@ -1869,7 +1985,8 @@
     "lat": 41.1304612,
     "lng": 16.5442091,
     "geocode_quality": "street",
-    "geocode_display": "Gioielleria Mercurio, 47, Corso Vittorio Emanuele Secondo, Terlizzi, Bari, Puglia, 70038, Italia"
+    "geocode_display": "Gioielleria Mercurio, 47, Corso Vittorio Emanuele Secondo, Terlizzi, Bari, Puglia, 70038, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "06090800720",
@@ -1885,7 +2002,8 @@
     "lat": 41.1197552,
     "lng": 16.8808077,
     "geocode_quality": "street",
-    "geocode_display": "Bar Viola, 95-101, Corso Sidney Sonnino, Madonnella, Municipio 1, Bari, Puglia, 70121, Italia"
+    "geocode_display": "Bar Viola, 95-101, Corso Sidney Sonnino, Madonnella, Municipio 1, Bari, Puglia, 70121, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "03537740981",
@@ -1901,7 +2019,8 @@
     "lat": 45.6482576,
     "lng": 10.2645464,
     "geocode_quality": "comune",
-    "geocode_display": "Lumezzane, Comunità montana della valle Trompia, Brescia, Lombardia, 25065, Italia"
+    "geocode_display": "Lumezzane, Comunità montana della valle Trompia, Brescia, Lombardia, 25065, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "01690170988",
@@ -1917,7 +2036,8 @@
     "lat": 45.640347,
     "lng": 10.6068517,
     "geocode_quality": "street",
-    "geocode_display": "Via Solino, Vigole, Maderno, Toscolano Maderno, Comunità Montana Parco Alto Garda bresciano, Brescia, Lombardia, 25088, Italia"
+    "geocode_display": "Via Solino, Vigole, Maderno, Toscolano Maderno, Comunità Montana Parco Alto Garda bresciano, Brescia, Lombardia, 25088, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "01808771206",
@@ -1933,7 +2053,8 @@
     "lat": 44.4979342,
     "lng": 11.2435871,
     "geocode_quality": "street",
-    "geocode_display": "14, Via Armando Gagliani, Gesso, Zola Predosa, Unione dei comuni Valli del Reno, Lavino e Samoggia, Bologna, Emilia-Romagna, 40033, Italia"
+    "geocode_display": "14, Via Armando Gagliani, Gesso, Zola Predosa, Unione dei comuni Valli del Reno, Lavino e Samoggia, Bologna, Emilia-Romagna, 40033, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "01626351207",
@@ -1949,7 +2070,8 @@
     "lat": 44.5599849,
     "lng": 11.3009636,
     "geocode_quality": "street",
-    "geocode_display": "24a, Via Stelloni Levante, Castiglia, Longara, Calderara di Reno, Unione Terre d'Acqua, Bologna, Emilia-Romagna, 40012, Italia"
+    "geocode_display": "24a, Via Stelloni Levante, Castiglia, Longara, Calderara di Reno, Unione Terre d'Acqua, Bologna, Emilia-Romagna, 40012, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "03422280986",
@@ -1965,7 +2087,8 @@
     "lat": 45.346975,
     "lng": 9.968467,
     "geocode_quality": "comune",
-    "geocode_display": "Borgo San Giacomo, Brescia, Lombardia, 25022, Italia"
+    "geocode_display": "Borgo San Giacomo, Brescia, Lombardia, 25022, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "05714140968",
@@ -1981,7 +2104,8 @@
     "lat": 45.4793424,
     "lng": 8.8180386,
     "geocode_quality": "comune",
-    "geocode_display": "Bernate Ticino, Milano, Lombardia, Italia"
+    "geocode_display": "Bernate Ticino, Milano, Lombardia, Italia",
+    "data_setup": "2026-04-23"
   },
   {
     "piva": "03009900543",
@@ -1997,7 +2121,8 @@
     "lat": 43.1693141,
     "lng": 12.4636007,
     "geocode_quality": "street",
-    "geocode_display": "Via Pineta, Ramazzano, Ramazzano Le Pulci, Perugia, Umbria, 06134, Italia"
+    "geocode_display": "Via Pineta, Ramazzano, Ramazzano Le Pulci, Perugia, Umbria, 06134, Italia",
+    "data_setup": "2026-04-23"
   },
   {
     "piva": "03449350655",
@@ -2013,7 +2138,8 @@
     "lat": 40.6702729,
     "lng": 14.7940973,
     "geocode_quality": "street",
-    "geocode_display": "Via Picarielli, Quartiere Italia, Salerno, Campania, 84133, Italia"
+    "geocode_display": "Via Picarielli, Quartiere Italia, Salerno, Campania, 84133, Italia",
+    "data_setup": "2026-04-23"
   },
   {
     "piva": "02634400606",
@@ -2029,7 +2155,8 @@
     "lat": 41.5998165,
     "lng": 13.4339519,
     "geocode_quality": "street",
-    "geocode_display": "Via Girate, Ripi, Frosinone, Lazio, 03027, Italia"
+    "geocode_display": "Via Girate, Ripi, Frosinone, Lazio, 03027, Italia",
+    "data_setup": "2026-04-23"
   },
   {
     "piva": "05086270757",
@@ -2045,7 +2172,8 @@
     "lat": 40.3344877,
     "lng": 18.179774,
     "geocode_quality": "street",
-    "geocode_display": "Via Enrico De Nicola, Castromediano, Cavallino, Lecce, Puglia, 73100, Italia"
+    "geocode_display": "Via Enrico De Nicola, Castromediano, Cavallino, Lecce, Puglia, 73100, Italia",
+    "data_setup": "2026-04-23"
   },
   {
     "piva": "04350190759",
@@ -2061,7 +2189,8 @@
     "lat": 40.0546937,
     "lng": 17.975785,
     "geocode_quality": "comune",
-    "geocode_display": "Gallipoli, Lecce, Puglia, 73014, Italia"
+    "geocode_display": "Gallipoli, Lecce, Puglia, 73014, Italia",
+    "data_setup": "2026-04-23"
   },
   {
     "piva": "00616170759",
@@ -2077,7 +2206,8 @@
     "lat": 40.1463521,
     "lng": 18.4919599,
     "geocode_quality": "street",
-    "geocode_display": "Via A. De Ferraris, Otranto, Lecce, Puglia, 73028, Italia"
+    "geocode_display": "Via A. De Ferraris, Otranto, Lecce, Puglia, 73028, Italia",
+    "data_setup": "2026-04-24"
   },
   {
     "piva": "03837231210",
@@ -2093,7 +2223,8 @@
     "lat": 40.9177615,
     "lng": 14.1064302,
     "geocode_quality": "street",
-    "geocode_display": "Via Ripuaria, Canosa, Giugliano in Campania, Napoli, Campania, 80019, Italia"
+    "geocode_display": "Via Ripuaria, Canosa, Giugliano in Campania, Napoli, Campania, 80019, Italia",
+    "data_setup": "2026-04-24"
   },
   {
     "piva": "00495690984",
@@ -2109,7 +2240,8 @@
     "lat": 45.5356769,
     "lng": 9.9272861,
     "geocode_quality": "street",
-    "geocode_display": "22, Via Cortezzano, Chiari, Brescia, Lombardia, 25032, Italia"
+    "geocode_display": "22, Via Cortezzano, Chiari, Brescia, Lombardia, 25032, Italia",
+    "data_setup": "2026-04-24"
   },
   {
     "piva": "05546890723",
@@ -2125,7 +2257,8 @@
     "lat": 41.1257843,
     "lng": 16.8620293,
     "geocode_quality": "comune",
-    "geocode_display": "Bari, Puglia, Italia"
+    "geocode_display": "Bari, Puglia, Italia",
+    "data_setup": "2026-04-24"
   },
   {
     "piva": "07831360727",
@@ -2141,7 +2274,8 @@
     "lat": 41.0489107,
     "lng": 16.9194233,
     "geocode_quality": "street",
-    "geocode_display": "Via Torricella, Capurso, Bari, Puglia, 70019, Italia"
+    "geocode_display": "Via Torricella, Capurso, Bari, Puglia, 70019, Italia",
+    "data_setup": "2026-04-24"
   },
   {
     "piva": "08402890720",
@@ -2157,7 +2291,8 @@
     "lat": 41.1136534,
     "lng": 16.8673598,
     "geocode_quality": "street",
-    "geocode_display": "Via Paolo Lembo, Picone, Bari, Puglia, 70124, Italia"
+    "geocode_display": "Via Paolo Lembo, Picone, Bari, Puglia, 70124, Italia",
+    "data_setup": "2026-04-24"
   },
   {
     "piva": "03378910982",
@@ -2173,7 +2308,8 @@
     "lat": 45.5633748,
     "lng": 10.1151996,
     "geocode_quality": "street",
-    "geocode_display": "Via Guglielmo Marconi, Castegnato, Brescia, Lombardia, 25045, Italia"
+    "geocode_display": "Via Guglielmo Marconi, Castegnato, Brescia, Lombardia, 25045, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "05889160726",
@@ -2189,7 +2325,8 @@
     "lat": 40.819725,
     "lng": 16.422779,
     "geocode_quality": "comune",
-    "geocode_display": "Gravina in Puglia, Bari, Puglia, 70024, Italia"
+    "geocode_display": "Gravina in Puglia, Bari, Puglia, 70024, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "01885480986",
@@ -2205,7 +2342,8 @@
     "lat": 45.415181,
     "lng": 10.390675,
     "geocode_quality": "comune",
-    "geocode_display": "Montichiari, Brescia, Lombardia, 25018, Italia"
+    "geocode_display": "Montichiari, Brescia, Lombardia, 25018, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "02725020982",
@@ -2221,7 +2359,8 @@
     "lat": 45.4694851,
     "lng": 10.5389467,
     "geocode_quality": "comune",
-    "geocode_display": "Desenzano del Garda, Brescia, Lombardia, 25015, Italia"
+    "geocode_display": "Desenzano del Garda, Brescia, Lombardia, 25015, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "07162900729",
@@ -2237,7 +2376,8 @@
     "lat": 40.9636884,
     "lng": 17.1120527,
     "geocode_quality": "street",
-    "geocode_display": "Via Soldato Vito di Leo, Conversano, Bari, Puglia, 70014, Italia"
+    "geocode_display": "Via Soldato Vito di Leo, Conversano, Bari, Puglia, 70014, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "03207550751",
@@ -2253,7 +2393,8 @@
     "lat": 40.2716808,
     "lng": 18.0502517,
     "geocode_quality": "comune",
-    "geocode_display": "Copertino, Lecce, Puglia, Italia"
+    "geocode_display": "Copertino, Lecce, Puglia, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "05953041216",
@@ -2269,7 +2410,8 @@
     "lat": 40.921611,
     "lng": 14.189828,
     "geocode_quality": "comune",
-    "geocode_display": "Villaricca, Napoli, Campania, Italia"
+    "geocode_display": "Villaricca, Napoli, Campania, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "03364540132",
@@ -2285,7 +2427,8 @@
     "lat": 45.8645689,
     "lng": 9.1049166,
     "geocode_quality": "street",
-    "geocode_display": "Via Roma, Carisciano, Roiano, Tosnacco, Moltrasio, Como, Lombardia, 22020, Italia"
+    "geocode_display": "Via Roma, Carisciano, Roiano, Tosnacco, Moltrasio, Como, Lombardia, 22020, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "09636621212",
@@ -2301,7 +2444,8 @@
     "lat": 40.8358846,
     "lng": 14.2487679,
     "geocode_quality": "comune",
-    "geocode_display": "Napoli, Campania, Italia"
+    "geocode_display": "Napoli, Campania, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "03859740247",
@@ -2317,7 +2461,8 @@
     "lat": 45.6514692,
     "lng": 11.4944272,
     "geocode_quality": "street",
-    "geocode_display": "Piazza del Popolo, Villaverla, Vicenza, Veneto, 36030, Italia"
+    "geocode_display": "Piazza del Popolo, Villaverla, Vicenza, Veneto, 36030, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "01962780381",
@@ -2333,7 +2478,8 @@
     "lat": 44.6192257,
     "lng": 11.485753,
     "geocode_quality": "street",
-    "geocode_display": "39, Via Roma, San Giovanni in Triario, Minerbio, Unione Terre di Pianura, Bologna, Emilia-Romagna, 40061, Italia"
+    "geocode_display": "39, Via Roma, San Giovanni in Triario, Minerbio, Unione Terre di Pianura, Bologna, Emilia-Romagna, 40061, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "01580180295",
@@ -2349,7 +2495,8 @@
     "lat": 45.0531228,
     "lng": 12.0572,
     "geocode_quality": "comune",
-    "geocode_display": "Adria, Rovigo, Veneto, 45011, Italia"
+    "geocode_display": "Adria, Rovigo, Veneto, 45011, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "07112540724",
@@ -2365,7 +2512,8 @@
     "lat": 40.8141417,
     "lng": 16.5508202,
     "geocode_quality": "street",
-    "geocode_display": "Via Alberobello, Altamura, Bari, Puglia, 70022, Italia"
+    "geocode_display": "Via Alberobello, Altamura, Bari, Puglia, 70022, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "03218580755",
@@ -2381,7 +2529,8 @@
     "lat": 40.1839683,
     "lng": 18.0367302,
     "geocode_quality": "street",
-    "geocode_display": "Viale Santa Maria del Ponte, Nardò, Lecce, Puglia, 73048, Italia"
+    "geocode_display": "Viale Santa Maria del Ponte, Nardò, Lecce, Puglia, 73048, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "02049470657",
@@ -2397,7 +2546,8 @@
     "lat": 40.6715477,
     "lng": 14.7286002,
     "geocode_quality": "comune",
-    "geocode_display": "Vietri sul Mare, Salerno, Campania, 84019, Italia"
+    "geocode_display": "Vietri sul Mare, Salerno, Campania, 84019, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "04416860650",
@@ -2413,7 +2563,8 @@
     "lat": 40.4253639,
     "lng": 15.1917851,
     "geocode_quality": "comune",
-    "geocode_display": "Roccadaspide, Salerno, Campania, 84069, Italia"
+    "geocode_display": "Roccadaspide, Salerno, Campania, 84069, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "03096580604",
@@ -2429,7 +2580,8 @@
     "lat": 41.7172128,
     "lng": 13.6116009,
     "geocode_quality": "street",
-    "geocode_display": "Via San Tommaso d'Aquino, Sora, Frosinone, Lazio, 03039, Italia"
+    "geocode_display": "Via San Tommaso d'Aquino, Sora, Frosinone, Lazio, 03039, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "04222650485",
@@ -2445,7 +2597,8 @@
     "lat": 43.5477043,
     "lng": 11.0409545,
     "geocode_quality": "comune",
-    "geocode_display": "Certaldo, Unione dei Comuni Circondario dell'Empolese Valdelsa, Firenze, Toscana, 50052, Italia"
+    "geocode_display": "Certaldo, Unione dei Comuni Circondario dell'Empolese Valdelsa, Firenze, Toscana, 50052, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "00034990986",
@@ -2461,7 +2614,8 @@
     "lat": 45.9779967,
     "lng": 10.3222314,
     "geocode_quality": "street",
-    "geocode_display": "Via Brendibusio, Niardo, Comunità montana della valle Camonica, Brescia, Lombardia, 25050, Italia"
+    "geocode_display": "Via Brendibusio, Niardo, Comunità montana della valle Camonica, Brescia, Lombardia, 25050, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "03308230758",
@@ -2477,7 +2631,8 @@
     "lat": 40.103391,
     "lng": 18.3383817,
     "geocode_quality": "street",
-    "geocode_display": "Piazza del Popolo, Muro Leccese, Lecce, Puglia, Italia"
+    "geocode_display": "Piazza del Popolo, Muro Leccese, Lecce, Puglia, Italia",
+    "data_setup": "2026-04-27"
   },
   {
     "piva": "03626520401",
@@ -2493,7 +2648,8 @@
     "lat": 44.1391019,
     "lng": 12.2629587,
     "geocode_quality": "street",
-    "geocode_display": "428, Via del Mare, Quartiere Fiorenzuola, Ponte Abbadesse, Cesena, Unione dei comuni Valle del Savio, Forlì-Cesena, Emilia-Romagna, 47521, Italia"
+    "geocode_display": "428, Via del Mare, Quartiere Fiorenzuola, Ponte Abbadesse, Cesena, Unione dei comuni Valle del Savio, Forlì-Cesena, Emilia-Romagna, 47521, Italia",
+    "data_setup": "2026-04-22"
   },
   {
     "piva": "13952041005",
@@ -2509,7 +2665,8 @@
     "lat": 41.9047529,
     "lng": 12.4777068,
     "geocode_quality": "street",
-    "geocode_display": "Via Tomacelli, Campo Marzio, Municipio Roma I, Roma, Lazio, 00187, Italia"
+    "geocode_display": "Via Tomacelli, Campo Marzio, Municipio Roma I, Roma, Lazio, 00187, Italia",
+    "data_setup": "2026-04-29"
   },
   {
     "piva": "12747880156",
@@ -2525,7 +2682,8 @@
     "lat": 45.5396527,
     "lng": 9.1323726,
     "geocode_quality": "street",
-    "geocode_display": "44, Via Monte Bianco, Novate Milanese, Milano, Lombardia, 20026, Italia"
+    "geocode_display": "44, Via Monte Bianco, Novate Milanese, Milano, Lombardia, 20026, Italia",
+    "data_setup": "2026-04-29"
   },
   {
     "piva": "05026060755",
@@ -2541,7 +2699,8 @@
     "lat": 40.034104,
     "lng": 18.1834545,
     "geocode_quality": "street",
-    "geocode_display": "Viale Antonio Filograna, Zona Industriale di Casarano, Palla, Casarano, Lecce, Puglia, 73042, Italia"
+    "geocode_display": "Viale Antonio Filograna, Zona Industriale di Casarano, Palla, Casarano, Lecce, Puglia, 73042, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "03864480755",
@@ -2557,7 +2716,8 @@
     "lat": 40.073821,
     "lng": 18.098125,
     "geocode_quality": "comune",
-    "geocode_display": "Tuglie, Lecce, Puglia, 73058, Italia"
+    "geocode_display": "Tuglie, Lecce, Puglia, 73058, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "03380400287",
@@ -2573,7 +2733,8 @@
     "lat": 45.3423468,
     "lng": 11.7802184,
     "geocode_quality": "street",
-    "geocode_display": "Corso delle Terme, Montegrotto Terme, Padova, Veneto, 35036, Italia"
+    "geocode_display": "Corso delle Terme, Montegrotto Terme, Padova, Veneto, 35036, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "08955350965",
@@ -2589,7 +2750,8 @@
     "lat": 45.6943758,
     "lng": 9.2309032,
     "geocode_quality": "street",
-    "geocode_display": "Via San Giuseppe, Molino Filo, Verano Brianza, Monza e Brianza, Lombardia, 20843, Italia"
+    "geocode_display": "Via San Giuseppe, Molino Filo, Verano Brianza, Monza e Brianza, Lombardia, 20843, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "08502320727",
@@ -2605,7 +2767,8 @@
     "lat": 41.063448,
     "lng": 16.9216976,
     "geocode_quality": "comune",
-    "geocode_display": "Triggiano, Bari, Puglia, 70019, Italia"
+    "geocode_display": "Triggiano, Bari, Puglia, 70019, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "07605530968",
@@ -2621,7 +2784,8 @@
     "lat": 45.5654382,
     "lng": 9.3754414,
     "geocode_quality": "comune",
-    "geocode_display": "Caponago, Monza e Brianza, Lombardia, 20867, Italia"
+    "geocode_display": "Caponago, Monza e Brianza, Lombardia, 20867, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "02392191207",
@@ -2637,7 +2801,8 @@
     "lat": 44.3712091,
     "lng": 11.3416026,
     "geocode_quality": "street",
-    "geocode_display": "3, Via Roma, Pianoro Vecchio, Pianoro, Unione dei comuni Savena-Idice, Bologna, Emilia-Romagna, 40060, Italia"
+    "geocode_display": "3, Via Roma, Pianoro Vecchio, Pianoro, Unione dei comuni Savena-Idice, Bologna, Emilia-Romagna, 40060, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "06764540487",
@@ -2653,7 +2818,8 @@
     "lat": 43.5391127,
     "lng": 10.954075,
     "geocode_quality": "comune",
-    "geocode_display": "Gambassi Terme, Unione dei Comuni Circondario dell'Empolese Valdelsa, Firenze, Toscana, Italia"
+    "geocode_display": "Gambassi Terme, Unione dei Comuni Circondario dell'Empolese Valdelsa, Firenze, Toscana, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "03136420605",
@@ -2669,7 +2835,8 @@
     "lat": 41.7379172,
     "lng": 13.6784797,
     "geocode_quality": "comune",
-    "geocode_display": "Campoli Appennino, Frosinone, Lazio, Italia"
+    "geocode_display": "Campoli Appennino, Frosinone, Lazio, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "07091820725",
@@ -2685,7 +2852,8 @@
     "lat": 41.0143747,
     "lng": 17.0134358,
     "geocode_quality": "street",
-    "geocode_display": "Via del Pesco, Rutigliano, Bari, Puglia, 70018, Italia"
+    "geocode_display": "Via del Pesco, Rutigliano, Bari, Puglia, 70018, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "01747230645",
@@ -2701,7 +2869,8 @@
     "lat": 40.9159959,
     "lng": 14.7946486,
     "geocode_quality": "street",
-    "geocode_display": "Via Luigi Amabile, Santa Maria delle Grazie, Avellino, Campania, 83100, Italia"
+    "geocode_display": "Via Luigi Amabile, Santa Maria delle Grazie, Avellino, Campania, 83100, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "02247610609",
@@ -2717,7 +2886,8 @@
     "lat": 41.5017386,
     "lng": 13.5578577,
     "geocode_quality": "comune",
-    "geocode_display": "San Giovanni Incarico, Frosinone, Lazio, Italia"
+    "geocode_display": "San Giovanni Incarico, Frosinone, Lazio, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "04069910406",
@@ -2733,7 +2903,8 @@
     "lat": 44.2227278,
     "lng": 12.041273,
     "geocode_quality": "street",
-    "geocode_display": "Forlì, Unione di Comuni della Romagna Forlivese, Forlì-Cesena, Emilia-Romagna, 47121-47122, Italia"
+    "geocode_display": "Forlì, Unione di Comuni della Romagna Forlivese, Forlì-Cesena, Emilia-Romagna, 47121-47122, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "01856970593",
@@ -2749,7 +2920,8 @@
     "lat": 41.598044,
     "lng": 12.6880503,
     "geocode_quality": "street",
-    "geocode_display": "Via Evangelista Torricelli, Leda, Aprilia, Latina, Lazio, 04011, Italia"
+    "geocode_display": "Via Evangelista Torricelli, Leda, Aprilia, Latina, Lazio, 04011, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "11735410968",
@@ -2765,7 +2937,8 @@
     "lat": 45.4318465,
     "lng": 9.311479,
     "geocode_quality": "comune",
-    "geocode_display": "Peschiera Borromeo, Milano, Lombardia, 20068, Italia"
+    "geocode_display": "Peschiera Borromeo, Milano, Lombardia, 20068, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "03448950729",
@@ -2781,7 +2954,8 @@
     "lat": 41.1193226,
     "lng": 16.8599354,
     "geocode_quality": "street",
-    "geocode_display": "Via Scipione Crisanzio, Libertà, Municipio 1, Bari, Puglia, 70123, Italia"
+    "geocode_display": "Via Scipione Crisanzio, Libertà, Municipio 1, Bari, Puglia, 70123, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "11327940968",
@@ -2797,7 +2971,8 @@
     "lat": 45.6215628,
     "lng": 9.2755699,
     "geocode_quality": "street",
-    "geocode_display": "Via Cesana e Villa, San Giorgio al Lambro, Biassono, Monza e Brianza, Lombardia, 20853, Italia"
+    "geocode_display": "Via Cesana e Villa, San Giorgio al Lambro, Biassono, Monza e Brianza, Lombardia, 20853, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "03704280548",
@@ -2813,7 +2988,8 @@
     "lat": 43.3266681,
     "lng": 12.5291295,
     "geocode_quality": "comune",
-    "geocode_display": "Spaccio Monteluiano, Montanaldo, Gubbio, Perugia, Umbria, 06024, Italia"
+    "geocode_display": "Spaccio Monteluiano, Montanaldo, Gubbio, Perugia, Umbria, 06024, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "09226521210",
@@ -2829,7 +3005,8 @@
     "lat": 40.8167282,
     "lng": 14.340463,
     "geocode_quality": "comune",
-    "geocode_display": "Piazzale Brunelleschi, Portici, Napoli, Campania, 80055, Italia"
+    "geocode_display": "Piazzale Brunelleschi, Portici, Napoli, Campania, 80055, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "06398981214",
@@ -2845,7 +3022,8 @@
     "lat": 40.8335314,
     "lng": 14.2413262,
     "geocode_quality": "street",
-    "geocode_display": "Via Calabritto, Pizzofalcone, San Ferdinando, Municipalità 1, Napoli, Campania, 80121, Italia"
+    "geocode_display": "Via Calabritto, Pizzofalcone, San Ferdinando, Municipalità 1, Napoli, Campania, 80121, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "15751261007",
@@ -2861,7 +3039,8 @@
     "lat": 41.7463572,
     "lng": 12.6237665,
     "geocode_quality": "street",
-    "geocode_display": "Via dei Lombardi, Castelluccia, Marino, Roma, Lazio, 00047, Italia"
+    "geocode_display": "Via dei Lombardi, Castelluccia, Marino, Roma, Lazio, 00047, Italia",
+    "data_setup": "2026-04-28"
   },
   {
     "piva": "06067760659",
@@ -2877,7 +3056,8 @@
     "lat": 40.6803601,
     "lng": 14.7594542,
     "geocode_quality": "comune",
-    "geocode_display": "Salerno, Campania, Italia"
+    "geocode_display": "Salerno, Campania, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "05454111005",
@@ -2893,7 +3073,8 @@
     "lat": 42.0517987,
     "lng": 12.6183967,
     "geocode_quality": "comune",
-    "geocode_display": "Monterotondo, Roma, Lazio, 00015, Italia"
+    "geocode_display": "Monterotondo, Roma, Lazio, 00015, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "05091870658",
@@ -2909,7 +3090,8 @@
     "lat": 40.6108178,
     "lng": 15.0482584,
     "geocode_quality": "street",
-    "geocode_display": "Via San Vito Martire, Eboli, Salerno, Campania, 84025, Italia"
+    "geocode_display": "Via San Vito Martire, Eboli, Salerno, Campania, 84025, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "03878260656",
@@ -2925,7 +3107,8 @@
     "lat": 40.648908,
     "lng": 14.640141,
     "geocode_quality": "comune",
-    "geocode_display": "Maiori, Salerno, Campania, Italia"
+    "geocode_display": "Maiori, Salerno, Campania, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "04362090658",
@@ -2941,7 +3124,8 @@
     "lat": 40.5617113,
     "lng": 14.9869071,
     "geocode_quality": "comune",
-    "geocode_display": "Via Campolongo, Eboli, Salerno, Campania, 84091, Italia"
+    "geocode_display": "Via Campolongo, Eboli, Salerno, Campania, 84091, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "03713630360",
@@ -2957,7 +3141,8 @@
     "lat": 44.7536838,
     "lng": 11.0062884,
     "geocode_quality": "street",
-    "geocode_display": "13, Via Galileo Galilei, Sorbara, Bomporto, Unione dei comuni del Sorbara, Modena, Emilia-Romagna, 41130, Italia"
+    "geocode_display": "13, Via Galileo Galilei, Sorbara, Bomporto, Unione dei comuni del Sorbara, Modena, Emilia-Romagna, 41130, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "04494581210",
@@ -2973,7 +3158,8 @@
     "lat": 40.7536978,
     "lng": 14.4616395,
     "geocode_quality": "street",
-    "geocode_display": "1, Via Claudio Prisco, Carminiello, Rovigliano, Torre Annunziata, Napoli, Campania, 80058, Italia"
+    "geocode_display": "1, Via Claudio Prisco, Carminiello, Rovigliano, Torre Annunziata, Napoli, Campania, 80058, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "10134310969",
@@ -2989,7 +3175,8 @@
     "lat": 45.4992924,
     "lng": 9.3283792,
     "geocode_quality": "street",
-    "geocode_display": "17, Via Roma, Seggiano, Pioltello, Rodano, Milano, Lombardia, 20096, Italia"
+    "geocode_display": "17, Via Roma, Seggiano, Pioltello, Rodano, Milano, Lombardia, 20096, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "04259140244",
@@ -3005,7 +3192,8 @@
     "lat": 45.7605528,
     "lng": 11.473198,
     "geocode_quality": "comune",
-    "geocode_display": "Chiuppano, Vicenza, Veneto, 36010, Italia"
+    "geocode_display": "Chiuppano, Vicenza, Veneto, 36010, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "02782070540",
@@ -3021,7 +3209,8 @@
     "lat": 44.2227278,
     "lng": 12.041273,
     "geocode_quality": "comune",
-    "geocode_display": "Forlì, Unione di Comuni della Romagna Forlivese, Forlì-Cesena, Emilia-Romagna, 47121-47122, Italia"
+    "geocode_display": "Forlì, Unione di Comuni della Romagna Forlivese, Forlì-Cesena, Emilia-Romagna, 47121-47122, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "02874031202",
@@ -3037,7 +3226,8 @@
     "lat": 44.1564557,
     "lng": 10.9761704,
     "geocode_quality": "street",
-    "geocode_display": "30, Via Giuseppe Mazzini, Madognana, Porretta Terme, Alto Reno Terme, Unione dell'Alto Reno, Bologna, Emilia-Romagna, 40046, Italia"
+    "geocode_display": "30, Via Giuseppe Mazzini, Madognana, Porretta Terme, Alto Reno Terme, Unione dell'Alto Reno, Bologna, Emilia-Romagna, 40046, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "09399040964",
@@ -3053,7 +3243,8 @@
     "lat": 45.4765003,
     "lng": 9.1860936,
     "geocode_quality": "street",
-    "geocode_display": "4, Via Lovanio, Borgonuovo, Brera, Municipio 1, Milano, Rodano, Milano, Lombardia, 20121, Italia"
+    "geocode_display": "4, Via Lovanio, Borgonuovo, Brera, Municipio 1, Milano, Rodano, Milano, Lombardia, 20121, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "05449321008",
@@ -3069,7 +3260,8 @@
     "lat": 42.104946,
     "lng": 12.4454599,
     "geocode_quality": "comune",
-    "geocode_display": "Sacrofano, Roma, Lazio, Italia"
+    "geocode_display": "Sacrofano, Roma, Lazio, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "01511460626",
@@ -3085,7 +3277,8 @@
     "lat": 41.0885378,
     "lng": 14.5037928,
     "geocode_quality": "street",
-    "geocode_display": "Sant'Agata de' Goti, Benevento, Campania, 82019, Italia"
+    "geocode_display": "Sant'Agata de' Goti, Benevento, Campania, 82019, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "05488560722",
@@ -3101,7 +3294,8 @@
     "lat": 40.9549844,
     "lng": 17.290832,
     "geocode_quality": "street",
-    "geocode_display": "Via Angelo Mengano, Monopoli, Bari, Puglia, 70034, Italia"
+    "geocode_display": "Via Angelo Mengano, Monopoli, Bari, Puglia, 70034, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "04595540651",
@@ -3117,7 +3311,8 @@
     "lat": 40.7869173,
     "lng": 14.5979259,
     "geocode_quality": "street",
-    "geocode_display": "Via Eduardo de Filippo, Casatori, San Valentino Torio, Salerno, Campania, 84087, Italia"
+    "geocode_display": "Via Eduardo de Filippo, Casatori, San Valentino Torio, Salerno, Campania, 84087, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "04006880753",
@@ -3133,7 +3328,8 @@
     "lat": 40.0368752,
     "lng": 18.4601052,
     "geocode_quality": "street",
-    "geocode_display": "Via Roma, Santa Cesarea Terme, Lecce, Puglia, 73027, Italia"
+    "geocode_display": "Via Roma, Santa Cesarea Terme, Lecce, Puglia, 73027, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "07923641216",
@@ -3149,7 +3345,8 @@
     "lat": 40.6310484,
     "lng": 14.4076359,
     "geocode_quality": "street",
-    "geocode_display": "Corso Italia, Maiano, Sant'Agnello, Napoli, Campania, 80063, Italia"
+    "geocode_display": "Corso Italia, Maiano, Sant'Agnello, Napoli, Campania, 80063, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "08491491216",
@@ -3165,7 +3362,8 @@
     "lat": 40.9115816,
     "lng": 14.2355989,
     "geocode_quality": "street",
-    "geocode_display": "Corso Europa, Melito di Napoli, Napoli, Campania, 80017, Italia"
+    "geocode_display": "Corso Europa, Melito di Napoli, Napoli, Campania, 80017, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "08827900724",
@@ -3181,7 +3379,8 @@
     "lat": 41.1257843,
     "lng": 16.8620293,
     "geocode_quality": "comune",
-    "geocode_display": "Bari, Puglia, Italia"
+    "geocode_display": "Bari, Puglia, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "03716180546",
@@ -3197,7 +3396,8 @@
     "lat": 43.1054003,
     "lng": 12.3886107,
     "geocode_quality": "street",
-    "geocode_display": "Via Cacciatori Delle Alpi, Sant'Erminio, Perugia, Umbria, 06122, Italia"
+    "geocode_display": "Via Cacciatori Delle Alpi, Sant'Erminio, Perugia, Umbria, 06122, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "05093810967",
@@ -3213,7 +3413,8 @@
     "lat": 45.608252,
     "lng": 9.5166835,
     "geocode_quality": "street",
-    "geocode_display": "Piazza Nazionale, Trezzo sull'Adda, Baracche, Concesa, Trezzo sull'Adda, Rodano, Milano, Lombardia, 20056, Italia"
+    "geocode_display": "Piazza Nazionale, Trezzo sull'Adda, Baracche, Concesa, Trezzo sull'Adda, Rodano, Milano, Lombardia, 20056, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "07240680483",
@@ -3229,7 +3430,8 @@
     "lat": 43.7697955,
     "lng": 11.2556404,
     "geocode_quality": "comune",
-    "geocode_display": "Firenze, Toscana, Italia"
+    "geocode_display": "Firenze, Toscana, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "04121630653",
@@ -3245,7 +3447,8 @@
     "lat": 40.6323839,
     "lng": 14.8997717,
     "geocode_quality": "street",
-    "geocode_display": "Via Alessandro Volta, Sant'Antonio a Picenza, Pontecagnano Faiano, Salerno, Campania, 84098, Italia"
+    "geocode_display": "Via Alessandro Volta, Sant'Antonio a Picenza, Pontecagnano Faiano, Salerno, Campania, 84098, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "01626120982",
@@ -3261,7 +3464,8 @@
     "lat": 45.9560585,
     "lng": 10.2999984,
     "geocode_quality": "street",
-    "geocode_display": "Piazza Generale Pietro Ronchi, Campogrande, Breno, Comunità montana della valle Camonica, Brescia, Lombardia, 25043, Italia"
+    "geocode_display": "Piazza Generale Pietro Ronchi, Campogrande, Breno, Comunità montana della valle Camonica, Brescia, Lombardia, 25043, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "08224410962",
@@ -3277,7 +3481,8 @@
     "lat": 45.6588863,
     "lng": 9.1482844,
     "geocode_quality": "street",
-    "geocode_display": "Via Martesana, Meda, Monza e Brianza, Lombardia, 20821, Italia"
+    "geocode_display": "Via Martesana, Meda, Monza e Brianza, Lombardia, 20821, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "03732210756",
@@ -3293,7 +3498,8 @@
     "lat": 40.2855536,
     "lng": 18.136084,
     "geocode_quality": "street",
-    "geocode_display": "Via Caduti di Nassirya, Lequile, Lecce, Puglia, 73016, Italia"
+    "geocode_display": "Via Caduti di Nassirya, Lequile, Lecce, Puglia, 73016, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "02420530517",
@@ -3309,7 +3515,8 @@
     "lat": 45.4596532,
     "lng": 10.4891691,
     "geocode_quality": "street",
-    "geocode_display": "Via Monte Grappa, Lonatino, Lonato del Garda, Brescia, Lombardia, 25017, Italia"
+    "geocode_display": "Via Monte Grappa, Lonatino, Lonato del Garda, Brescia, Lombardia, 25017, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "01246341000",
@@ -3325,7 +3532,8 @@
     "lat": 41.8249172,
     "lng": 12.4591433,
     "geocode_quality": "street",
-    "geocode_display": "24-26, Via Thailandia, E.U.R., Municipio Roma IX, Roma, Lazio, 00144, Italia"
+    "geocode_display": "24-26, Via Thailandia, E.U.R., Municipio Roma IX, Roma, Lazio, 00144, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "05205900656",
@@ -3341,7 +3549,8 @@
     "lat": 40.6772675,
     "lng": 14.7535509,
     "geocode_quality": "street",
-    "geocode_display": "35, Piazza della Libertà, Salerno, Campania, 84121, Italia"
+    "geocode_display": "35, Piazza della Libertà, Salerno, Campania, 84121, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "03419231208",
@@ -3357,7 +3566,8 @@
     "lat": 44.5783605,
     "lng": 11.3549787,
     "geocode_quality": "street",
-    "geocode_display": "14, Piazza Giorgio Amendola, Castel Maggiore, Unione Reno Galliera, Bologna, Emilia-Romagna, 40013, Italia"
+    "geocode_display": "14, Piazza Giorgio Amendola, Castel Maggiore, Unione Reno Galliera, Bologna, Emilia-Romagna, 40013, Italia",
+    "data_setup": "2026-04-30"
   },
   {
     "piva": "08433290965",
@@ -3373,7 +3583,8 @@
     "lat": 45.6283938,
     "lng": 9.1467512,
     "geocode_quality": "comune",
-    "geocode_display": "Cesano Maderno, Monza e Brianza, Lombardia, 20811, Italia"
+    "geocode_display": "Cesano Maderno, Monza e Brianza, Lombardia, 20811, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "03413810759",
@@ -3389,7 +3600,8 @@
     "lat": 40.1006169,
     "lng": 18.4452796,
     "geocode_quality": "street",
-    "geocode_display": "Via Minervino, Uggiano la Chiesa, Lecce, Puglia, 73027, Italia"
+    "geocode_display": "Via Minervino, Uggiano la Chiesa, Lecce, Puglia, 73027, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "08601051215",
@@ -3405,7 +3617,8 @@
     "lat": 40.6245399,
     "lng": 14.3778441,
     "geocode_quality": "street",
-    "geocode_display": "Via degli Aranci, Parsano, Santa Lucia, Sorrento, Napoli, Campania, 80067, Italia"
+    "geocode_display": "Via degli Aranci, Parsano, Santa Lucia, Sorrento, Napoli, Campania, 80067, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "16655791008",
@@ -3421,7 +3634,8 @@
     "lat": 41.670806,
     "lng": 12.5003598,
     "geocode_quality": "street",
-    "geocode_display": "Via Filippo Re, Primavera, Pomezia, Roma, Lazio, 00071, Italia"
+    "geocode_display": "Via Filippo Re, Primavera, Pomezia, Roma, Lazio, 00071, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "05956770969",
@@ -3437,7 +3651,8 @@
     "lat": 45.4555133,
     "lng": 9.2068935,
     "geocode_quality": "street",
-    "geocode_display": "Viale Lazio, Porta Romana, Municipio 4, Milano, Rodano, Milano, Lombardia, 20135, Italia"
+    "geocode_display": "Viale Lazio, Porta Romana, Municipio 4, Milano, Rodano, Milano, Lombardia, 20135, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "01885200640",
@@ -3453,7 +3668,8 @@
     "lat": 41.0598712,
     "lng": 14.9969409,
     "geocode_quality": "street",
-    "geocode_display": "Via Nazionale Pianopantano, Pianopantano, Mirabella Eclano, Avellino, Campania, 83036, Italia"
+    "geocode_display": "Via Nazionale Pianopantano, Pianopantano, Mirabella Eclano, Avellino, Campania, 83036, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "06635790964",
@@ -3469,7 +3685,8 @@
     "lat": 45.5001349,
     "lng": 8.9966369,
     "geocode_quality": "street",
-    "geocode_display": "Via Brughiera, Serbelloni, Pregnana Milanese, Milano, Lombardia, 20006, Italia"
+    "geocode_display": "Via Brughiera, Serbelloni, Pregnana Milanese, Milano, Lombardia, 20006, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "09296161210",
@@ -3485,7 +3702,8 @@
     "lat": 40.8670152,
     "lng": 14.0864342,
     "geocode_quality": "street",
-    "geocode_display": "Via Pier Paolo Pasolini, Trepiccioni, Monterusciello, Pozzuoli, Napoli, Campania, 80078, Italia"
+    "geocode_display": "Via Pier Paolo Pasolini, Trepiccioni, Monterusciello, Pozzuoli, Napoli, Campania, 80078, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "07768090636",
@@ -3501,7 +3719,8 @@
     "lat": 40.8442929,
     "lng": 14.251678,
     "geocode_quality": "street",
-    "geocode_display": "Via Monteoliveto, Rione Carità, San Giuseppe, Municipalità 2, Napoli, Campania, 80100, Italia"
+    "geocode_display": "Via Monteoliveto, Rione Carità, San Giuseppe, Municipalità 2, Napoli, Campania, 80100, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "04503590483",
@@ -3517,7 +3736,8 @@
     "lat": 43.7759518,
     "lng": 11.444824,
     "geocode_quality": "street",
-    "geocode_display": "Via Giuseppe Mazzini, San Francesco, Pelago, Unione di Comuni Valdarno e Valdisieve, Firenze, Toscana, 50065, Italia"
+    "geocode_display": "Via Giuseppe Mazzini, San Francesco, Pelago, Unione di Comuni Valdarno e Valdisieve, Firenze, Toscana, 50065, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "05492830657",
@@ -3533,7 +3753,8 @@
     "lat": 40.6250343,
     "lng": 14.9572608,
     "geocode_quality": "street",
-    "geocode_display": "via del Commercio, Bellizzi, Salerno, Campania, 84092, Italia"
+    "geocode_display": "via del Commercio, Bellizzi, Salerno, Campania, 84092, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "12069150964",
@@ -3549,7 +3770,8 @@
     "lat": 45.5719082,
     "lng": 9.1682143,
     "geocode_quality": "comune",
-    "geocode_display": "Paderno Dugnano, Zona Omogenea Milano Nord, Milano, Lombardia, 20037, Italia"
+    "geocode_display": "Paderno Dugnano, Zona Omogenea Milano Nord, Milano, Lombardia, 20037, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "01246830721",
@@ -3565,7 +3787,8 @@
     "lat": 41.1221242,
     "lng": 16.793968,
     "geocode_quality": "street",
-    "geocode_display": "Via Abruzzi, San Paolo, Municipio 3, Bari, Puglia, 70132, Italia"
+    "geocode_display": "Via Abruzzi, San Paolo, Municipio 3, Bari, Puglia, 70132, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "02032640985",
@@ -3581,7 +3804,8 @@
     "lat": 45.3772059,
     "lng": 10.1215539,
     "geocode_quality": "street",
-    "geocode_display": "Via Guglielmo Marconi, Offlaga, Brescia, Lombardia, 25020, Italia"
+    "geocode_display": "Via Guglielmo Marconi, Offlaga, Brescia, Lombardia, 25020, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "05183890655",
@@ -3597,7 +3821,8 @@
     "lat": 40.6175146,
     "lng": 15.0569438,
     "geocode_quality": "comune",
-    "geocode_display": "Eboli, Salerno, Campania, 84025, Italia"
+    "geocode_display": "Eboli, Salerno, Campania, 84025, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "03628420246",
@@ -3613,7 +3838,8 @@
     "lat": 45.6756071,
     "lng": 11.5542615,
     "geocode_quality": "street",
-    "geocode_display": "Via Preara, Moraro, Preara, Montecchio Precalcino, Vicenza, Veneto, 36030, Italia"
+    "geocode_display": "Via Preara, Moraro, Preara, Montecchio Precalcino, Vicenza, Veneto, 36030, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "03573590985",
@@ -3629,7 +3855,8 @@
     "lat": 45.5303508,
     "lng": 10.2161419,
     "geocode_quality": "street",
-    "geocode_display": "Via Malta, Lamarmora, Zona Sud, Brescia, Lombardia, 25100, Italia"
+    "geocode_display": "Via Malta, Lamarmora, Zona Sud, Brescia, Lombardia, 25100, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "02697380596",
@@ -3645,7 +3872,8 @@
     "lat": 41.3418977,
     "lng": 13.0099834,
     "geocode_quality": "street",
-    "geocode_display": "Viale Sicilia, Sacramento, Sabaudia, Latina, Lazio, 04016, Italia"
+    "geocode_display": "Viale Sicilia, Sacramento, Sabaudia, Latina, Lazio, 04016, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "04525080653",
@@ -3661,7 +3889,8 @@
     "lat": 40.6733814,
     "lng": 14.7275982,
     "geocode_quality": "street",
-    "geocode_display": "Corso Umberto Primo, Benincasa, Vietri sul Mare, Salerno, Campania, 84019, Italia"
+    "geocode_display": "Corso Umberto Primo, Benincasa, Vietri sul Mare, Salerno, Campania, 84019, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "05274860757",
@@ -3677,7 +3906,8 @@
     "lat": 40.1610854,
     "lng": 18.2563643,
     "geocode_quality": "street",
-    "geocode_display": "Via Galatina, Corigliano d'Otranto, Lecce, Puglia, 73022, Italia"
+    "geocode_display": "Via Galatina, Corigliano d'Otranto, Lecce, Puglia, 73022, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "14229811006",
@@ -3693,7 +3923,8 @@
     "lat": 41.9402579,
     "lng": 12.6385556,
     "geocode_quality": "street",
-    "geocode_display": "Via San Getullo, Case Rosse, Municipio Roma IV, Roma, Lazio, 00131, Italia"
+    "geocode_display": "Via San Getullo, Case Rosse, Municipio Roma IV, Roma, Lazio, 00131, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "04667010286",
@@ -3709,7 +3940,8 @@
     "lat": 45.4277655,
     "lng": 11.9523217,
     "geocode_quality": "street",
-    "geocode_display": "Via Padova, Giora, Busa, Vigonza, Padova, Veneto, 35010, Italia"
+    "geocode_display": "Via Padova, Giora, Busa, Vigonza, Padova, Veneto, 35010, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "01667770190",
@@ -3725,7 +3957,8 @@
     "lat": 45.0787334,
     "lng": 11.1355183,
     "geocode_quality": "street",
-    "geocode_display": "Via Abetone Brennero Nord, Bugno San Romano, Ostiglia, Mantova, Lombardia, 46035, Italia"
+    "geocode_display": "Via Abetone Brennero Nord, Bugno San Romano, Ostiglia, Mantova, Lombardia, 46035, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "04296190988",
@@ -3741,7 +3974,8 @@
     "lat": 45.8823343,
     "lng": 10.1799287,
     "geocode_quality": "street",
-    "geocode_display": "C.I.S.L. - Sede di Darfo Boario Terme, 15, Via Antonio Lorenzetti, Sciano, Darfo Boario Terme, Comunità montana della valle Camonica, Brescia, Lombardia, 25087, Italia"
+    "geocode_display": "C.I.S.L. - Sede di Darfo Boario Terme, 15, Via Antonio Lorenzetti, Sciano, Darfo Boario Terme, Comunità montana della valle Camonica, Brescia, Lombardia, 25087, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "04998840658",
@@ -3757,7 +3991,8 @@
     "lat": 40.712635,
     "lng": 14.9381506,
     "geocode_quality": "street",
-    "geocode_display": "Via Francesco Spirito, Terravecchia, Giffoni Valle Piana, Salerno, Campania, 84095, Italia"
+    "geocode_display": "Via Francesco Spirito, Terravecchia, Giffoni Valle Piana, Salerno, Campania, 84095, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "10849590962",
@@ -3773,7 +4008,8 @@
     "lat": 45.7525302,
     "lng": 9.0154866,
     "geocode_quality": "street",
-    "geocode_display": "Via Crespi, Monticello, Cassina Rizzardi, Como, Lombardia, 22079, Italia"
+    "geocode_display": "Via Crespi, Monticello, Cassina Rizzardi, Como, Lombardia, 22079, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "03670950249",
@@ -3789,7 +4025,8 @@
     "lat": 45.6877202,
     "lng": 11.4861438,
     "geocode_quality": "comune",
-    "geocode_display": "Thiene, Vicenza, Veneto, 36016, Italia"
+    "geocode_display": "Thiene, Vicenza, Veneto, 36016, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "03742340981",
@@ -3805,7 +4042,8 @@
     "lat": 45.327176,
     "lng": 10.12837,
     "geocode_quality": "comune",
-    "geocode_display": "Bassano Bresciano, Brescia, Lombardia, 25020, Italia"
+    "geocode_display": "Bassano Bresciano, Brescia, Lombardia, 25020, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "09201641009",
@@ -3821,7 +4059,8 @@
     "lat": 42.0945222,
     "lng": 11.793392,
     "geocode_quality": "street",
-    "geocode_display": "Via Leonardo, Borgo Odescalchi, Civitavecchia, Roma, Lazio, 00053, Italia"
+    "geocode_display": "Via Leonardo, Borgo Odescalchi, Civitavecchia, Roma, Lazio, 00053, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "03218040362",
@@ -3837,7 +4076,8 @@
     "lat": 44.800621,
     "lng": 10.8920168,
     "geocode_quality": "street",
-    "geocode_display": "Via Pola Esterna, Cibeno Pile, San Marino di Carpi, Carpi, Unione delle Terre d'Argine, Modena, Emilia-Romagna, 41012, Italia"
+    "geocode_display": "Via Pola Esterna, Cibeno Pile, San Marino di Carpi, Carpi, Unione delle Terre d'Argine, Modena, Emilia-Romagna, 41012, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "02330010519",
@@ -3853,7 +4093,8 @@
     "lat": 43.4277915,
     "lng": 11.8318241,
     "geocode_quality": "street",
-    "geocode_display": "Strada A, Zona Industriale San Zeno, San Zeno, Arezzo, Toscana, 54045, Italia"
+    "geocode_display": "Strada A, Zona Industriale San Zeno, San Zeno, Arezzo, Toscana, 54045, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "05524571212",
@@ -3869,7 +4110,8 @@
     "lat": 40.8712512,
     "lng": 14.3424692,
     "geocode_quality": "street",
-    "geocode_display": "Via Fraustino, Volla, Napoli, Campania, 80147, Italia"
+    "geocode_display": "Via Fraustino, Volla, Napoli, Campania, 80147, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "02562190245",
@@ -3885,7 +4127,8 @@
     "lat": 45.7726007,
     "lng": 11.7206547,
     "geocode_quality": "comune",
-    "geocode_display": "Bassano del Grappa, Vicenza, Veneto, 36061, Italia"
+    "geocode_display": "Bassano del Grappa, Vicenza, Veneto, 36061, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "05524970968",
@@ -3901,7 +4144,8 @@
     "lat": 45.5654067,
     "lng": 9.2320991,
     "geocode_quality": "street",
-    "geocode_display": "Via Antonio Fogazzaro, Robecco, Borgo Misto, Cinisello Balsamo, Zona Omogenea Milano Nord, Milano, Lombardia, 20092, Italia"
+    "geocode_display": "Via Antonio Fogazzaro, Robecco, Borgo Misto, Cinisello Balsamo, Zona Omogenea Milano Nord, Milano, Lombardia, 20092, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "04726940655",
@@ -3917,7 +4161,8 @@
     "lat": 40.7055899,
     "lng": 14.705096,
     "geocode_quality": "street",
-    "geocode_display": "Via Alcide De Gasperi, San Nicola, San Vito, Santa Rosa, Cava de' Tirreni, Salerno, Campania, 84013, Italia"
+    "geocode_display": "Via Alcide De Gasperi, San Nicola, San Vito, Santa Rosa, Cava de' Tirreni, Salerno, Campania, 84013, Italia",
+    "data_setup": "2026-05-04"
   },
   {
     "piva": "07556351216",
@@ -3933,7 +4178,8 @@
     "lat": 40.923212,
     "lng": 14.423933,
     "geocode_quality": "comune",
-    "geocode_display": "Brusciano, Napoli, Campania, Italia"
+    "geocode_display": "Brusciano, Napoli, Campania, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "02364180592",
@@ -3949,7 +4195,8 @@
     "lat": 41.5926368,
     "lng": 12.6494742,
     "geocode_quality": "street",
-    "geocode_display": "Via degli Olivi, Aprilia, Latina, Lazio, 04011, Italia"
+    "geocode_display": "Via degli Olivi, Aprilia, Latina, Lazio, 04011, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "05853310729",
@@ -3965,7 +4212,8 @@
     "lat": 41.1157078,
     "lng": 16.680941,
     "geocode_quality": "comune",
-    "geocode_display": "1^ strada Viale Europa, Zona Artigianale di Bitonto, Bitonto, Bari, Puglia, 70032, Italia"
+    "geocode_display": "1^ strada Viale Europa, Zona Artigianale di Bitonto, Bitonto, Bari, Puglia, 70032, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "12162630961",
@@ -3981,7 +4229,8 @@
     "lat": 45.4641943,
     "lng": 9.1896346,
     "geocode_quality": "comune",
-    "geocode_display": "Milano, Rodano, Milano, Lombardia, Italia"
+    "geocode_display": "Milano, Rodano, Milano, Lombardia, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "04713590968",
@@ -3997,7 +4246,8 @@
     "lat": 45.55255,
     "lng": 9.2110836,
     "geocode_quality": "street",
-    "geocode_display": "Farmacia Bartolotti, 20, Via Trieste, Cinisello, Cinisello Balsamo, Zona Omogenea Milano Nord, Milano, Lombardia, 20092, Italia"
+    "geocode_display": "Farmacia Bartolotti, 20, Via Trieste, Cinisello, Cinisello Balsamo, Zona Omogenea Milano Nord, Milano, Lombardia, 20092, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "04464720236",
@@ -4013,7 +4263,8 @@
     "lat": 45.4076014,
     "lng": 10.8457098,
     "geocode_quality": "street",
-    "geocode_display": "Via Sabaina, Pirlar, Sommacampagna, Verona, Veneto, 37066, Italia"
+    "geocode_display": "Via Sabaina, Pirlar, Sommacampagna, Verona, Veneto, 37066, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "03104110642",
@@ -4029,7 +4280,8 @@
     "lat": 41.071221,
     "lng": 15.200548,
     "geocode_quality": "comune",
-    "geocode_display": "San Sossio Baronia, Avellino, Campania, Italia"
+    "geocode_display": "San Sossio Baronia, Avellino, Campania, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "03178350546",
@@ -4045,7 +4297,8 @@
     "lat": 43.0888914,
     "lng": 12.3682598,
     "geocode_quality": "street",
-    "geocode_display": "Via Settevalli, Madonna Alta, Perugia, Umbria, 06129, Italia"
+    "geocode_display": "Via Settevalli, Madonna Alta, Perugia, Umbria, 06129, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "11016760966",
@@ -4061,7 +4314,8 @@
     "lat": 45.4182125,
     "lng": 9.0710538,
     "geocode_quality": "comune",
-    "geocode_display": "Trezzano sul Naviglio, Milano, Lombardia, Italia"
+    "geocode_display": "Trezzano sul Naviglio, Milano, Lombardia, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "08322480727",
@@ -4077,7 +4331,8 @@
     "lat": 40.9561908,
     "lng": 17.2895968,
     "geocode_quality": "street",
-    "geocode_display": "Via Aurelio Sereno, Monopoli, Bari, Puglia, 70034, Italia"
+    "geocode_display": "Via Aurelio Sereno, Monopoli, Bari, Puglia, 70034, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "03805831207",
@@ -4093,7 +4348,8 @@
     "lat": 44.5046664,
     "lng": 11.4744496,
     "geocode_quality": "street",
-    "geocode_display": "41b, Via Giuseppe Mazzini, Fiesso, Castenaso, Bologna, Emilia-Romagna, 40055, Italia"
+    "geocode_display": "41b, Via Giuseppe Mazzini, Fiesso, Castenaso, Bologna, Emilia-Romagna, 40055, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "05671870656",
@@ -4109,7 +4365,8 @@
     "lat": 40.6286581,
     "lng": 14.4854955,
     "geocode_quality": "comune",
-    "geocode_display": "Positano, Salerno, Campania, 84017, Italia"
+    "geocode_display": "Positano, Salerno, Campania, 84017, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "06048910654",
@@ -4125,7 +4382,8 @@
     "lat": 40.6092539,
     "lng": 14.9821443,
     "geocode_quality": "comune",
-    "geocode_display": "Battipaglia, Salerno, Campania, 84091, Italia"
+    "geocode_display": "Battipaglia, Salerno, Campania, 84091, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "01515700605",
@@ -4141,7 +4399,8 @@
     "lat": 41.459241,
     "lng": 13.6671124,
     "geocode_quality": "street",
-    "geocode_display": "Via San Giovanni Battista, Pontecorvo, Frosinone, Lazio, 03037, Italia"
+    "geocode_display": "Via San Giovanni Battista, Pontecorvo, Frosinone, Lazio, 03037, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "07542780726",
@@ -4157,7 +4416,8 @@
     "lat": 40.8003985,
     "lng": 16.9212083,
     "geocode_quality": "street",
-    "geocode_display": "Via Camillo Benso conte di Cavour, Gioia del Colle, Bari, Puglia, 70023, Italia"
+    "geocode_display": "Via Camillo Benso conte di Cavour, Gioia del Colle, Bari, Puglia, 70023, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "12781900969",
@@ -4173,7 +4433,8 @@
     "lat": 45.5441506,
     "lng": 9.2759987,
     "geocode_quality": "street",
-    "geocode_display": "Via Piacenza, Cascina Campagnazza, San Giuliano Monzese, San Maurizio al Lambro, Cologno Monzese, Rodano, Milano, Lombardia, 20090, Italia"
+    "geocode_display": "Via Piacenza, Cascina Campagnazza, San Giuliano Monzese, San Maurizio al Lambro, Cologno Monzese, Rodano, Milano, Lombardia, 20090, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "04828530289",
@@ -4189,7 +4450,8 @@
     "lat": 45.5384418,
     "lng": 11.8872757,
     "geocode_quality": "street",
-    "geocode_display": "Via Margarise, Rizzo, Arsego, San Giorgio delle Pertiche, Padova, Veneto, 35010, Italia"
+    "geocode_display": "Via Margarise, Rizzo, Arsego, San Giorgio delle Pertiche, Padova, Veneto, 35010, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "03964661205",
@@ -4205,7 +4467,8 @@
     "lat": 44.4938203,
     "lng": 11.3426327,
     "geocode_quality": "comune",
-    "geocode_display": "Bologna, Emilia-Romagna, Italia"
+    "geocode_display": "Bologna, Emilia-Romagna, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "07170850726",
@@ -4221,7 +4484,8 @@
     "lat": 41.1134728,
     "lng": 16.8774878,
     "geocode_quality": "street",
-    "geocode_display": "Via Domenico Cirillo, Municipio 2, Bari, Puglia, 70126, Italia"
+    "geocode_display": "Via Domenico Cirillo, Municipio 2, Bari, Puglia, 70126, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "03716570548",
@@ -4237,7 +4501,8 @@
     "lat": 43.1000613,
     "lng": 12.5219347,
     "geocode_quality": "street",
-    "geocode_display": "Viale dei Pini, Petrignano, Assisi, Perugia, Umbria, 06081, Italia"
+    "geocode_display": "Viale dei Pini, Petrignano, Assisi, Perugia, Umbria, 06081, Italia",
+    "data_setup": "2026-05-05"
   },
   {
     "piva": "12331341003",
@@ -4253,7 +4518,8 @@
     "lat": 41.8824188,
     "lng": 12.5146157,
     "geocode_quality": "street",
-    "geocode_display": "57, Piazza dei Re di Roma, Municipio Roma VII, Roma, Lazio, 00183, Italia"
+    "geocode_display": "57, Piazza dei Re di Roma, Municipio Roma VII, Roma, Lazio, 00183, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "02891210342",
@@ -4269,7 +4535,8 @@
     "lat": 44.8083291,
     "lng": 10.3140892,
     "geocode_quality": "street",
-    "geocode_display": "2, Via Primo Savani, Cornocchio, Pablo, Parma, Emilia-Romagna, 43125, Italia"
+    "geocode_display": "2, Via Primo Savani, Cornocchio, Pablo, Parma, Emilia-Romagna, 43125, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "02229110545",
@@ -4285,7 +4552,8 @@
     "lat": 42.7170082,
     "lng": 13.0135022,
     "geocode_quality": "comune",
-    "geocode_display": "Cascia, Perugia, Umbria, 06043, Italia"
+    "geocode_display": "Cascia, Perugia, Umbria, 06043, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "03339841201",
@@ -4301,7 +4569,8 @@
     "lat": 44.6088419,
     "lng": 11.665535,
     "geocode_quality": "street",
-    "geocode_display": "2, Via Giuseppe Morosini, Molinella, Bologna, Emilia-Romagna, 40062, Italia"
+    "geocode_display": "2, Via Giuseppe Morosini, Molinella, Bologna, Emilia-Romagna, 40062, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "01644230516",
@@ -4317,7 +4586,8 @@
     "lat": 43.4944425,
     "lng": 11.6333756,
     "geocode_quality": "street",
-    "geocode_display": "Via Piero Calamandrei, Malafrasca-San Frustino, Pergine Valdarno, Laterina Pergine Valdarno, Arezzo, Toscana, 52020, Italia"
+    "geocode_display": "Via Piero Calamandrei, Malafrasca-San Frustino, Pergine Valdarno, Laterina Pergine Valdarno, Arezzo, Toscana, 52020, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "07128930489",
@@ -4333,7 +4603,8 @@
     "lat": 43.7681254,
     "lng": 11.2980569,
     "geocode_quality": "street",
-    "geocode_display": "275a, Via Aretina, Varlungo, Rovezzano, Quartiere 2, Settignano, Firenze, Toscana, 50135, Italia"
+    "geocode_display": "275a, Via Aretina, Varlungo, Rovezzano, Quartiere 2, Settignano, Firenze, Toscana, 50135, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "07326631210",
@@ -4349,7 +4620,8 @@
     "lat": 40.8245492,
     "lng": 14.5615656,
     "geocode_quality": "street",
-    "geocode_display": "Via Palma, Striano, Napoli, Campania, 80036, Italia"
+    "geocode_display": "Via Palma, Striano, Napoli, Campania, 80036, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "02134660980",
@@ -4365,7 +4637,8 @@
     "lat": 45.457182,
     "lng": 10.413574,
     "geocode_quality": "comune",
-    "geocode_display": "Calcinato, Brescia, Lombardia, 25011, Italia"
+    "geocode_display": "Calcinato, Brescia, Lombardia, 25011, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "12431801005",
@@ -4381,7 +4654,8 @@
     "lat": 41.8933203,
     "lng": 12.4829321,
     "geocode_quality": "comune",
-    "geocode_display": "Roma, Lazio, Italia"
+    "geocode_display": "Roma, Lazio, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "09143701218",
@@ -4397,7 +4671,8 @@
     "lat": 40.9249138,
     "lng": 14.4568673,
     "geocode_quality": "comune",
-    "geocode_display": "Marigliano, Napoli, Campania, 80034, Italia"
+    "geocode_display": "Marigliano, Napoli, Campania, 80034, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "04784220289",
@@ -4413,7 +4688,8 @@
     "lat": 45.4212196,
     "lng": 11.6890115,
     "geocode_quality": "street",
-    "geocode_display": "Via Roma, Boccalara, Cervarese Santa Croce, Padova, Veneto, 35030, Italia"
+    "geocode_display": "Via Roma, Boccalara, Cervarese Santa Croce, Padova, Veneto, 35030, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "04263570238",
@@ -4429,7 +4705,8 @@
     "lat": 45.4799686,
     "lng": 10.8544278,
     "geocode_quality": "street",
-    "geocode_display": "Corso San Lorenzo, Arcè, Pescantina, Verona, Veneto, 37026, Italia"
+    "geocode_display": "Corso San Lorenzo, Arcè, Pescantina, Verona, Veneto, 37026, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "05406920651",
@@ -4445,7 +4722,8 @@
     "lat": 40.7900022,
     "lng": 14.6989338,
     "geocode_quality": "street",
-    "geocode_display": "Via Risorgimento, Torello, Castel San Giorgio, Salerno, Campania, 84088, Italia"
+    "geocode_display": "Via Risorgimento, Torello, Castel San Giorgio, Salerno, Campania, 84088, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "07665480963",
@@ -4461,7 +4739,8 @@
     "lat": 45.5016851,
     "lng": 9.025746,
     "geocode_quality": "comune",
-    "geocode_display": "Cornaredo, Milano, Lombardia, 20007, Italia"
+    "geocode_display": "Cornaredo, Milano, Lombardia, 20007, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "06428650722",
@@ -4477,7 +4756,8 @@
     "lat": 40.8040333,
     "lng": 16.7592673,
     "geocode_quality": "street",
-    "geocode_display": "Via Cassano, Alessandriello, Santeramo in Colle, Bari, Puglia, 70029, Italia"
+    "geocode_display": "Via Cassano, Alessandriello, Santeramo in Colle, Bari, Puglia, 70029, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "01310321219",
@@ -4493,7 +4773,8 @@
     "lat": 40.9052221,
     "lng": 14.3470059,
     "geocode_quality": "street",
-    "geocode_display": "Via Arcora, Tavernanova, Casalnuovo di Napoli, Napoli, Campania, 80013, Italia"
+    "geocode_display": "Via Arcora, Tavernanova, Casalnuovo di Napoli, Napoli, Campania, 80013, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "08380520729",
@@ -4509,7 +4790,8 @@
     "lat": 40.816326,
     "lng": 16.5429048,
     "geocode_quality": "street",
-    "geocode_display": "Via Filippo Calderazzi, Altamura, Bari, Puglia, 70022, Italia"
+    "geocode_display": "Via Filippo Calderazzi, Altamura, Bari, Puglia, 70022, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "08470110720",
@@ -4525,7 +4807,8 @@
     "lat": 40.819725,
     "lng": 16.422779,
     "geocode_quality": "comune",
-    "geocode_display": "Gravina in Puglia, Bari, Puglia, 70024, Italia"
+    "geocode_display": "Gravina in Puglia, Bari, Puglia, 70024, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "05881310659",
@@ -4541,7 +4824,8 @@
     "lat": 40.7376592,
     "lng": 14.5722829,
     "geocode_quality": "comune",
-    "geocode_display": "Angri, Salerno, Campania, 84012, Italia"
+    "geocode_display": "Angri, Salerno, Campania, 84012, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "07055890482",
@@ -4557,7 +4841,8 @@
     "lat": 43.8135183,
     "lng": 11.0630414,
     "geocode_quality": "street",
-    "geocode_display": "Via Edmondo De Amicis, Poggio Nuovo, Signa, Firenze, Toscana, 59016, Italia"
+    "geocode_display": "Via Edmondo De Amicis, Poggio Nuovo, Signa, Firenze, Toscana, 59016, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "03309950651",
@@ -4573,7 +4858,8 @@
     "lat": 40.5602233,
     "lng": 15.3051388,
     "geocode_quality": "street",
-    "geocode_display": "Via Mario Pagano, Galdo, Sicignano degli Alburni, Salerno, Campania, 84029, Italia"
+    "geocode_display": "Via Mario Pagano, Galdo, Sicignano degli Alburni, Salerno, Campania, 84029, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "05656510657",
@@ -4589,7 +4875,8 @@
     "lat": 40.6570121,
     "lng": 15.4024269,
     "geocode_quality": "street",
-    "geocode_display": "Corso Giuseppe Garibaldi, San Gregorio Magno, Salerno, Campania, 84021, Italia"
+    "geocode_display": "Corso Giuseppe Garibaldi, San Gregorio Magno, Salerno, Campania, 84021, Italia",
+    "data_setup": "2026-05-06"
   },
   {
     "piva": "02156560480",
@@ -4605,7 +4892,8 @@
     "lat": 43.71463,
     "lng": 10.8172883,
     "geocode_quality": "street",
-    "geocode_display": "Via Vecchia Saminiatese, Macone, San Pierino, Fucecchio, Unione dei Comuni Circondario dell'Empolese Valdelsa, Firenze, Toscana, 50054, Italia"
+    "geocode_display": "Via Vecchia Saminiatese, Macone, San Pierino, Fucecchio, Unione dei Comuni Circondario dell'Empolese Valdelsa, Firenze, Toscana, 50054, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "02674910241",
@@ -4621,7 +4909,8 @@
     "lat": 45.6016604,
     "lng": 11.5825334,
     "geocode_quality": "comune",
-    "geocode_display": "Monticello Conte Otto, Vicenza, Veneto, 36010, Italia"
+    "geocode_display": "Monticello Conte Otto, Vicenza, Veneto, 36010, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "00360250286",
@@ -4637,7 +4926,8 @@
     "lat": 45.4621194,
     "lng": 11.909602,
     "geocode_quality": "street",
-    "geocode_display": "Via Guglielmo Marconi, Mejaniga, Bragni, Cadoneghe, Padova, Veneto, 35010, Italia"
+    "geocode_display": "Via Guglielmo Marconi, Mejaniga, Bragni, Cadoneghe, Padova, Veneto, 35010, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "05587040725",
@@ -4653,7 +4943,8 @@
     "lat": 41.1150401,
     "lng": 16.6932667,
     "geocode_quality": "street",
-    "geocode_display": "Via Benedetto Croce, Bitonto, Bari, Puglia, 70032, Italia"
+    "geocode_display": "Via Benedetto Croce, Bitonto, Bari, Puglia, 70032, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "08260050722",
@@ -4669,7 +4960,8 @@
     "lat": 40.9522369,
     "lng": 17.299948,
     "geocode_quality": "comune",
-    "geocode_display": "Monopoli, Bari, Puglia, Italia"
+    "geocode_display": "Monopoli, Bari, Puglia, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "07151511008",
@@ -4685,7 +4977,8 @@
     "lat": 41.9185848,
     "lng": 12.4964388,
     "geocode_quality": "street",
-    "geocode_display": "Via Alessandro Scarlatti, Pinciano, Municipio Roma II, Roma, Lazio, 00198, Italia"
+    "geocode_display": "Via Alessandro Scarlatti, Pinciano, Municipio Roma II, Roma, Lazio, 00198, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "04933930754",
@@ -4701,7 +4994,8 @@
     "lat": 39.9358466,
     "lng": 18.2976398,
     "geocode_quality": "street",
-    "geocode_display": "Via Alcide De Gasperi, Specchia, Lecce, Puglia, 73035, Italia"
+    "geocode_display": "Via Alcide De Gasperi, Specchia, Lecce, Puglia, 73035, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "04028450759",
@@ -4717,7 +5011,8 @@
     "lat": 40.1751116,
     "lng": 18.0340843,
     "geocode_quality": "street",
-    "geocode_display": "Via Firenze, Nardò, Lecce, Puglia, 73048, Italia"
+    "geocode_display": "Via Firenze, Nardò, Lecce, Puglia, 73048, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "02108790383",
@@ -4733,7 +5028,8 @@
     "lat": 44.8581382,
     "lng": 11.5757761,
     "geocode_quality": "street",
-    "geocode_display": "16, Via Giovanni Calvino, Mizzana, Cassana, Ferrara, Emilia-Romagna, 44123, Italia"
+    "geocode_display": "16, Via Giovanni Calvino, Mizzana, Cassana, Ferrara, Emilia-Romagna, 44123, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "04293520245",
@@ -4749,7 +5045,8 @@
     "lat": 45.6402365,
     "lng": 11.6404375,
     "geocode_quality": "street",
-    "geocode_display": "Via Vegri, Zona Campagnolo-Grendene, Bressanvido, Vicenza, Veneto, 36050, Italia"
+    "geocode_display": "Via Vegri, Zona Campagnolo-Grendene, Bressanvido, Vicenza, Veneto, 36050, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "02223120607",
@@ -4765,7 +5062,8 @@
     "lat": 41.649973,
     "lng": 13.3454394,
     "geocode_quality": "street",
-    "geocode_display": "Via Tiburtina, De Matthaeis, Frosinone, Lazio, 03100, Italia"
+    "geocode_display": "Via Tiburtina, De Matthaeis, Frosinone, Lazio, 03100, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "12176760960",
@@ -4781,7 +5079,8 @@
     "lat": 45.6183722,
     "lng": 9.2065877,
     "geocode_quality": "street",
-    "geocode_display": "Via Fratelli Cervi, Pont, Busasca, Desio, Monza e Brianza, Lombardia, 20832, Italia"
+    "geocode_display": "Via Fratelli Cervi, Pont, Busasca, Desio, Monza e Brianza, Lombardia, 20832, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "04963870722",
@@ -4797,7 +5096,8 @@
     "lat": 41.0414078,
     "lng": 16.7486991,
     "geocode_quality": "comune",
-    "geocode_display": "Bitetto, Bari, Puglia, Italia"
+    "geocode_display": "Bitetto, Bari, Puglia, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "09012710969",
@@ -4813,7 +5113,8 @@
     "lat": 45.5736338,
     "lng": 9.0235721,
     "geocode_quality": "street",
-    "geocode_display": "Via Fabio Filzi, Grancia-Pagliera, Lainate, Milano, Lombardia, 20045, Italia"
+    "geocode_display": "Via Fabio Filzi, Grancia-Pagliera, Lainate, Milano, Lombardia, 20045, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "08932570966",
@@ -4829,7 +5130,8 @@
     "lat": 45.5306933,
     "lng": 9.2688661,
     "geocode_quality": "street",
-    "geocode_display": "Viale Spagna, San Giuliano Monzese, San Maurizio al Lambro, Cologno Monzese, Rodano, Milano, Lombardia, 20090, Italia"
+    "geocode_display": "Viale Spagna, San Giuliano Monzese, San Maurizio al Lambro, Cologno Monzese, Rodano, Milano, Lombardia, 20090, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "11733830969",
@@ -4845,7 +5147,8 @@
     "lat": 45.5190489,
     "lng": 9.2743878,
     "geocode_quality": "street",
-    "geocode_display": "Via Papa Giovanni XXIII, San Giuseppe, Vimodrone, Rodano, Milano, Lombardia, 20059, Italia"
+    "geocode_display": "Via Papa Giovanni XXIII, San Giuseppe, Vimodrone, Rodano, Milano, Lombardia, 20059, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "03402550655",
@@ -4861,7 +5164,8 @@
     "lat": 40.4552941,
     "lng": 15.5509501,
     "geocode_quality": "comune",
-    "geocode_display": "Atena Lucana, Salerno, Campania, Italia"
+    "geocode_display": "Atena Lucana, Salerno, Campania, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "01283611216",
@@ -4877,7 +5181,8 @@
     "lat": 40.9358637,
     "lng": 14.2488046,
     "geocode_quality": "comune",
-    "geocode_display": "Casandrino, Napoli, Campania, 80025, Italia"
+    "geocode_display": "Casandrino, Napoli, Campania, 80025, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "04206630750",
@@ -4893,7 +5198,8 @@
     "lat": 40.3690997,
     "lng": 18.1686305,
     "geocode_quality": "street",
-    "geocode_display": "Via Adriatica, Super Carcere, Lecce, Puglia, 73100, Italia"
+    "geocode_display": "Via Adriatica, Super Carcere, Lecce, Puglia, 73100, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "02374100515",
@@ -4909,7 +5215,8 @@
     "lat": 43.5615566,
     "lng": 12.1617259,
     "geocode_quality": "street",
-    "geocode_display": "Via Tiberina Sud, Sansepolcro, Arezzo, Toscana, 52037, Italia"
+    "geocode_display": "Via Tiberina Sud, Sansepolcro, Arezzo, Toscana, 52037, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "04822690725",
@@ -4925,7 +5232,8 @@
     "lat": 40.8282032,
     "lng": 16.5561815,
     "geocode_quality": "street",
-    "geocode_display": "Via Caprera, Altamura, Bari, Puglia, 70022, Italia"
+    "geocode_display": "Via Caprera, Altamura, Bari, Puglia, 70022, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "00132840604",
@@ -4941,7 +5249,8 @@
     "lat": 41.4474967,
     "lng": 13.7806842,
     "geocode_quality": "street",
-    "geocode_display": "Via Vecchia Esperia, Pignataro Interamna, Frosinone, Lazio, 03040, Italia"
+    "geocode_display": "Via Vecchia Esperia, Pignataro Interamna, Frosinone, Lazio, 03040, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "03602600961",
@@ -4957,7 +5266,8 @@
     "lat": 45.6240106,
     "lng": 10.1953271,
     "geocode_quality": "street",
-    "geocode_display": "Via Vittorio Veneto, Cailina, Villa Carcina, Comunità montana della valle Trompia, Brescia, Lombardia, 25069, Italia"
+    "geocode_display": "Via Vittorio Veneto, Cailina, Villa Carcina, Comunità montana della valle Trompia, Brescia, Lombardia, 25069, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "03612690242",
@@ -4973,7 +5283,8 @@
     "lat": 45.8739615,
     "lng": 11.5083624,
     "geocode_quality": "street",
-    "geocode_display": "32, Via Jacopo Scajaro, Hodegart, Asiago, Vicenza, Veneto, 36012, Italia"
+    "geocode_display": "32, Via Jacopo Scajaro, Hodegart, Asiago, Vicenza, Veneto, 36012, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "01128870514",
@@ -4989,7 +5300,8 @@
     "lat": 43.5231434,
     "lng": 11.5676569,
     "geocode_quality": "street",
-    "geocode_display": "Via Roma, La Ginestra, Montevarchi, Arezzo, Toscana, 52025, Italia"
+    "geocode_display": "Via Roma, La Ginestra, Montevarchi, Arezzo, Toscana, 52025, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "03647490238",
@@ -5005,7 +5317,8 @@
     "lat": 45.3882176,
     "lng": 11.306392,
     "geocode_quality": "street",
-    "geocode_display": "Via dell'Artigianato, Prova, San Bonifacio, Verona, Veneto, 37047, Italia"
+    "geocode_display": "Via dell'Artigianato, Prova, San Bonifacio, Verona, Veneto, 37047, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "02360650366",
@@ -5021,7 +5334,8 @@
     "lat": 44.7726026,
     "lng": 10.8733507,
     "geocode_quality": "street",
-    "geocode_display": "88, Via Cattani Nord, Quartirolo, Santa Croce, Carpi, Unione delle Terre d'Argine, Modena, Emilia-Romagna, 41012, Italia"
+    "geocode_display": "88, Via Cattani Nord, Quartirolo, Santa Croce, Carpi, Unione delle Terre d'Argine, Modena, Emilia-Romagna, 41012, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "09407520965",
@@ -5037,7 +5351,8 @@
     "lat": 45.560417,
     "lng": 9.1251071,
     "geocode_quality": "street",
-    "geocode_display": "Azienda Agricola Tosi G. & G. S.A.S., 2, Via Giacomo Brodolini, Lazzaretto, Cascina Brodolini, Senago, Milano, Lombardia, 20030, Italia"
+    "geocode_display": "Azienda Agricola Tosi G. & G. S.A.S., 2, Via Giacomo Brodolini, Lazzaretto, Cascina Brodolini, Senago, Milano, Lombardia, 20030, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "04251960235",
@@ -5053,7 +5368,8 @@
     "lat": 45.4644022,
     "lng": 11.2054178,
     "geocode_quality": "street",
-    "geocode_display": "Località Molino Schiavi, Zona industriale Cazzano di Tramigna, Pistoza, Illasi, Verona, Veneto, 37031, Italia"
+    "geocode_display": "Località Molino Schiavi, Zona industriale Cazzano di Tramigna, Pistoza, Illasi, Verona, Veneto, 37031, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "07827990727",
@@ -5069,7 +5385,8 @@
     "lat": 40.7538702,
     "lng": 17.3285,
     "geocode_quality": "street",
-    "geocode_display": "Corso Umberto Primo, Locorotondo, Bari, Puglia, Italia"
+    "geocode_display": "Corso Umberto Primo, Locorotondo, Bari, Puglia, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "06699010481",
@@ -5085,7 +5402,8 @@
     "lat": 43.7932931,
     "lng": 11.2468708,
     "geocode_quality": "street",
-    "geocode_display": "243, Via Vittorio Emanuele Secondo, Poggetto, Quartiere 5, Firenze, Toscana, 50134, Italia"
+    "geocode_display": "243, Via Vittorio Emanuele Secondo, Poggetto, Quartiere 5, Firenze, Toscana, 50134, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "03343680363",
@@ -5101,7 +5419,8 @@
     "lat": 44.5675688,
     "lng": 10.8116435,
     "geocode_quality": "street",
-    "geocode_display": "703/1, Via Radici in Piano, Sassuolo, Unione dei comuni del Distretto Ceramico, Modena, Emilia-Romagna, 40149, Italia"
+    "geocode_display": "703/1, Via Radici in Piano, Sassuolo, Unione dei comuni del Distretto Ceramico, Modena, Emilia-Romagna, 40149, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "15096631005",
@@ -5117,7 +5436,8 @@
     "lat": 41.6460625,
     "lng": 12.7925006,
     "geocode_quality": "street",
-    "geocode_display": "Via Colle Formica, Pratolungo, Velletri, Roma, Lazio, 00049, Italia"
+    "geocode_display": "Via Colle Formica, Pratolungo, Velletri, Roma, Lazio, 00049, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "02530510979",
@@ -5133,7 +5453,8 @@
     "lat": 43.772017,
     "lng": 11.2552789,
     "geocode_quality": "street",
-    "geocode_display": "79 R, Via dei Calzaiuoli, Quartiere 1, Firenze, Toscana, 50122, Italia"
+    "geocode_display": "79 R, Via dei Calzaiuoli, Quartiere 1, Firenze, Toscana, 50122, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "06167800728",
@@ -5149,7 +5470,8 @@
     "lat": 40.8479869,
     "lng": 17.1231324,
     "geocode_quality": "street",
-    "geocode_display": "Via Estramurale a Mezzogiorno, Putignano, Bari, Puglia, 70017, Italia"
+    "geocode_display": "Via Estramurale a Mezzogiorno, Putignano, Bari, Puglia, 70017, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "06503160720",
@@ -5165,7 +5487,8 @@
     "lat": 40.8304555,
     "lng": 16.5445506,
     "geocode_quality": "street",
-    "geocode_display": "Via Ravenna, Altamura, Bari, Puglia, 70022, Italia"
+    "geocode_display": "Via Ravenna, Altamura, Bari, Puglia, 70022, Italia",
+    "data_setup": "2026-05-07"
   },
   {
     "piva": "04886120650",
@@ -5181,7 +5504,8 @@
     "lat": 40.2803002,
     "lng": 15.6919268,
     "geocode_quality": "comune",
-    "geocode_display": "Corso Italia, Prato Comune, Montesano sulla Marcellana, Salerno, Campania, 84033, Italia"
+    "geocode_display": "Corso Italia, Prato Comune, Montesano sulla Marcellana, Salerno, Campania, 84033, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "03384680983",
@@ -5197,7 +5521,8 @@
     "lat": 45.415181,
     "lng": 10.390675,
     "geocode_quality": "comune",
-    "geocode_display": "Montichiari, Brescia, Lombardia, 25018, Italia"
+    "geocode_display": "Montichiari, Brescia, Lombardia, 25018, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "05692890659",
@@ -5213,7 +5538,8 @@
     "lat": 40.1416021,
     "lng": 15.18576,
     "geocode_quality": "comune",
-    "geocode_display": "Ascea, Salerno, Campania, 84046, Italia"
+    "geocode_display": "Ascea, Salerno, Campania, 84046, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "04627680657",
@@ -5229,7 +5555,8 @@
     "lat": 40.6803601,
     "lng": 14.7594542,
     "geocode_quality": "comune",
-    "geocode_display": "Salerno, Campania, Italia"
+    "geocode_display": "Salerno, Campania, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "10557810966",
@@ -5245,7 +5572,8 @@
     "lat": 45.4641943,
     "lng": 9.1896346,
     "geocode_quality": "comune",
-    "geocode_display": "Milano, Rodano, Milano, Lombardia, Italia"
+    "geocode_display": "Milano, Rodano, Milano, Lombardia, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "03378900611",
@@ -5261,7 +5589,8 @@
     "lat": 43.0709382,
     "lng": 12.3224839,
     "geocode_quality": "street",
-    "geocode_display": "Strada delle Fratte, Santa Sabina, Perugia, Umbria, 06132, Italia"
+    "geocode_display": "Strada delle Fratte, Santa Sabina, Perugia, Umbria, 06132, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "04575460169",
@@ -5277,7 +5606,8 @@
     "lat": 45.6351356,
     "lng": 9.9331791,
     "geocode_quality": "street",
-    "geocode_display": "Via Adro, Pirlotti, Capriolo, Brescia, Lombardia, 25031, Italia"
+    "geocode_display": "Via Adro, Pirlotti, Capriolo, Brescia, Lombardia, 25031, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "05046500657",
@@ -5293,7 +5623,8 @@
     "lat": 40.4190883,
     "lng": 15.188035,
     "geocode_quality": "street",
-    "geocode_display": "Via San Paolo, Roccadaspide, Salerno, Campania, 84069, Italia"
+    "geocode_display": "Via San Paolo, Roccadaspide, Salerno, Campania, 84069, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "01388030510",
@@ -5309,7 +5640,8 @@
     "lat": 43.238941,
     "lng": 11.9967758,
     "geocode_quality": "comune",
-    "geocode_display": "Vallone, Cortona, Arezzo, Toscana, 52044, Italia"
+    "geocode_display": "Vallone, Cortona, Arezzo, Toscana, 52044, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "04211240983",
@@ -5325,7 +5657,8 @@
     "lat": 45.5906582,
     "lng": 10.1536532,
     "geocode_quality": "street",
-    "geocode_display": "Via Paolo Richiedei, Casaglio, Sale, Gussago, Brescia, Lombardia, 25064, Italia"
+    "geocode_display": "Via Paolo Richiedei, Casaglio, Sale, Gussago, Brescia, Lombardia, 25064, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "01364541217",
@@ -5341,7 +5674,8 @@
     "lat": 40.907912,
     "lng": 14.386233,
     "geocode_quality": "comune",
-    "geocode_display": "Pomigliano d'Arco, Napoli, Campania, 80038, Italia"
+    "geocode_display": "Pomigliano d'Arco, Napoli, Campania, 80038, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "06058561215",
@@ -5357,7 +5691,8 @@
     "lat": 40.8660875,
     "lng": 14.3767843,
     "geocode_quality": "street",
-    "geocode_display": "Via Giuseppe Garibaldi, Pollena Trocchia, Napoli, Campania, 80048, Italia"
+    "geocode_display": "Via Giuseppe Garibaldi, Pollena Trocchia, Napoli, Campania, 80048, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "03721870750",
@@ -5373,7 +5708,8 @@
     "lat": 40.1456661,
     "lng": 18.490757,
     "geocode_quality": "comune",
-    "geocode_display": "Otranto, Lecce, Puglia, 73028, Italia"
+    "geocode_display": "Otranto, Lecce, Puglia, 73028, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "09667221213",
@@ -5389,7 +5725,8 @@
     "lat": 40.9221632,
     "lng": 14.479886,
     "geocode_quality": "street",
-    "geocode_display": "Via Francesco Petrarca, San Vitaliano, Napoli, Campania, 80030, Italia"
+    "geocode_display": "Via Francesco Petrarca, San Vitaliano, Napoli, Campania, 80030, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "08257250723",
@@ -5405,7 +5742,8 @@
     "lat": 41.1257843,
     "lng": 16.8620293,
     "geocode_quality": "comune",
-    "geocode_display": "Bari, Puglia, Italia"
+    "geocode_display": "Bari, Puglia, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "02674490640",
@@ -5421,7 +5759,8 @@
     "lat": 41.228524,
     "lng": 15.179246,
     "geocode_quality": "comune",
-    "geocode_display": "Savignano Irpino, Avellino, Campania, Italia"
+    "geocode_display": "Savignano Irpino, Avellino, Campania, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "00310900543",
@@ -5437,7 +5776,8 @@
     "lat": 43.1267921,
     "lng": 12.0502926,
     "geocode_quality": "street",
-    "geocode_display": "Via Vittorio Emanuele, Castiglione del Lago, Perugia, Umbria, 06061, Italia"
+    "geocode_display": "Via Vittorio Emanuele, Castiglione del Lago, Perugia, Umbria, 06061, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "02126070974",
@@ -5453,7 +5793,8 @@
     "lat": 43.8460369,
     "lng": 11.1601368,
     "geocode_quality": "street",
-    "geocode_display": "Via di Pratignone, Settimello, Calenzano, Firenze, Toscana, 50041, Italia"
+    "geocode_display": "Via di Pratignone, Settimello, Calenzano, Firenze, Toscana, 50041, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "07212640960",
@@ -5469,7 +5810,8 @@
     "lat": 45.4800714,
     "lng": 9.1971706,
     "geocode_quality": "street",
-    "geocode_display": "19, Piazza della Repubblica, Centrale, Municipio 2, Milano, Rodano, Milano, Lombardia, 20124, Italia"
+    "geocode_display": "19, Piazza della Repubblica, Centrale, Municipio 2, Milano, Rodano, Milano, Lombardia, 20124, Italia",
+    "data_setup": "2026-05-08"
   },
   {
     "piva": "15496861004",
@@ -5485,7 +5827,8 @@
     "lat": 42.0517987,
     "lng": 12.6183967,
     "geocode_quality": "comune",
-    "geocode_display": "Monterotondo, Roma, Lazio, 00015, Italia"
+    "geocode_display": "Monterotondo, Roma, Lazio, 00015, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "14759111009",
@@ -5501,7 +5844,8 @@
     "lat": 41.9481501,
     "lng": 12.5570485,
     "geocode_quality": "street",
-    "geocode_display": "Via Ugo Falena, Monte Sacro Alto, Municipio Roma III, Roma, Lazio, 00137, Italia"
+    "geocode_display": "Via Ugo Falena, Monte Sacro Alto, Municipio Roma III, Roma, Lazio, 00137, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "01796031209",
@@ -5517,7 +5861,8 @@
     "lat": 44.537863,
     "lng": 11.5354979,
     "geocode_quality": "comune",
-    "geocode_display": "Budrio, Bologna, Emilia-Romagna, 40054, Italia"
+    "geocode_display": "Budrio, Bologna, Emilia-Romagna, 40054, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "06506040721",
@@ -5533,7 +5878,8 @@
     "lat": 41.1145771,
     "lng": 16.7994799,
     "geocode_quality": "street",
-    "geocode_display": "Viale Maestri del Lavoro, Zona Industriale di Bari, San Paolo, Municipio 3, Bari, Puglia, 70132, Italia"
+    "geocode_display": "Viale Maestri del Lavoro, Zona Industriale di Bari, San Paolo, Municipio 3, Bari, Puglia, 70132, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "02770740138",
@@ -5549,7 +5895,8 @@
     "lat": 45.9724026,
     "lng": 9.1899814,
     "geocode_quality": "comune",
-    "geocode_display": "Via Rima, Casanova, Lenno, Tremezzina, Como, Lombardia, 22016, Italia"
+    "geocode_display": "Via Rima, Casanova, Lenno, Tremezzina, Como, Lombardia, 22016, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "04378640728",
@@ -5565,7 +5912,8 @@
     "lat": 41.0477337,
     "lng": 16.9204693,
     "geocode_quality": "comune",
-    "geocode_display": "Capurso, Bari, Puglia, Italia"
+    "geocode_display": "Capurso, Bari, Puglia, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "07233710487",
@@ -5581,7 +5929,8 @@
     "lat": 43.7740342,
     "lng": 11.2548198,
     "geocode_quality": "street",
-    "geocode_display": "32 R, Borgo San Lorenzo, Quartiere 1, Firenze, Toscana, 50123, Italia"
+    "geocode_display": "32 R, Borgo San Lorenzo, Quartiere 1, Firenze, Toscana, 50123, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "04099921217",
@@ -5597,7 +5946,8 @@
     "lat": 40.6940829,
     "lng": 14.5007319,
     "geocode_quality": "street",
-    "geocode_display": "Via Castellammare, Gragnano, Napoli, Campania, 80054, Italia"
+    "geocode_display": "Via Castellammare, Gragnano, Napoli, Campania, 80054, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "03600920981",
@@ -5613,7 +5963,8 @@
     "lat": 45.5812415,
     "lng": 9.928011,
     "geocode_quality": "street",
-    "geocode_display": "Via Brescia, Cologne, Brescia, Lombardia, 25033, Italia"
+    "geocode_display": "Via Brescia, Cologne, Brescia, Lombardia, 25033, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "02848990541",
@@ -5629,7 +5980,8 @@
     "lat": 43.1588999,
     "lng": 12.4657257,
     "geocode_quality": "street",
-    "geocode_display": "Strada dei Palazzi, Rosciolo, Fosso del Diavolo, Ramazzano Le Pulci, Perugia, Umbria, 06134, Italia"
+    "geocode_display": "Strada dei Palazzi, Rosciolo, Fosso del Diavolo, Ramazzano Le Pulci, Perugia, Umbria, 06134, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "07911371214",
@@ -5645,7 +5997,8 @@
     "lat": 40.9414265,
     "lng": 14.2722092,
     "geocode_quality": "comune",
-    "geocode_display": "Frattamaggiore, Napoli, Campania, Italia"
+    "geocode_display": "Frattamaggiore, Napoli, Campania, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "02362410645",
@@ -5661,7 +6014,8 @@
     "lat": 40.8799681,
     "lng": 14.629467,
     "geocode_quality": "comune",
-    "geocode_display": "Lauro, Avellino, Campania, Italia"
+    "geocode_display": "Lauro, Avellino, Campania, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "00619420607",
@@ -5677,7 +6031,8 @@
     "lat": 41.8920511,
     "lng": 13.3259676,
     "geocode_quality": "street",
-    "geocode_display": "Via della Panoramica, Filettino, Frosinone, Lazio, Italia"
+    "geocode_display": "Via della Panoramica, Filettino, Frosinone, Lazio, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "06664691216",
@@ -5693,7 +6048,8 @@
     "lat": 40.8669495,
     "lng": 14.4607413,
     "geocode_quality": "street",
-    "geocode_display": "Via Aldo Moro, Santa Maria di Costantinopoli, Borgo Casamale, Somma Vesuviana, Napoli, Campania, 80049, Italia"
+    "geocode_display": "Via Aldo Moro, Santa Maria di Costantinopoli, Borgo Casamale, Somma Vesuviana, Napoli, Campania, 80049, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "07802811211",
@@ -5709,7 +6065,8 @@
     "lat": 40.947465,
     "lng": 14.2674167,
     "geocode_quality": "street",
-    "geocode_display": "Via Lupoli, Rossini, Sepano, Frattamaggiore, Napoli, Campania, 80027, Italia"
+    "geocode_display": "Via Lupoli, Rossini, Sepano, Frattamaggiore, Napoli, Campania, 80027, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "08345260726",
@@ -5725,7 +6082,8 @@
     "lat": 41.0497743,
     "lng": 16.5728773,
     "geocode_quality": "comune",
-    "geocode_display": "Bitonto, Bari, Puglia, 70032, Italia"
+    "geocode_display": "Bitonto, Bari, Puglia, 70032, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "00089080519",
@@ -5741,7 +6099,8 @@
     "lat": 43.341715,
     "lng": 11.92378,
     "geocode_quality": "comune",
-    "geocode_display": "Castiglion Fiorentino, Arezzo, Toscana, 52043, Italia"
+    "geocode_display": "Castiglion Fiorentino, Arezzo, Toscana, 52043, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "16365281001",
@@ -5757,7 +6116,8 @@
     "lat": 41.7448513,
     "lng": 12.9097756,
     "geocode_quality": "street",
-    "geocode_display": "Via Abruzzo, Selvatico, Artena, Roma, Lazio, 00031, Italia"
+    "geocode_display": "Via Abruzzo, Selvatico, Artena, Roma, Lazio, 00031, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "09479461213",
@@ -5773,7 +6133,8 @@
     "lat": 41.764322,
     "lng": 13.369499,
     "geocode_quality": "comune",
-    "geocode_display": "Collepardo, Frosinone, Lazio, Italia"
+    "geocode_display": "Collepardo, Frosinone, Lazio, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "04917280754",
@@ -5789,7 +6150,8 @@
     "lat": 40.0080534,
     "lng": 18.3910678,
     "geocode_quality": "street",
-    "geocode_display": "Via Paolo De Blasi, Marittima, Diso, Lecce, Puglia, 73032, Italia"
+    "geocode_display": "Via Paolo De Blasi, Marittima, Diso, Lecce, Puglia, 73032, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "08134270720",
@@ -5805,7 +6167,8 @@
     "lat": 40.8815944,
     "lng": 17.1475857,
     "geocode_quality": "street",
-    "geocode_display": "Via Turi, Castellana Grotte, Bari, Puglia, 70013, Italia"
+    "geocode_display": "Via Turi, Castellana Grotte, Bari, Puglia, 70013, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "01623220553",
@@ -5821,7 +6184,8 @@
     "lat": 42.8634804,
     "lng": 12.0128824,
     "geocode_quality": "comune",
-    "geocode_display": "Fabro, Terni, Umbria, 05015, Italia"
+    "geocode_display": "Fabro, Terni, Umbria, 05015, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "09436211214",
@@ -5837,7 +6201,8 @@
     "lat": 40.6357408,
     "lng": 14.4182223,
     "geocode_quality": "comune",
-    "geocode_display": "Corso Italia, Alberi, Meta, Napoli, Campania, 80062, Italia"
+    "geocode_display": "Corso Italia, Alberi, Meta, Napoli, Campania, 80062, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "05490620654",
@@ -5853,7 +6218,8 @@
     "lat": 40.7498877,
     "lng": 14.6133234,
     "geocode_quality": "comune",
-    "geocode_display": "Pagani, Salerno, Campania, 84016, Italia"
+    "geocode_display": "Pagani, Salerno, Campania, 84016, Italia",
+    "data_setup": "2026-05-11"
   },
   {
     "piva": "07639400725",
@@ -5869,6 +6235,7 @@
     "lat": 40.9701123,
     "lng": 17.109317,
     "geocode_quality": "street",
-    "geocode_display": "Via Carlo Alberto dalla Chiesa, Contrada Bari, Conversano, Bari, Puglia, 70014, Italia"
+    "geocode_display": "Via Carlo Alberto dalla Chiesa, Contrada Bari, Conversano, Bari, Puglia, 70014, Italia",
+    "data_setup": "2026-05-11"
   }
 ]

@@ -19,6 +19,19 @@ const UA = 'appoint-aicall-import/1.0 (+https://github.com/AttitudeLTD/appoint; 
 const SLEEP_MS = 1100;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Normalizza la "Data Setup" del TSV in ISO `yyyy-mm-dd`. Accetta sia il formato
+// italiano `g/m/aaaa` (es. "9/4/2026") sia un ISO già pronto (`yyyy-mm-dd`).
+// Ritorna null se assente/non parsabile.
+function toIsoDate(raw) {
+  const s = (raw || '').trim();
+  if (!s) return null;
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (m) return `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`;
+  m = s.match(/^(\d{1,2})[\/.](\d{1,2})[\/.](\d{4})$/); // g/m/aaaa
+  if (m) return `${m[3]}-${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
+  return null;
+}
+
 const STREET_KEYWORDS = [
   'VIALE', 'VIA', 'V.LE', 'CORSO', 'C.SO', 'PIAZZALE', 'PIAZZA', 'P.ZZA',
   'P.ZA', 'P.LE', 'LARGO', 'STRADA', 'S.DA', 'S.STATALE', 'ST. PROVINCIALE',
@@ -142,11 +155,33 @@ async function main() {
   const lines = readFileSync(TSV, 'utf8').split('\n').filter((l) => l.trim().length > 0);
   const header = lines.shift();
 
+  // Mappa piva -> data_setup (ISO) per TUTTE le righe del TSV: serve sia per le
+  // righe nuove sia per ri-arricchire quelle già geocodificate (vedi patch sotto).
+  const dataSetupByPiva = new Map();
+  for (const line of lines) {
+    const cols = line.split('\t');
+    const iso = toIsoDate(cols[0]);
+    if (cols[1]) dataSetupByPiva.set(cols[1], iso);
+  }
+
   let results = [];
   const done = new Set();
   if (existsSync(OUT)) {
     results = JSON.parse(readFileSync(OUT, 'utf8'));
     for (const r of results) done.add(r.piva);
+    // Backfill data_setup sulle righe già processate (aggiunto in un secondo
+    // momento): se manca o è cambiato, lo prendiamo dal TSV.
+    let patched = 0;
+    for (const r of results) {
+      if (dataSetupByPiva.has(r.piva)) {
+        const iso = dataSetupByPiva.get(r.piva) ?? null;
+        if (r.data_setup !== iso) { r.data_setup = iso; patched++; }
+      }
+    }
+    if (patched > 0) {
+      writeFileSync(OUT, JSON.stringify(results, null, 2));
+      console.log(`Backfill data_setup su ${patched} righe già presenti.`);
+    }
     console.log(`Ripresa: ${results.length} righe già processate.`);
   }
 
@@ -175,6 +210,7 @@ async function main() {
 
     const rec = {
       piva, societa, referente,
+      data_setup: toIsoDate(data_setup),
       address: indirizzo.replace(/\s+/g, ' ').trim(),
       street, comune, prov, regione: region,
       phone: (phone || '').trim(), email: (email || '').trim(),

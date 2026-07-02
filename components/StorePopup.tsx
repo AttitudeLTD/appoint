@@ -42,7 +42,7 @@ import { WorkflowRunner } from './WorkflowRunner';
 import { DynamicManageForm } from './DynamicManageForm';
 
 import { StorePopupProps, ClientWorkflow } from '@/types';
-import { getStatusLabel, statuses, StatusItem } from '@/utils/utils';
+import { getStatusLabel, statuses, StatusItem, formatDataSetup } from '@/utils/utils';
 import { getClientLogoUrl } from '@/utils/client-logo';
 import { parseCoords } from '@/utils/navigation';
 import { createClient } from '@/utils/supabase/client';
@@ -600,6 +600,11 @@ const StorePopup: React.FC<StorePopupProps> = ({
             <p className='text-xs text-gray-400 truncate leading-none pt-2'>
               {store.address}
             </p>
+            {store.data_setup ? (
+              <p className='text-xs text-gray-400 truncate leading-none pt-1'>
+                Data setup: {formatDataSetup(store.data_setup)}
+              </p>
+            ) : null}
             {store.client_name ? (
               <div className='flex items-center gap-1.5 pt-1.5'>
                 {clientLogoUrl ? (
@@ -842,6 +847,12 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 <div className='py-3 border-b border-white/20'>
                   <p className='text-base text-white/80 font-medium'>Partita IVA:</p>
                   <p className='text-base text-white'>{store.pi}</p>
+                </div>
+              ) : null}
+              {store.data_setup ? (
+                <div className='py-3 border-b border-white/20'>
+                  <p className='text-base text-white/80 font-medium'>Data setup:</p>
+                  <p className='text-base text-white'>{formatDataSetup(store.data_setup)}</p>
                 </div>
               ) : null}
               {(store.tier || store.fatturato) && (

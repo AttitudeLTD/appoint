@@ -35,7 +35,7 @@ for (const r of rows) {
   const coords = r.lat != null && r.lng != null ? `[${fmt(r.lat)}, ${fmt(r.lng)}]` : null;
   if (coords) withCoords++; else noCoords++;
   valueRows.push(
-    `  (${q(r.societa)}, ${q(r.referente)}, ${q(r.piva)}, ${q(r.address)}, ${q(coords)}, ${q(r.phone)}, ${q(r.email)}, ${q(r.comune)}, ${q(r.prov)}, ${q(r.regione)}, 'altro', 'free', ${CLIENT_ID}::smallint)`
+    `  (${q(r.societa)}, ${q(r.referente)}, ${q(r.piva)}, ${q(r.address)}, ${q(coords)}, ${q(r.phone)}, ${q(r.email)}, ${q(r.comune)}, ${q(r.prov)}, ${q(r.regione)}, 'altro', 'free', ${CLIENT_ID}::smallint, ${q(r.data_setup)})`
   );
 }
 
@@ -51,26 +51,45 @@ const header = `-- =============================================================
 --   - Normalizzazione "secondo la tabella stores":
 --       name=Società · owner_name=Referente · pi=P.IVA · address=Indirizzo grezzo
 --       (mantiene l'info appuntamento APT/ORE) · comune/provincia/regione parse · category='altro'.
+--       data_setup=Data Setup (ISO yyyy-mm-dd) fornita dal partner.
 --   - coordinates nel formato storico "[lat, lng]" (parentesi quadre + spazio): il
 --     trigger convert_coordinates_to_location calcola da lì il punto PostGIS location.
 --   - Backfill store_clients (is_primary = true) per ogni store del cliente.
+--   - Backfill data_setup anche sulle righe già esistenti (per (client_id, pi)).
 --
 -- Idempotenza:
---   - anti-join su (client_id, pi): ri-eseguibile senza duplicare.
+--   - INSERT con anti-join su (client_id, pi): ri-eseguibile senza duplicare.
+--   - L'UPDATE data_setup tocca solo le righe esistenti il cui valore differisce.
 -- =============================================================================
 
 begin;
 
-insert into public.stores
-  (name, owner_name, pi, address, coordinates, phone, email, comune, provincia, regione, category, status, client_id)
-select v.name, v.owner_name, v.pi, v.address, v.coordinates, v.phone, v.email, v.comune, v.provincia, v.regione, v.category, v.status, v.client_id
-from (values
+with v(name, owner_name, pi, address, coordinates, phone, email, comune, provincia, regione, category, status, client_id, data_setup) as (
+  values
 ${valueRows.join(',\n')}
-) as v(name, owner_name, pi, address, coordinates, phone, email, comune, provincia, regione, category, status, client_id)
-where not exists (
-  select 1 from public.stores s
+),
+ins as (
+  insert into public.stores
+    (name, owner_name, pi, address, coordinates, phone, email, comune, provincia, regione, category, status, client_id, data_setup)
+  select v.name, v.owner_name, v.pi, v.address, v.coordinates, v.phone, v.email, v.comune, v.provincia, v.regione, v.category, v.status, v.client_id, v.data_setup::date
+  from v
+  where not exists (
+    select 1 from public.stores s
+    where s.client_id = ${CLIENT_ID} and s.pi = v.pi
+  )
+  returning 1
+),
+bf as (
+  -- backfill data_setup sulle righe già presenti (righe nuove: già valorizzate dall'INSERT)
+  update public.stores s
+  set data_setup = v.data_setup::date
+  from v
   where s.client_id = ${CLIENT_ID} and s.pi = v.pi
-);
+    and v.data_setup is not null
+    and s.data_setup is distinct from v.data_setup::date
+  returning 1
+)
+select (select count(*) from ins) as inserted, (select count(*) from bf) as backfilled;
 
 -- store_clients: associazione primaria per ogni store del cliente
 insert into public.store_clients (store_id, client_id, is_primary)

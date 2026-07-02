@@ -256,6 +256,7 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
         coordinates: store?.coordinates,
         client_id: store?.client_id ?? null,
         client_name: getClientName(store),
+        data_setup: store?.data_setup ?? null,
         modifier_display_name: modifierMap.get(status.modifier) ?? '',
       };
     })
@@ -285,6 +286,7 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
         photo_url: photo.photo_url,
         client_id: store?.client_id ?? null,
         client_name: getClientName(store),
+        data_setup: store?.data_setup ?? null,
         modifier_display_name: modifierMap.get(photo.user_id) ?? '',
       };
     })
@@ -313,6 +315,7 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
         photo_url: photo.photo_url,
         client_id: store?.client_id ?? null,
         client_name: getClientName(store),
+        data_setup: store?.data_setup ?? null,
         modifier_display_name: modifierMap.get(photo.user_id) ?? '',
       };
     })
@@ -375,6 +378,7 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
         coordinates: store?.coordinates,
         client_id: clientId,
         client_name: getClientName(store),
+        data_setup: store?.data_setup ?? null,
         modifier_display_name: modifierMap.get(o.user_id) ?? '',
       };
     })

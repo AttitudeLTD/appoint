@@ -26,7 +26,7 @@ import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores, getDashboardContext } from '@/utils/stores';
 import { getMyLoc, parseCoords } from '@/utils/navigation';
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { getStatusLabel, statuses } from '@/utils/utils';
+import { getStatusLabel, statuses, formatDataSetup } from '@/utils/utils';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -389,6 +389,7 @@ export default function DashboardPage() {
       'CAP',
       'Comune',
       'Provincia',
+      'Data setup',
       'Stato',
       ...(withAgent ? ['Agente'] : []),
       'Data',
@@ -416,6 +417,7 @@ export default function DashboardPage() {
         entry.cap || '',
         entry.comune || '',
         entry.provincia || '',
+        formatDataSetup(entry.data_setup),
         stato,
         ...(withAgent ? [entry.modifier_display_name ?? ''] : []),
         new Date(entry.created_at).toLocaleString('it-IT'),
@@ -502,7 +504,7 @@ export default function DashboardPage() {
       const { data: storesData, error: storesErr } = await supabase
         .from('stores')
         .select(
-          'id, name, pi, cf_azienda, address, comune, provincia, cap, regione, phone, email, category, codice_ateco, dipendenti, fatturato, tier, status, created_at, created_by'
+          'id, name, pi, cf_azienda, address, comune, provincia, cap, regione, phone, email, category, codice_ateco, dipendenti, fatturato, tier, status, data_setup, created_at, created_by'
         )
         .in('id', storeIds);
       if (storesErr) throw storesErr;
@@ -551,6 +553,7 @@ export default function DashboardPage() {
         'Fatturato',
         'Tier',
         'Status',
+        'Data setup',
         'Cliente',
         'Cliente primario',
         'Data creazione',
@@ -576,6 +579,7 @@ export default function DashboardPage() {
           s.fatturato ?? '',
           s.tier ?? '',
           getStatusLabel(s.status) || s.status || '',
+          formatDataSetup(s.data_setup),
           clientName,
           isPrimary ? 'Sì' : 'No',
           s.created_at ? new Date(s.created_at).toLocaleString('it-IT') : '',
@@ -1144,6 +1148,12 @@ export default function DashboardPage() {
                                 <span className='text-amber-200/80'>
                                   {activity.modifier_display_name}
                                 </span>
+                                <span className='mx-1.5 text-white/20'>·</span>
+                              </>
+                            )}
+                            {activity.data_setup && (
+                              <>
+                                <span>Setup {formatDataSetup(activity.data_setup)}</span>
                                 <span className='mx-1.5 text-white/20'>·</span>
                               </>
                             )}

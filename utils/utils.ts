@@ -65,6 +65,20 @@ export const getStatusLabel = (value: string) => {
   return statuses.find((status) => status.value === value)?.label || value;
 };
 
+/**
+ * Formatta la "Data Setup" (colonna `stores.data_setup`, tipo date) in formato
+ * italiano `gg/mm/aaaa`. Accetta sia `yyyy-mm-dd` sia un ISO completo; evita gli
+ * shift di fuso orario leggendo direttamente i primi 10 caratteri. Ritorna ''
+ * per valori assenti/non validi.
+ */
+export const formatDataSetup = (value?: string | null): string => {
+  if (!value) return '';
+  const m = String(value).slice(0, 10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return '';
+  const [, y, mo, d] = m;
+  return `${d}/${mo}/${y}`;
+};
+
 export const generateMailBody = (store: Store, agent: Agent | null): string => {
   return `Gentile Sig/Sig.ra ${store.owner_name},
 

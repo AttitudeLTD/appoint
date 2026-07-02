@@ -19,6 +19,8 @@ export interface Store {
   provincia?: string | null;
   regione?: string | null;
   coordinates?: [number, number] | null;
+  /** Data di setup del lead fornita dal partner (es. AiCall). Distinta da `created_at`. ISO date (yyyy-mm-dd). */
+  data_setup?: string | null;
   status:
     | 'free'
     | 'in_progress'
