@@ -600,6 +600,11 @@ const StorePopup: React.FC<StorePopupProps> = ({
             <p className='text-xs text-gray-400 truncate leading-none pt-2'>
               {store.address}
             </p>
+            {store.pi ? (
+              <p className='text-xs text-gray-400 truncate leading-none pt-1'>
+                P.IVA: {store.pi}
+              </p>
+            ) : null}
             {store.data_setup ? (
               <p className='text-xs text-gray-400 truncate leading-none pt-1'>
                 Data setup: {formatDataSetup(store.data_setup)}
