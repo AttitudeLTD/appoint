@@ -87,7 +87,7 @@ select
         ]
       }
     ],
-    "submit": { "label": "Salva esito", "save_to_outcomes": true }
+    "submit": { "label": "Salva esito", "save_to_outcomes": true, "lock_pin": true }
   }
   }'::jsonb,
   true

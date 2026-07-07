@@ -245,6 +245,16 @@ export interface DynamicManageForm {
       | 'non_existent';
     /** Se true (default), persiste i valori in store_visit_outcomes.outcome_data. */
     save_to_outcomes?: boolean;
+    /**
+     * Se true, al primo salvataggio dell'esito il pin viene "preso in carico":
+     * lo status passa a `in_progress` (con log del modificatore). Effetti:
+     *   - il pin sulla mappa risulta ESITATO (icona "in lavorazione");
+     *   - gli ALTRI agenti lo vedono bloccato ("trattativa in corso");
+     *   - l'AUTORE (ultimo modificatore) può riaprirlo e ri-esitare.
+     * Usato dal cliente PROGETTO AICALL. Diverso da `sets_status` perché NON apre
+     * il dialog di conferma e non conta nel limite dei 10 pin in lavorazione.
+     */
+    lock_pin?: boolean;
   };
 }
 
@@ -265,4 +275,10 @@ export type StorePopupProps = {
     checkInProgressLimit?: boolean
   ) => Promise<boolean>;
   handleSendEmail: (store: Store) => void;
+  /**
+   * "Prende in carico" il pin al salvataggio esito (manage_form con `lock_pin`):
+   * porta lo status a `in_progress` (DB + log + stato locale della mappa) senza
+   * dialog di conferma. `prevStatus` è lo stato corrente (per il log).
+   */
+  onEsitoLock?: (storeId: number, prevStatus: string) => Promise<void>;
 };

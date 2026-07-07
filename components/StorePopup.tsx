@@ -97,6 +97,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
   fetchStatusLogs,
   handleStatusChangeAttempt,
   handleSendEmail,
+  onEsitoLock,
 }) => {
   const [selectedNote, setSelectedNote] = useState('');
   const [logsOffset, setLogsOffset] = useState(0);
@@ -939,6 +940,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 existingOutcome={existingOutcome}
                 handleStatusChangeAttempt={handleStatusChangeAttempt}
                 storeStatuses={storeStatuses}
+                onEsitoLock={onEsitoLock}
               />
             ) : (
               <>

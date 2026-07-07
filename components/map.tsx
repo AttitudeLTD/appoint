@@ -537,6 +537,30 @@ const Map = ({ user }: any) => {
     setSelectedNote(''); // Reset the selected note
   };
 
+  // Lock "esito" (manage_form con `lock_pin`, es. PROGETTO AICALL): al salvataggio
+  // dell'esito il pin viene preso in carico → status `in_progress`, SENZA dialog
+  // di conferma e SENZA il limite dei 10 pin. Aggiorna DB (stores + log del
+  // modificatore) e lo stato locale (icona sulla mappa + storeStatuses), così il
+  // pin risulta subito esitato per l'autore e bloccato per gli altri agenti.
+  const applyEsitoLock = useCallback(async (storeId: number, prevStatus: string) => {
+    const { error } = await supabase
+      .from('stores')
+      .update({ status: 'in_progress' })
+      .eq('id', storeId);
+    if (error) {
+      console.error('Errore lock esito:', error);
+      return;
+    }
+    await supabase.from('store_status_logs').insert([
+      { store_id: storeId, prev: prevStatus || 'free', new: 'in_progress', modifier: user.id },
+    ]);
+    setStoreStatuses((prev) => ({ ...prev, [storeId]: 'in_progress' }));
+    setStores(
+      (prev) =>
+        prev.map((s) => (s.id === storeId ? { ...s, status: 'in_progress' } : s)) as Store[]
+    );
+  }, [supabase, user.id]);
+
   const updateStoreStatus = async (
     storeId: number,
     newStatus: string,
@@ -1266,6 +1290,7 @@ const Map = ({ user }: any) => {
                 fetchStatusLogs={fetchStatusLogs}
                 handleStatusChangeAttempt={handleStatusChangeAttempt}
                 handleSendEmail={handleSendEmail}
+                onEsitoLock={applyEsitoLock}
               />
             </Popup>
           </Marker>
@@ -1285,6 +1310,7 @@ const Map = ({ user }: any) => {
     fetchStatusLogs,
     handleStatusChangeAttempt,
     handleSendEmail,
+    applyEsitoLock,
   ]);
 
   return (

@@ -58,6 +58,12 @@ interface Props {
    * senza dover ricaricare lo store.
    */
   storeStatuses?: Record<number, string>;
+  /**
+   * "Prende in carico" il pin al salvataggio esito quando il workflow ha
+   * `submit.lock_pin` (es. PROGETTO AICALL): porta lo status a `in_progress`
+   * senza dialog di conferma. Fornito da StorePopup → map.
+   */
+  onEsitoLock?: (storeId: number, prevStatus: string) => Promise<void>;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -102,6 +108,7 @@ export const DynamicManageForm: React.FC<Props> = ({
   existingOutcome,
   handleStatusChangeAttempt,
   storeStatuses,
+  onEsitoLock,
 }) => {
   const supabase = createClient();
   const [values, setValues] = useState<FormValues>(existingOutcome ?? {});
@@ -266,6 +273,16 @@ export const DynamicManageForm: React.FC<Props> = ({
         await handleStatusChangeAttempt(store.id, newStatus);
       }
 
+      // Lock del pin al salvataggio esito (manage_form con `lock_pin`, es. AiCall):
+      // dal PRIMO esito lo store passa a `in_progress` (esitato + bloccato per gli
+      // altri agenti), senza dialog. I ri-esiti dell'autore non ri-cambiano stato.
+      if (form.submit?.lock_pin && onEsitoLock) {
+        const prev = (storeStatuses?.[store.id] ?? store.status ?? 'free') as string;
+        if (prev === 'free') {
+          await onEsitoLock(store.id, prev);
+        }
+      }
+
       setSaved(true);
     } catch (err: any) {
       console.error('Save dynamic form error:', err);
@@ -278,9 +295,12 @@ export const DynamicManageForm: React.FC<Props> = ({
     values,
     store.id,
     store.client_id,
+    store.status,
     userId,
     supabase,
     handleStatusChangeAttempt,
+    onEsitoLock,
+    storeStatuses,
   ]);
 
   // ── Field renderer ────────────────────────────────────────────────────────
