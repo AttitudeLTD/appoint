@@ -24,7 +24,7 @@ import {
   Camera,
   ExternalLink,
 } from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 import { SelectComponent } from './select';
 import { Button } from './ui/button';
@@ -121,6 +121,22 @@ const StorePopup: React.FC<StorePopupProps> = ({
   const [nonExistentText, setNonExistentText] = useState('');
   const [existingOutcome, setExistingOutcome] = useState<any>(null);
   const [currentUserId, setCurrentUserId] = useState('');
+  // Storico esiti del pin (tutti gli agenti): letto da store_visit_outcomes.
+  const [outcomeHistory, setOutcomeHistory] = useState<
+    Array<{ user_id: string; userName: string; outcome_data: any; created_at: string }>
+  >([]);
+
+  // Mappa "fieldId:value" → label, ricavata dalle option del manage_form:
+  // serve a mostrare l'ESITO in chiaro (es. "OK - Appuntamento preso") nello storico.
+  const optionLabelByValue = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const sec of clientWorkflow?.manage_form?.sections ?? []) {
+      for (const f of sec.fields ?? []) {
+        for (const opt of f.options ?? []) m.set(`${f.id}:${opt.value}`, opt.label);
+      }
+    }
+    return m;
+  }, [clientWorkflow]);
 
   const supabase = createClient();
 
@@ -206,6 +222,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
     setNonExistentReason('');
     setNonExistentText('');
     setExistingOutcome(null);
+    setOutcomeHistory([]);
   }, [store.id]);
 
   // Fetch client workflow and any existing outcome for this store
@@ -237,8 +254,39 @@ const StorePopup: React.FC<StorePopupProps> = ({
       if (data) setExistingOutcome(data.outcome_data);
     };
 
+    // Storico esiti del pin: tutti gli esiti (ogni agente) salvati su questo store.
+    const fetchOutcomeHistory = async () => {
+      if (!store.client_id) return;
+      const { data: outs } = await supabase
+        .from('store_visit_outcomes')
+        .select('user_id, outcome_data, created_at')
+        .eq('store_id', store.id)
+        .order('created_at', { ascending: false });
+      if (!outs || outs.length === 0) {
+        setOutcomeHistory([]);
+        return;
+      }
+      const ids = Array.from(new Set(outs.map((o: any) => o.user_id)));
+      const { data: users } = await supabase
+        .from('users')
+        .select('id, name, surname')
+        .in('id', ids);
+      const nameById = new Map(
+        (users ?? []).map((u: any) => [u.id, `${u.name ?? ''} ${u.surname ?? ''}`.trim()])
+      );
+      setOutcomeHistory(
+        outs.map((o: any) => ({
+          user_id: o.user_id,
+          userName: nameById.get(o.user_id) || '',
+          outcome_data: o.outcome_data,
+          created_at: o.created_at,
+        }))
+      );
+    };
+
     fetchWorkflow();
     fetchOutcome();
+    fetchOutcomeHistory();
   }, [store.id, store.client_id]);
 
   // Function to get current user position
@@ -598,6 +646,11 @@ const StorePopup: React.FC<StorePopupProps> = ({
             <p className='text-sm text-gray-500 truncate leading-none pt-1'>
               {store.category.charAt(0).toUpperCase() + store.category.slice(1)}
             </p>
+            {store.owner_name ? (
+              <p className='text-xs text-gray-500 truncate leading-none pt-1.5'>
+                Referente: {store.owner_name}
+              </p>
+            ) : null}
             <p className='text-xs text-gray-400 truncate leading-none pt-2'>
               {store.address}
             </p>
@@ -843,6 +896,12 @@ const StorePopup: React.FC<StorePopupProps> = ({
                   ) : null}
                 </div>
               </div>
+              {store.owner_name ? (
+                <div className='py-3 border-b border-white/20'>
+                  <p className='text-base text-white/80 font-medium'>Referente:</p>
+                  <p className='text-base text-white'>{store.owner_name}</p>
+                </div>
+              ) : null}
               <div className='py-3 border-b border-white/20'>
                 <p className='text-base text-white/80 font-medium'>
                   Categoria:
@@ -1310,6 +1369,50 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 />
               )}
               </>
+            )}
+
+            {outcomeHistory.length > 0 && (
+              <div className='py-3'>
+                <p className='text-lg font-medium text-white mb-3 border-b border-white/20 pb-2'>
+                  Storico esiti
+                </p>
+                {outcomeHistory.map((o, idx) => {
+                  const esitoVal = o.outcome_data?.esito as string | undefined;
+                  const esitoLabel = esitoVal
+                    ? optionLabelByValue.get(`esito:${esitoVal}`) ?? esitoVal
+                    : null;
+                  const note = o.outcome_data?.note as string | undefined;
+                  return (
+                    <div
+                      key={`${o.user_id}-${o.created_at}-${idx}`}
+                      className='mb-3 p-3 bg-white/10 rounded-lg shadow-md border border-white/20'
+                    >
+                      <p className='text-sm text-white/80 mb-1'>
+                        <strong>Data:</strong>{' '}
+                        {new Date(o.created_at).toLocaleString('it-IT')}
+                      </p>
+                      {o.userName && (
+                        <p className='text-sm text-white/80 mb-1'>
+                          <strong>Agente:</strong>{' '}
+                          <span className='text-white'>{o.userName}</span>
+                        </p>
+                      )}
+                      {esitoLabel && (
+                        <p className='text-sm text-white/80 mb-1'>
+                          <strong>Esito:</strong>{' '}
+                          <span className='text-white'>{esitoLabel}</span>
+                        </p>
+                      )}
+                      {note && (
+                        <p className='text-sm text-white/80'>
+                          <strong>Note:</strong>{' '}
+                          <span className='text-white'>{note}</span>
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
 
             {statusLogs[store.id]?.length > 0 && (
