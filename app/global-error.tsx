@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { logClientError } from '@/utils/error-logger';
 
 /**
  * Error boundary GLOBALE: cattura anche gli errori che avvengono nel root layout
@@ -16,6 +17,7 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error('[Appoint] Errore globale:', error);
+    void logClientError(error, 'global_error');
   }, [error]);
 
   return (

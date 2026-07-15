@@ -2,6 +2,7 @@ import { GeistSans } from 'geist/font/sans';
 import { ThemeProvider } from 'next-themes';
 import './globals.css';
 import { Toaster } from 'sonner';
+import { ErrorListener } from '@/components/ErrorListener';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -27,6 +28,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <ErrorListener />
           <div style={{ backgroundColor: '#224677' }}>{children}</div>
           <Toaster />
         </ThemeProvider>

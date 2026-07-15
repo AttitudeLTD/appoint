@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { logClientError } from '@/utils/error-logger';
 
 /**
  * Error boundary di route (App Router). Cattura le eccezioni lato client che
@@ -22,6 +23,8 @@ export default function Error({
   useEffect(() => {
     // Log completo per diagnosi (console del browser + Vercel Runtime Logs).
     console.error('[Appoint] Errore applicativo:', error);
+    // Persiste su public.error_logs (best-effort).
+    void logClientError(error, 'error_boundary');
   }, [error]);
 
   return (
