@@ -26,7 +26,7 @@ import { createClient } from '@/utils/supabase/client';
 import { fetchUserStores, getDashboardContext } from '@/utils/stores';
 import { getMyLoc, parseCoords } from '@/utils/navigation';
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { getStatusLabel, statuses, formatDataSetup } from '@/utils/utils';
+import { getStatusLabel, statuses, formatDataSetup, esitoToStatus } from '@/utils/utils';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -621,15 +621,42 @@ export default function DashboardPage() {
   // conversione + percentuali. Fonte: `clientFiltered` (riflette periodo, agenti
   // e clienti selezionati; indipendente dal filtro esiti, che agisce sulla lista).
   const kpis = useMemo(() => {
+    // `clientFiltered` è ordinato per created_at desc. Per ogni negozio teniamo:
+    //  • l'esito manage_form (AiCall) più recente, se presente;
+    //  • lo status grezzo più recente (client "classici" senza esiti).
+    // L'esito ha priorità: per AiCall lo `status` è sempre 'in_progress' (pin
+    // bloccato) e il bucket vero va ricavato dall'esito (es. "KO - Non
+    // interessato" → not_interested, "OK - Inviata ad Amex" → concluded).
+    const storeToEsito = new Map<number, string>();
     const storeToStatus = new Map<number, string>();
     for (const e of clientFiltered) {
-      if (!storeToStatus.has(e.store_id)) {
-        storeToStatus.set(e.store_id, e.status || 'free');
+      if (e.type === 'outcome') {
+        if (e.esito && !storeToEsito.has(e.store_id)) {
+          storeToEsito.set(e.store_id, e.esito);
+        }
+      } else if (e.type === 'status') {
+        if (!storeToStatus.has(e.store_id)) {
+          storeToStatus.set(e.store_id, e.status || 'free');
+        }
       }
     }
-    const total = storeToStatus.size;
+    // Status "effettivo" per negozio: l'esito mappato vince sullo status grezzo.
+    const effectiveStatus = new Map<number, string>();
+    const allStoreIds = new Set<number>([
+      ...storeToEsito.keys(),
+      ...storeToStatus.keys(),
+    ]);
+    allStoreIds.forEach((sid) => {
+      const esito = storeToEsito.get(sid);
+      if (esito) {
+        effectiveStatus.set(sid, esitoToStatus(esito, storeToStatus.get(sid)));
+      } else {
+        effectiveStatus.set(sid, storeToStatus.get(sid) || 'free');
+      }
+    });
+    const total = effectiveStatus.size;
     const byStatus: Record<string, number> = {};
-    Array.from(storeToStatus.values()).forEach((status) => {
+    Array.from(effectiveStatus.values()).forEach((status) => {
       if (status !== 'free') {
         byStatus[status] = (byStatus[status] || 0) + 1;
       }

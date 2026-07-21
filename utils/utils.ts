@@ -66,6 +66,54 @@ export const getStatusLabel = (value: string) => {
 };
 
 /**
+ * Mappa gli esiti del workflow "manage_form" del cliente AiCall (client_id 5)
+ * verso gli status "canonici" usati dalle card della dashboard.
+ *
+ * Motivo: quando un agente AiCall salva un esito, il pin viene solo BLOCCATO
+ * (stores.status = 'in_progress') e l'esito reale finisce in
+ * `store_visit_outcomes.outcome_data.esito`. Perciò lo `status` grezzo del negozio
+ * è SEMPRE 'in_progress' e da solo non basta a popolare le card: bisogna leggere
+ * l'esito e ricondurlo al bucket giusto.
+ *
+ * Mapping (chiave = valore dell'opzione "esito" configurata per AiCall):
+ *   - ok_inviata_amex      → concluded      (Contratto sottoscritto / conversione)
+ *   - ok_in_trattativa     → in_progress    (Trattativa in corso)
+ *   - ok_richiamare        → in_progress    (Trattativa in corso)
+ *   - ok_appuntamento_preso→ in_progress    (Trattativa in corso)
+ *   - ko_gia_cliente       → already_client (Già cliente)
+ *   - ko_non_interessato   → not_interested (Non interessato)
+ *   - ko_lead_non_valido   → failed         (Bad prospect)
+ *   - ko_blocco_dap        → failed         (Bad prospect)
+ *   - ko_irreperibile      → non_existent   (Inesistente)
+ */
+export const ESITO_TO_STATUS: Record<string, string> = {
+  ok_inviata_amex: 'concluded',
+  ok_in_trattativa: 'in_progress',
+  ok_richiamare: 'in_progress',
+  ok_appuntamento_preso: 'in_progress',
+  ko_gia_cliente: 'already_client',
+  ko_non_interessato: 'not_interested',
+  ko_lead_non_valido: 'failed',
+  ko_blocco_dap: 'failed',
+  ko_irreperibile: 'non_existent',
+};
+
+/**
+ * Ritorna lo status canonico corrispondente a un esito manage_form. Se l'esito
+ * non è mappato esplicitamente, prova a dedurlo dal prefisso (ok_/ko_) e, in
+ * ultima istanza, ricade sullo status grezzo del negozio (`fallbackStatus`).
+ */
+export const esitoToStatus = (
+  esito?: string | null,
+  fallbackStatus?: string | null
+): string => {
+  if (esito && ESITO_TO_STATUS[esito]) return ESITO_TO_STATUS[esito];
+  if (esito?.startsWith('ko_')) return 'failed';
+  if (esito?.startsWith('ok_')) return 'in_progress';
+  return fallbackStatus || 'free';
+};
+
+/**
  * Formatta la "Data Setup" (colonna `stores.data_setup`, tipo date) in formato
  * italiano `gg/mm/aaaa`. Accetta sia `yyyy-mm-dd` sia un ISO completo; evita gli
  * shift di fuso orario leggendo direttamente i primi 10 caratteri. Ritorna ''
