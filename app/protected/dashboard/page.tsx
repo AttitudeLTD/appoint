@@ -642,16 +642,12 @@ export default function DashboardPage() {
     }
     // Status "effettivo" per negozio: l'esito mappato vince sullo status grezzo.
     const effectiveStatus = new Map<number, string>();
-    const allStoreIds = new Set<number>([
-      ...storeToEsito.keys(),
-      ...storeToStatus.keys(),
-    ]);
-    allStoreIds.forEach((sid) => {
-      const esito = storeToEsito.get(sid);
-      if (esito) {
-        effectiveStatus.set(sid, esitoToStatus(esito, storeToStatus.get(sid)));
-      } else {
-        effectiveStatus.set(sid, storeToStatus.get(sid) || 'free');
+    storeToEsito.forEach((esito, sid) => {
+      effectiveStatus.set(sid, esitoToStatus(esito, storeToStatus.get(sid)));
+    });
+    storeToStatus.forEach((status, sid) => {
+      if (!effectiveStatus.has(sid)) {
+        effectiveStatus.set(sid, status || 'free');
       }
     });
     const total = effectiveStatus.size;
