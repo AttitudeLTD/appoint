@@ -282,6 +282,13 @@ export type StorePopupProps = {
    */
   onEsitoLock?: (storeId: number, prevStatus: string) => Promise<void>;
   /**
+   * Notifica l'esito appena salvato nel `manage_form`, così la mappa può
+   * ricolorare SUBITO il solo pin interessato senza rifare alcuna fetch.
+   * Serve soprattutto al RI-esito: lì `stores.status` resta `in_progress` e
+   * l'unica cosa che cambia è l'esito.
+   */
+  onOutcomeSaved?: (storeId: number, esito: string | null) => void;
+  /**
    * Apre automaticamente il pannello "Gestisci" al mount. Usato dal deep-link
    * `/protected?store=<id>&manage=1` con cui la Dashboard apre una lead senza
    * costringere l'utente a cercarla a mano sulla mappa.

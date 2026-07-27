@@ -64,6 +64,12 @@ interface Props {
    * senza dialog di conferma. Fornito da StorePopup → map.
    */
   onEsitoLock?: (storeId: number, prevStatus: string) => Promise<void>;
+  /**
+   * Notifica al chiamante l'esito appena salvato, così può aggiornare lo stato
+   * LOCALE del solo negozio interessato (es. il colore del pin sulla mappa)
+   * senza rifare alcuna fetch. Chiamata dopo un salvataggio andato a buon fine.
+   */
+  onOutcomeSaved?: (storeId: number, esito: string | null) => void;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -109,6 +115,7 @@ export const DynamicManageForm: React.FC<Props> = ({
   handleStatusChangeAttempt,
   storeStatuses,
   onEsitoLock,
+  onOutcomeSaved,
 }) => {
   const supabase = createClient();
   const [values, setValues] = useState<FormValues>(existingOutcome ?? {});
@@ -297,6 +304,16 @@ export const DynamicManageForm: React.FC<Props> = ({
         }
       }
 
+      // Comunica al chiamante l'esito salvato: serve alla mappa per ricolorare
+      // SUBITO il solo pin interessato (nessuna fetch). Va fatto anche quando
+      // `lock_pin` non scatta o quando lo status non cambia — il caso tipico è
+      // il RI-esito di un pin già preso in carico, dove `stores.status` resta
+      // `in_progress` e l'unica cosa che cambia è appunto l'esito.
+      if (onOutcomeSaved) {
+        const esito = values?.esito;
+        onOutcomeSaved(store.id, typeof esito === 'string' ? esito : null);
+      }
+
       setSaved(true);
     } catch (err: any) {
       console.error('Save dynamic form error:', err);
@@ -314,6 +331,7 @@ export const DynamicManageForm: React.FC<Props> = ({
     supabase,
     handleStatusChangeAttempt,
     onEsitoLock,
+    onOutcomeSaved,
     storeStatuses,
   ]);
 

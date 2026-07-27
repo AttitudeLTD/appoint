@@ -1,0 +1,22 @@
+-- =============================================================================
+-- ROLLBACK di 20260727170000_search_stores_by_name.sql
+-- Date: 2026-07-27
+-- Author: egidiosalinaro
+--
+-- NON è una migration: NON va applicata da `supabase db push`.
+--
+-- Elimina la RPC di ricerca punti vendita per nome. Da eseguire SOLO insieme al
+-- revert del frontend (`components/map.tsx → AddressSearchBar`), che senza la
+-- RPC riceverebbe un errore PGRST202 ad ogni ricerca.
+--
+-- ⚠️ Tornando alla query diretta `from('stores').ilike('name', …)` si
+-- riattivano i tre difetti che questa migration risolveva:
+--   1. Seq Scan (706 ms, 132.737 buffer su ~14,6k store) perché la RLS
+--      inietta `user_can_see_store` per riga e l'indice trigram non viene usato;
+--   2. nessun filtro `clients.show_on_map` → risultati che sulla mappa non
+--      hanno alcun pin (es. Amex);
+--   3. `location` restituita come WKB esadecimale, che `parseCoords` non sa
+--      leggere → la ricerca per nome non restituisce di fatto nulla.
+-- =============================================================================
+
+drop function if exists public.search_stores_by_name(text, integer);

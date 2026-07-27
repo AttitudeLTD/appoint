@@ -3,6 +3,8 @@
 > **Fonte di verità** dello schema del database Supabase del progetto.
 > Aggiornare questo file **ad ogni cambio di schema** (insieme alla migration corrispondente in [`./migrations/`](./migrations/)).
 >
+> _2026-07-27 (d) — **ricerca punti vendita + colore pin**: nuova RPC **`search_stores_by_name(p_query, p_limit)`** (SECURITY DEFINER) per la barra di ricerca della mappa: la query diretta `from('stores').ilike(...)` faceva **Seq Scan** (706 ms, 132.737 buffer su ~14,6k store) perché la RLS inietta `user_can_see_store` per riga e l'indice trigram non veniva mai usato; inoltre non applicava `show_on_map` e restituiva `location` come WKB esadecimale, illeggibile per `parseCoords`. Ora: Bitmap Index Scan, 42 ms. Migration: [`migrations/20260727170000_search_stores_by_name.sql`](./migrations/20260727170000_search_stores_by_name.sql). Nuovo modulo condiviso **`utils/store-status.ts`** (`effectiveStoreStatus`, `STATUS_CARD_UI`): mappa e Dashboard partono dallo stesso status canonico, quindi il pin assume il colore del bucket dell'esito. Solo frontend, nessuna modifica di schema._
+>
 > _2026-07-27 (c) — **cliente escluso dalla mappa**: nuova colonna **`clients.show_on_map`** (`boolean`, not null, default `true`). Se `false`, `get_stores_within_radius` non restituisce i punti vendita del cliente → nessun pin su mappa e "Prospect vicini". Impostata a `false` per **Amex** (id 2, 2.079 store tutti nell'area di Milano). È una configurazione di **visualizzazione, non un permesso**: `user_can_see_store` / `user_can_see_client`, `user_client_access` e le RLS restano identiche, quindi storico, esiti ed export CSV supervisor sono intatti. Migration: [`migrations/20260727131525_clients_show_on_map.sql`](./migrations/20260727131525_clients_show_on_map.sql)._
 >
 > _2026-07-27 (b) — **scalabilità mappa**: `get_stores_within_radius` riscritta con filtro di visibilità **insiemistico** (lo scope del chiamante è risolto una volta per chiamata, non riga per riga con `user_can_see_store`) e promossa a **SECURITY DEFINER** per eliminare la doppia valutazione introdotta dalla RLS di `stores`. Firma argomenti e TABLE di ritorno **invariate**; nessuna regola di autorizzazione modificata (`user_can_see_store` / `user_can_see_client` restano intatte e continuano a reggere le RLS). Misure su produzione (~14,6k store): filtro AiCall 1.400 → 135 ms, Amex 1.390 → 110 ms, Scalapay 300 → 63 ms, default mappa 121 → 48 ms. Migration: [`migrations/20260727125237_gswr_set_based_visibility.sql`](./migrations/20260727125237_gswr_set_based_visibility.sql) (rollback in [`rollback/`](./rollback/))._
@@ -583,6 +585,7 @@ where id = '<uuid>';
 | `user_can_see_store(p_user_id uuid, p_store_id bigint)`     | `uuid, bigint`                                              | `boolean` | **SECURITY DEFINER / STABLE**. Predicato di visibilità sul negozio. Considera `user_store_access`, `user_client_access` ↔ `stores.client_id` **e** `user_client_access` ↔ `store_clients.client_id`. Usato dalla RLS di `stores` / `store_clients` e dalla RPC `get_stores_within_radius`. |
 | `user_can_see_client(p_user_id uuid, p_client_id smallint)` | `uuid, smallint`                                            | `boolean` | **SECURITY DEFINER / STABLE**. Predicato di visibilità sul cliente. Considera `user_client_access` **e** la presenza del cliente tra le associazioni (`stores.client_id` o `store_clients`) di uno store visibile via `user_store_access`. Usato dalla RLS di `clients` e `client_workflows`. |
 | `get_stores_within_radius(...)`       | `lat double precision, lng double precision, radius double precision, p_client_id bigint, p_limit integer, p_client_ids bigint[]` | TABLE    | **SECURITY DEFINER / STABLE** (dal 2026-07-27). Ritorna negozi entro un raggio (in metri) da un punto, filtrati per cliente **e** per scope di visibilità del chiamante (`auth.uid()`). Filtro cliente: `p_client_ids` (array, multi-select; ha precedenza) **oppure** `p_client_id` (singolo, legacy); match su `stores.client_id` **o** `store_clients.client_id`. La TABLE di ritorno include `data_setup` e `pi` (dal 2026-07-02), così arrivano al popup del pin e alla schermata "Gestisci". Il filtro di visibilità è **insiemistico** — equivalente a `user_can_see_store` ma risolto una volta per chiamata; vedi il [Changelog 2026-07-27 (b)](#2026-07-27-b--scalabilit%C3%A0-di-get_stores_within_radius). EXECUTE: solo `authenticated` e `service_role`. |
+| `search_stores_by_name(p_query text, p_limit integer)` | `text, integer` | TABLE (`id, name, address, comune, provincia, location`) | **SECURITY DEFINER / STABLE**. Ricerca punti vendita per ragione sociale, per la barra di ricerca della mappa. Stesso predicato di visibilità insiemistico di `get_stores_within_radius` + filtro `clients.show_on_map`. Minimo 2 caratteri, cap risultati a 20, wildcard LIKE neutralizzati lato server. Ritorna `ST_AsText(location)` (`POINT(lng lat)`), non il WKB grezzo. Ranking: prefisso, poi nome più corto, poi alfabetico. |
 | `get_client_stores_bounds(p_client_id bigint)` | `bigint`                                                              | TABLE (`n, min_lat, min_lng, max_lat, max_lng`) | **SECURITY DEFINER / STABLE**. Conteggio + bounding box dei pin **visibili al chiamante** per UN cliente (filtrato da `user_can_see_store`). _Variante singola; la mappa usa la versione array._ |
 | `get_clients_stores_bounds(p_client_ids bigint[])` | `bigint[]`                                                        | TABLE (`n, min_lat, min_lng, max_lat, max_lng`) | **SECURITY DEFINER / STABLE**. Come sopra ma per un **INSIEME** di clienti (match su `stores.client_id` **o** `store_clients.client_id`). Usata dalla mappa per il fit-bounds automatico (dezoom) sulla selezione multi-cliente. |
 | `getstoreswithinradius(...)`          | `lat, lng, radius`                                                              | TABLE    | _Legacy / deprecato_ — versione precedente di `get_stores_within_radius`.                                                                                  |
@@ -691,6 +694,59 @@ Vedi [`./migrations/README.md`](./migrations/README.md) per la convenzione di na
 ---
 
 ## Changelog
+
+### 2026-07-27 (d) — Ricerca punti vendita scalabile + colore pin coerente
+
+**Ricerca (`search_stores_by_name`).** La barra di ricerca della mappa cercava già
+sia indirizzi (Nominatim) sia punti vendita, ma la parte "negozi" aveva **tre**
+difetti, tutti risolti dalla nuova RPC:
+
+1. **Seq Scan.** `from('stores').ilike('name', …)` passa dalla RLS di `stores`, che
+   inietta `user_can_see_store(auth.uid(), id)`. Il planner la valutava PRIMA del
+   predicato sul nome → l'indice `stores_name_trgm_idx` non veniva **mai** usato:
+   `Rows Removed by Filter: 14617`, **706 ms**, **132.737 buffer**, con costo
+   lineare sul totale dei negozi. Con la RPC: `Bitmap Index Scan`, **42 ms**,
+   **1.462 buffer**, costo proporzionale ai match.
+2. **Nessun `show_on_map`.** Restituiva negozi (es. Amex) che sulla mappa non
+   hanno alcun pin: si volava su un punto vuoto.
+3. **Coordinate illeggibili.** `stores.location` letta dalla tabella arriva come
+   WKB esadecimale (`0101000020E6…`), mentre `utils/navigation.ts → parseCoords`
+   accetta solo `POINT(lng lat)`: ogni risultato veniva scartato da
+   `.filter(Boolean)`. La RPC ritorna `ST_AsText`, come `get_stores_within_radius`.
+
+Verificato: Amex escluso anche cercandone il nome esatto, wildcard `%`/`_`
+neutralizzati lato server, taglio sotto i 2 caratteri, cap a 20 risultati,
+`location` sempre in formato `POINT(...)`, fail-closed senza JWT.
+
+**Colore dei pin (`utils/store-status.ts`).** Il pin sceglieva l'icona da
+`store.status` grezzo. Per i clienti con `manage_form` + `lock_pin` (AiCall) quel
+valore resta **`in_progress` per sempre** dal primo esito in poi: il ri-esito non
+poteva cambiare colore al pin, mentre la Dashboard classificava lo stesso negozio
+in tutt'altro bucket. Ora entrambe le superfici passano da
+**`effectiveStoreStatus(rawStatus, esito)`** — un unico punto che fa vincere
+l'esito sullo status grezzo, appoggiandosi alla mappatura già esistente
+`ESITO_TO_STATUS`.
+
+- La mappa carica gli esiti **in batch per i soli pin già a schermo**
+  (`.in('store_id', …)`), stesso pattern della query dei log: scala col numero di
+  pin visibili (≤ `CLIENT_LIMIT`), **non** col totale dei negozi.
+- Al salvataggio di un esito, `onOutcomeSaved` aggiorna **solo** quel negozio in
+  memoria → il pin si ricolora subito, **senza alcuna nuova fetch**.
+- I colori delle card della Dashboard vivono ora in `STATUS_CARD_UI`, non più
+  inline in `dashboard/page.tsx`.
+
+Impatto misurato: **270 pin** cambiano colore, **tutti e soli** gli AiCall con
+esito (103 → `not_interested`, 102 → `failed`, 37 → `non_existent`, 22 →
+`concluded`, 6 → `already_client`). Nessun pin di Scalapay, Amex o altri clienti
+è toccato.
+
+> ⚠️ **Divergenza di palette lasciata invariata di proposito.** Le icone dei pin e
+> i colori delle card non coincidono per tre stati: `already_client` (pin verde
+> `#039855` / card blu), `not_interested` (pin rosso `#DE2E21` / card grigia),
+> `non_existent` (pin grigio `#6b7280` / card arancione). Allinearle cambierebbe
+> il colore di pin già in produzione, quindi non è stato fatto in questo giro.
+> Ciò che `utils/store-status.ts` garantisce è che entrambe partano dallo
+> **stesso status canonico**, non che usino gli stessi colori.
 
 ### 2026-07-27 (c) — `clients.show_on_map`: Amex fuori dalla mappa
 

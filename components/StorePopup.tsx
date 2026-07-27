@@ -98,6 +98,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
   handleStatusChangeAttempt,
   handleSendEmail,
   onEsitoLock,
+  onOutcomeSaved,
   autoOpenManage = false,
 }) => {
   const [selectedNote, setSelectedNote] = useState('');
@@ -1024,6 +1025,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 handleStatusChangeAttempt={handleStatusChangeAttempt}
                 storeStatuses={storeStatuses}
                 onEsitoLock={onEsitoLock}
+                onOutcomeSaved={onOutcomeSaved}
               />
             ) : (
               <>

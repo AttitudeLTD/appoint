@@ -27,6 +27,7 @@ import { Agent, Store, StoreLog } from '@/types';
 import { createClient } from '@/utils/supabase/client';
 import { getClientLogoUrl } from '@/utils/client-logo';
 import { getMyLoc, parseCoords } from '@/utils/navigation';
+import { effectiveStoreStatus } from '@/utils/store-status';
 import { generateMailBody, statuses } from '@/utils/utils';
 import {
   alreadyClientPin,
@@ -250,26 +251,33 @@ function AddressSearchBar({
         }
       })();
 
-      // Punti vendita: ricerca lato SERVER su stores.name, con cap basso di
-      // risultati. Non si scarica mai l'intero dataset sul client; l'indice GIN
-      // trigram (migration 20260727120000) tiene la query index-assisted.
-      // La RLS di `stores` si applica automaticamente → nessun leak di negozi
-      // non visibili all'utente. Serve almeno 2 caratteri per evitare query
-      // inutilmente ampie ad ogni singolo tasto.
+      // Punti vendita: ricerca lato SERVER via RPC `search_stores_by_name`
+      // (migration 20260727170000). Non si scarica mai l'intero dataset sul
+      // client e non si filtra client-side.
+      //
+      // Perché una RPC e non più `from('stores').ilike(...)`:
+      //  1. la query diretta passa dalla RLS di `stores`, che inietta
+      //     `user_can_see_store` per riga → il planner sceglieva un Seq Scan e
+      //     l'indice trigram non veniva MAI usato (706 ms e 132.737 buffer su
+      //     ~14,6k store, con costo lineare sul totale dei negozi);
+      //  2. la query diretta non applicava `clients.show_on_map`, quindi
+      //     restituiva negozi che sulla mappa non hanno alcun pin;
+      //  3. `stores.location` letta dalla tabella arriva come WKB esadecimale,
+      //     che `parseCoords` non sa leggere → ogni risultato veniva scartato.
+      //     La RPC ritorna `ST_AsText`, cioè `POINT(lng lat)`.
+      //
+      // Il minimo di 2 caratteri, il cap sui risultati e la neutralizzazione
+      // dei wildcard LIKE sono ora imposti ANCHE lato server, dentro la RPC.
       const storePromise = (async () => {
         if (q.length < 2) {
           setStoreResults([]);
           return;
         }
         try {
-          // `%` e `_` sono wildcard in ilike: vanno neutralizzati, altrimenti una
-          // ricerca contenente '%' matcherebbe qualsiasi cosa.
-          const safe = q.replace(/[\\%_]/g, (m) => `\\${m}`);
-          const { data, error } = await supabase
-            .from('stores')
-            .select('id, name, address, comune, provincia, location')
-            .ilike('name', `%${safe}%`)
-            .limit(6);
+          const { data, error } = await supabase.rpc('search_stores_by_name', {
+            p_query: q,
+            p_limit: 6,
+          });
           if (error) {
             console.error('Error searching stores by name:', error);
             return;
@@ -482,6 +490,11 @@ const Map = ({ user }: any) => {
   const [storeStatuses, setStoreStatuses] = useState<{ [key: number]: string }>(
     {}
   ); // Store statuses
+  // Esito manage_form più recente per negozio (solo per i pin già caricati).
+  // Serve a colorare il pin col BUCKET giusto: per i clienti con `lock_pin`
+  // (AiCall) `stores.status` resta per sempre `in_progress` e da solo non dice
+  // nulla sull'esito reale. Chiave assente = nessun esito noto.
+  const [storeEsiti, setStoreEsiti] = useState<{ [key: number]: string | null }>({});
   const [statusLogs, setStatusLogs] = useState<{ [key: number]: StoreLog[] }>(
     {}
   );
@@ -710,6 +723,16 @@ const Map = ({ user }: any) => {
         prev.map((s) => (s.id === storeId ? { ...s, status: 'in_progress' } : s)) as Store[]
     );
   }, [supabase, user.id]);
+
+  // Esito appena salvato dal pannello "Gestisci": aggiorna in memoria SOLO il
+  // negozio interessato → il pin si ricolora all'istante, senza rifare la RPC
+  // dei pin. È il caso del RI-esito, dove `stores.status` non cambia
+  // (resta `in_progress`) e l'unica informazione nuova è appunto l'esito.
+  const handleOutcomeSaved = useCallback((storeId: number, esito: string | null) => {
+    setStoreEsiti((prev) =>
+      prev[storeId] === esito ? prev : { ...prev, [storeId]: esito }
+    );
+  }, []);
 
   const updateStoreStatus = async (
     storeId: number,
@@ -974,6 +997,32 @@ const Map = ({ user }: any) => {
             .order('created_at', { ascending: false });
           for (const log of allLogs ?? []) {
             (logsByStore[log.store_id] ||= []).push(log);
+          }
+        }
+
+        // --- Esiti manage_form in BATCH -------------------------------------
+        // Una sola query per gli esiti dei pin appena caricati. Serve a dare al
+        // pin il colore del BUCKET giusto: con `lock_pin` (AiCall) lo status
+        // grezzo è sempre `in_progress`, l'informazione vera è l'esito.
+        // Scala col numero di pin A SCHERMO (≤ CLIENT_LIMIT), non col totale dei
+        // negozi: stesso identico pattern della query dei log qui sopra, e come
+        // quella è limitata ai soli store NON 'free' (un pin libero non ha esiti).
+        if (nonFreeIds.length > 0) {
+          const { data: allOutcomes } = await supabase
+            .from('store_visit_outcomes')
+            .select('store_id, outcome_data, created_at')
+            .in('store_id', nonFreeIds)
+            .order('created_at', { ascending: false });
+          if (allOutcomes && allOutcomes.length > 0) {
+            const esitoByStore: Record<number, string | null> = {};
+            for (const o of allOutcomes) {
+              // Righe già ordinate desc: la prima vista per uno store è la più recente.
+              const sid = o.store_id as number;
+              if (sid in esitoByStore) continue;
+              const e = (o.outcome_data as any)?.esito;
+              esitoByStore[sid] = typeof e === 'string' && e ? e : null;
+            }
+            setStoreEsiti((prev) => ({ ...prev, ...esitoByStore }));
           }
         }
 
@@ -1443,15 +1492,28 @@ const Map = ({ user }: any) => {
         const storeCoordinates = parseCoords(store.location);
         if (!storeCoordinates) return null;
 
+        // Status EFFETTIVO del pin: parte dallo status locale più aggiornato
+        // (`storeStatuses`, che riflette le modifiche già fatte in questa
+        // sessione) e, se il negozio ha un esito manage_form, lascia vincere il
+        // bucket dell'esito. È la STESSA funzione usata dalle card della
+        // Dashboard → mappa e dashboard non possono più divergere.
+        // Prima si leggeva `store.status` grezzo: per i clienti con `lock_pin`
+        // (AiCall) restava `in_progress` per sempre e il pin non cambiava mai
+        // colore al ri-esito.
+        const effStatus = effectiveStoreStatus(
+          storeStatuses[store.id] ?? store.status,
+          storeEsiti[store.id]
+        );
+
         const clientLogoUrl =
-          store.status === 'free' ? getClientLogoUrl(store.client_logo) : null;
+          effStatus === 'free' ? getClientLogoUrl(store.client_logo) : null;
 
         const tierFillColor = (showTierColors && store.tier)
           ? (TIER_COLORS[(store.tier as string).toLowerCase() as keyof typeof TIER_COLORS] ?? null)
           : null;
 
         const icon = store.modifiedByOtherUser
-          ? store.status === 'free'
+          ? effStatus === 'free'
             ? tierFillColor && clientLogoUrl
               ? createFreePinColoredWithLogo(tierFillColor, clientLogoUrl, true)
               : tierFillColor
@@ -1459,18 +1521,18 @@ const Map = ({ user }: any) => {
                 : clientLogoUrl
                   ? createFreePinMutedWithLogo(clientLogoUrl)
                   : freePinM
-            : store.status === 'in_progress'
+            : effStatus === 'in_progress'
               ? progressPinM
-              : store.status === 'concluded'
+              : effStatus === 'concluded'
                 ? closedPinM
-                : store.status === 'already_client'
+                : effStatus === 'already_client'
                   ? alreadyClientPinM
-                  : store.status === 'not_interested'
+                  : effStatus === 'not_interested'
                     ? notInterestedPinM
-                    : store.status === 'non_existent'
+                    : effStatus === 'non_existent'
                       ? nonExistentPinM
                       : failedPinM
-          : store.status === 'free'
+          : effStatus === 'free'
             ? tierFillColor && clientLogoUrl
               ? createFreePinColoredWithLogo(tierFillColor, clientLogoUrl)
               : tierFillColor
@@ -1478,15 +1540,15 @@ const Map = ({ user }: any) => {
                 : clientLogoUrl
                   ? createFreePinWithLogo(clientLogoUrl)
                   : freePin
-            : store.status === 'in_progress'
+            : effStatus === 'in_progress'
               ? progressPin
-              : store.status === 'concluded'
+              : effStatus === 'concluded'
                 ? closedPin
-                : store.status === 'already_client'
+                : effStatus === 'already_client'
                   ? alreadyClientPin
-                  : store.status === 'not_interested'
+                  : effStatus === 'not_interested'
                     ? notInterestedPin
-                    : store.status === 'non_existent'
+                    : effStatus === 'non_existent'
                       ? nonExistentPin
                       : failedPin;
 
@@ -1577,6 +1639,7 @@ const Map = ({ user }: any) => {
                 handleStatusChangeAttempt={handleStatusChangeAttempt}
                 handleSendEmail={handleSendEmail}
                 onEsitoLock={applyEsitoLock}
+                onOutcomeSaved={handleOutcomeSaved}
                 autoOpenManage={deepLinkManage && deepLinkStoreId === store.id}
               />
             </Popup>
@@ -1594,10 +1657,12 @@ const Map = ({ user }: any) => {
     loadingStatus,
     loadingEmail,
     storeStatuses,
+    storeEsiti,
     fetchStatusLogs,
     handleStatusChangeAttempt,
     handleSendEmail,
     applyEsitoLock,
+    handleOutcomeSaved,
     deepLinkManage,
     deepLinkStoreId,
   ]);

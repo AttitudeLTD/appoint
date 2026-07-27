@@ -28,7 +28,8 @@ import { useRouter } from 'next/navigation';
 import { fetchUserStores, getDashboardContext } from '@/utils/stores';
 import { getMyLoc, parseCoords } from '@/utils/navigation';
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { getStatusLabel, statuses, formatDataSetup, esitoToStatus } from '@/utils/utils';
+import { getStatusLabel, statuses, formatDataSetup } from '@/utils/utils';
+import { STATUS_CARD_UI, effectiveStoreStatus } from '@/utils/store-status';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -44,17 +45,29 @@ import { it } from 'date-fns/locale';
 import { format } from 'date-fns';
 import 'react-day-picker/style.css';
 
+// Icone delle card, specifiche di questa schermata. I COLORI arrivano invece da
+// `utils/store-status.ts → STATUS_CARD_UI`, unico punto in cui vive la
+// corrispondenza "status canonico → colore": così la Dashboard e la mappa
+// partono dallo stesso vocabolario di stati (vedi `effectiveStoreStatus`) e la
+// palette non può più divergere riga per riga.
+const STATUS_KPI_ICON: Record<string, typeof Store> = {
+  in_progress: Clock,
+  concluded: CheckCircle,
+  already_client: Star,
+  failed: Ban,
+  not_interested: X,
+  non_existent: XCircle,
+};
+
 const STATUS_KPI_CONFIG: Record<
   string,
   { icon: typeof Store; color: string; bgColor: string }
-> = {
-  in_progress: { icon: Clock, color: 'text-amber-500', bgColor: 'bg-amber-500/20' },
-  concluded: { icon: CheckCircle, color: 'text-green-500', bgColor: 'bg-green-500/20' },
-  already_client: { icon: Star, color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
-  failed: { icon: Ban, color: 'text-red-500', bgColor: 'bg-red-500/20' },
-  not_interested: { icon: X, color: 'text-gray-500', bgColor: 'bg-gray-500/20' },
-  non_existent: { icon: XCircle, color: 'text-orange-500', bgColor: 'bg-orange-500/20' },
-};
+> = Object.fromEntries(
+  Object.entries(STATUS_KPI_ICON).map(([status, icon]) => [
+    status,
+    { icon, ...STATUS_CARD_UI[status] },
+  ])
+);
 
 const NEARBY_RADIUS_M = 5000;
 const NEARBY_LIMIT = 10;
@@ -745,7 +758,8 @@ export default function DashboardPage() {
     // Status "effettivo" per negozio: l'esito mappato vince sullo status grezzo.
     const effectiveStatus = new Map<number, string>();
     storeToEsito.forEach((esito, sid) => {
-      effectiveStatus.set(sid, esitoToStatus(esito, storeToStatus.get(sid)));
+      // Stessa funzione usata dalla mappa per scegliere il colore del pin.
+      effectiveStatus.set(sid, effectiveStoreStatus(storeToStatus.get(sid), esito));
     });
     storeToStatus.forEach((status, sid) => {
       if (!effectiveStatus.has(sid)) {
