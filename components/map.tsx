@@ -23,11 +23,12 @@ import {
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 
-import { Agent, Store, StoreLog } from '@/types';
+import { Agent, Store } from '@/types';
 import { createClient } from '@/utils/supabase/client';
 import { getClientLogoUrl } from '@/utils/client-logo';
 import { getMyLoc, parseCoords } from '@/utils/navigation';
 import { effectiveStoreStatus } from '@/utils/store-status';
+import { useStoreActions, StoreActionDialogs } from './store-actions';
 import { generateMailBody, statuses } from '@/utils/utils';
 import {
   alreadyClientPin,
@@ -52,16 +53,6 @@ import {
   TIER_COLORS,
 } from '@/utils/nav-icons';
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from './ui/alert-dialog';
 import { Input } from './ui/input';
 import {
   DropdownMenu,
@@ -484,26 +475,33 @@ const Map = ({ user }: any) => {
   const [coord, setCoord] = useState<LatLngExpression | null>(null);
   const [stores, setStores] = useState<Store[]>([]);
   const [loadingEmail, setLoadingEmail] = useState<boolean>(false); // For email sending
-  const [loadingStatus, setLoadingStatus] = useState<{
-    [key: number]: boolean;
-  }>({}); // For status update
-  const [storeStatuses, setStoreStatuses] = useState<{ [key: number]: string }>(
-    {}
-  ); // Store statuses
-  // Esito manage_form più recente per negozio (solo per i pin già caricati).
-  // Serve a colorare il pin col BUCKET giusto: per i clienti con `lock_pin`
-  // (AiCall) `stores.status` resta per sempre `in_progress` e da solo non dice
-  // nulla sull'esito reale. Chiave assente = nessun esito noto.
-  const [storeEsiti, setStoreEsiti] = useState<{ [key: number]: string | null }>({});
-  const [statusLogs, setStatusLogs] = useState<{ [key: number]: StoreLog[] }>(
-    {}
-  );
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [limitDialogOpen, setLimitDialogOpen] = useState(false); // For in-progress limit dialog
-  const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState('');
-  const [selectedNote, setSelectedNote] = useState('');
-  const [loadingConfirm, setLoadingConfirm] = useState(false);
+  // Orchestrazione della gestione punto vendita (cambio stato + limite
+  // trattative + log + lock esito): vive in `components/store-actions.tsx`,
+  // condivisa con la Dashboard. `onStatusApplied` tiene allineato l'array
+  // `stores` locale, da cui dipende il colore del pin.
+  const actions = useStoreActions({
+    userId: user.id,
+    onStatusApplied: useCallback((storeId: number, newStatus: string) => {
+      setStores(
+        (prev) =>
+          prev.map((st) =>
+            st.id === storeId ? { ...st, status: newStatus } : st
+          ) as Store[]
+      );
+    }, []),
+  });
+  const {
+    storeStatuses,
+    setStoreStatuses,
+    storeEsiti,
+    setStoreEsiti,
+    statusLogs,
+    loadingStatus,
+    fetchStatusLogs,
+    handleStatusChangeAttempt,
+    applyEsitoLock,
+    handleOutcomeSaved,
+  } = actions;
   const [selectedLocation, setSelectedLocation] = useState<[number, number]>();
   const [showGeoMessage, setShowGeoMessage] = useState(false);
   const [governanceLevel, setGovernanceLevel] = useState<GovernanceLevel>('am'); // populated from users.role
@@ -595,260 +593,6 @@ const Map = ({ user }: any) => {
   }, [supabase]);
 
 
-  const handleStatusChangeAttempt = useCallback(async (
-    storeId: number,
-    newStatus: string,
-    note?: string,
-    checkInProgressLimit?: boolean
-  ): Promise<boolean> => {
-    // Handle in-progress limit check if needed
-    if (checkInProgressLimit && newStatus === 'in_progress') {
-      try {
-        // First get all stores that have a log where this user set them to in_progress
-        const { data: potentialInProgressStores, error: storesError } =
-          await supabase
-            .from('store_status_logs')
-            .select('store_id')
-            .eq('modifier', user.id)
-            .eq('new', 'in_progress');
-
-        if (storesError) throw storesError;
-
-        if (
-          !potentialInProgressStores ||
-          potentialInProgressStores.length === 0
-        ) {
-          // No in-progress stores found, proceed
-        } else {
-          // Get unique store IDs
-          const uniqueStoreIds = Array.from(
-            new Set(potentialInProgressStores.map((store) => store.store_id))
-          );
-
-          // For each of these stores, check if the latest status log is 'in_progress'
-          let currentInProgressCount = 0;
-
-          // Run these checks in parallel
-          const checkPromises = uniqueStoreIds.map(async (storeId) => {
-            const { data: latestLog, error: logError } = await supabase
-              .from('store_status_logs')
-              .select('*')
-              .eq('store_id', storeId)
-              .order('created_at', { ascending: false })
-              .limit(1);
-
-            if (logError) throw logError;
-
-            // If the latest log for this store shows 'in_progress' and was set by this user, count it
-            if (
-              latestLog &&
-              latestLog.length > 0 &&
-              latestLog[0].new === 'in_progress' &&
-              latestLog[0].modifier === user.id
-            ) {
-              return true; // This counts as an in-progress store
-            }
-
-            return false;
-          });
-
-          // Wait for all checks to complete
-          const results = await Promise.all(checkPromises);
-          currentInProgressCount = results.filter(Boolean).length;
-
-          if (currentInProgressCount >= 10) {
-            // Show a dialog instead of alert
-            setLimitDialogOpen(true);
-            return false;
-          }
-        }
-      } catch (error) {
-        console.error('Error checking in-progress store count:', error);
-        setLimitDialogOpen(true);
-        return false;
-      }
-    }
-
-    setSelectedStoreId(storeId);
-    setSelectedStatus(newStatus || '');
-    setSelectedNote(note || '');
-    setDialogOpen(true);
-    return true;
-  }, [supabase, user.id]);
-
-  const confirmStatusChange = async () => {
-    setLoadingConfirm(true);
-
-    if (selectedStoreId && selectedStatus) {
-      await updateStoreStatus(selectedStoreId, selectedStatus, selectedNote);
-
-      setStores(
-        (prevStores) =>
-          prevStores.map((store) =>
-            store.id === selectedStoreId
-              ? { ...store, status: selectedStatus }
-              : store
-          ) as Store[]
-      );
-
-      // Refetch logs for the specific store after status update
-      await fetchStatusLogs(selectedStoreId);
-    }
-
-    setLoadingConfirm(false);
-    setDialogOpen(false);
-    setSelectedNote(''); // Reset the selected note
-  };
-
-  // Lock "esito" (manage_form con `lock_pin`, es. PROGETTO AICALL): al salvataggio
-  // dell'esito il pin viene preso in carico → status `in_progress`, SENZA dialog
-  // di conferma e SENZA il limite dei 10 pin. Aggiorna DB (stores + log del
-  // modificatore) e lo stato locale (icona sulla mappa + storeStatuses), così il
-  // pin risulta subito esitato per l'autore e bloccato per gli altri agenti.
-  const applyEsitoLock = useCallback(async (storeId: number, prevStatus: string) => {
-    const { error } = await supabase
-      .from('stores')
-      .update({ status: 'in_progress' })
-      .eq('id', storeId);
-    if (error) {
-      console.error('Errore lock esito:', error);
-      return;
-    }
-    await supabase.from('store_status_logs').insert([
-      { store_id: storeId, prev: prevStatus || 'free', new: 'in_progress', modifier: user.id },
-    ]);
-    setStoreStatuses((prev) => ({ ...prev, [storeId]: 'in_progress' }));
-    setStores(
-      (prev) =>
-        prev.map((s) => (s.id === storeId ? { ...s, status: 'in_progress' } : s)) as Store[]
-    );
-  }, [supabase, user.id]);
-
-  // Esito appena salvato dal pannello "Gestisci": aggiorna in memoria SOLO il
-  // negozio interessato → il pin si ricolora all'istante, senza rifare la RPC
-  // dei pin. È il caso del RI-esito, dove `stores.status` non cambia
-  // (resta `in_progress`) e l'unica informazione nuova è appunto l'esito.
-  const handleOutcomeSaved = useCallback((storeId: number, esito: string | null) => {
-    setStoreEsiti((prev) =>
-      prev[storeId] === esito ? prev : { ...prev, [storeId]: esito }
-    );
-  }, []);
-
-  const updateStoreStatus = async (
-    storeId: number,
-    newStatus: string,
-    note?: string
-  ) => {
-    setLoadingStatus((prev) => ({ ...prev, [storeId]: true }));
-    try {
-      const { error: updateError } = await supabase
-        .from('stores')
-        .update({ status: newStatus })
-        .eq('id', storeId);
-
-      if (!updateError) {
-        // Immediately update storeStatuses state
-        setStoreStatuses((prevStatuses) => ({
-          ...prevStatuses,
-          [storeId]: newStatus,
-        }));
-
-        // Insert a new log for the status change
-        await supabase.from('store_status_logs').insert([
-          {
-            store_id: storeId,
-            prev: storeStatuses[storeId] || 'free',
-            new: newStatus,
-            modifier: user.id,
-            notes: (['failed', 'non_existent'].includes(newStatus) && note) ? note : null,
-          },
-        ]);
-
-        await fetchStatusLogs(storeId); // Refetch logs
-      } else {
-        console.error('Error updating store status:', updateError);
-      }
-    } catch (error) {
-      console.error('Unexpected error:', error);
-    } finally {
-      setLoadingStatus((prev) => ({ ...prev, [storeId]: false }));
-    }
-  };
-
-  const fetchStatusLogs = useCallback(async (storeId: number, offset: number = 0) => {
-    try {
-      const { data, error } = await supabase
-        .from('store_status_logs')
-        .select('id, prev, new, created_at, modifier')
-        .eq('store_id', storeId)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + 2); // This gets 3 logs (0,1,2 or 3,4,5 etc.)
-
-      if (error) {
-        console.error('Error fetching status logs:', error);
-        return;
-      }
-
-      // For each log, fetch the user's name and surname
-      if (data && data.length > 0) {
-        const logsWithUserInfo = await Promise.all(
-          data.map(async (log) => {
-            const userInfo = await fetchUserInfo(log.modifier);
-            return {
-              ...log,
-              modifierName: userInfo
-                ? `${userInfo.name} ${userInfo.surname}`
-                : 'Unknown User',
-            };
-          })
-        );
-
-        // If offset is 0, replace logs; otherwise append them
-        setStatusLogs((prev) => ({
-          ...prev,
-          [storeId]:
-            offset === 0
-              ? logsWithUserInfo
-              : [...(prev[storeId] || []), ...logsWithUserInfo],
-        }));
-
-        // Return the count of logs retrieved for UI feedback
-        return logsWithUserInfo.length;
-      } else {
-        if (offset === 0) {
-          // Only clear if this is the initial fetch
-          setStatusLogs((prev) => ({
-            ...prev,
-            [storeId]: [],
-          }));
-        }
-        return 0;
-      }
-    } catch (error) {
-      console.error('Error in fetchStatusLogs:', error);
-    }
-  }, [supabase]);
-
-  // New function to fetch user information by ID
-  const fetchUserInfo = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('name, surname')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user info:', error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Unexpected error in fetchUserInfo:', error);
-      return null;
-    }
-  };
 
   // Raggio (in metri) che copre il viewport corrente: mezza diagonale, ovvero
   // distanza dal centro all'angolo nord-est dei bounds. Usato in modalità filtro
@@ -1677,61 +1421,7 @@ const Map = ({ user }: any) => {
 
   return (
     <>
-      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <AlertDialogContent className='z-1000'>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Sei sicuro di voler cambiare lo stato?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Questo punto vendita verrà contrassegnato come{' '}
-              <strong>
-                {statuses.find((status) => status.value === selectedStatus)
-                  ?.label || selectedStatus}
-              </strong>
-              {selectedStatus === 'failed' && selectedNote && (
-                <>
-                  {' '}
-                  con motivo <strong>{selectedNote}</strong>
-                </>
-              )}
-              .
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDialogOpen(false)}>
-              Annulla
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmStatusChange}
-              disabled={loadingConfirm}
-            >
-              {loadingConfirm ? (
-                <Loader className='animate-spin' />
-              ) : (
-                'Conferma'
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={limitDialogOpen} onOpenChange={setLimitDialogOpen}>
-        <AlertDialogContent className='z-1000'>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Limite di trattative raggiunto</AlertDialogTitle>
-            <AlertDialogDescription>
-              Hai già 10 trattative in corso. Concludi o chiudi almeno una
-              trattativa prima di iniziarne un&apos;altra.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setLimitDialogOpen(false)}>
-              Ho capito
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <StoreActionDialogs actions={actions} />
 
       <div className='relative w-full h-full'>
         {coord && (

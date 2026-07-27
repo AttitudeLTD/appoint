@@ -24,12 +24,15 @@ import {
   Settings,
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
-import { useRouter } from 'next/navigation';
 import { fetchUserStores, getDashboardContext } from '@/utils/stores';
 import { getMyLoc, parseCoords } from '@/utils/navigation';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { getStatusLabel, statuses, formatDataSetup } from '@/utils/utils';
 import { STATUS_CARD_UI, effectiveStoreStatus } from '@/utils/store-status';
+import StorePopup from '@/components/StorePopup';
+import { useStoreActions, StoreActionDialogs } from '@/components/store-actions';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import type { Store as StoreType } from '@/types';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -184,7 +187,6 @@ function MultiSelectPopover({
 }
 
 export default function DashboardPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [nearbyProspects, setNearbyProspects] = useState<any[]>([]);
   const [nearbyLoading, setNearbyLoading] = useState(true);
@@ -212,6 +214,49 @@ export default function DashboardPage() {
   const [selectedNearbyClientIds, setSelectedNearbyClientIds] = useState<string[]>([]);
   // Clienti visibili all'utente (RLS) per le tendine client (es. prospect).
   const [visibleClients, setVisibleClients] = useState<{ id: number; name: string }[]>([]);
+
+  // ── Scheda "Gestisci" aperta dalla Dashboard ───────────────────────────────
+  // Prima si mandava l'utente sulla mappa con `/protected?store=<id>&manage=1`
+  // e si sperava che il pin fosse fra quelli caricati: bastava un filtro
+  // cliente attivo, il limite di pin raggiunto o un cliente non mappato perche
+  // il marker non esistesse e il pannello non si aprisse.
+  // Ora la scheda si apre QUI, con lo stesso <StorePopup> della mappa e la
+  // stessa orchestrazione (`useStoreActions`): nessuna navigazione, nessuna
+  // dipendenza dallo stato della mappa, nessuna logica duplicata.
+  const [manageStore, setManageStore] = useState<StoreType | null>(null);
+  const [manageLoadingId, setManageLoadingId] = useState<number | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user?.id) setCurrentUserId(data.user.id);
+    })();
+  }, [supabase]);
+
+  const storeActions = useStoreActions({ userId: currentUserId });
+
+  // Carica il singolo punto vendita via RPC: `get_store_for_manage` applica la
+  // stessa visibilita della mappa e restituisce `location` come POINT(...),
+  // leggibile da parseCoords (una select diretta darebbe WKB esadecimale).
+  const openManage = useCallback(
+    async (storeId: number) => {
+      setManageLoadingId(storeId);
+      try {
+        const { data, error } = await supabase.rpc('get_store_for_manage', {
+          p_store_id: storeId,
+        });
+        if (error || !data || data.length === 0) {
+          console.error('Apertura scheda punto vendita fallita:', error);
+          return;
+        }
+        setManageStore(data[0] as StoreType);
+      } finally {
+        setManageLoadingId(null);
+      }
+    },
+    [supabase]
+  );
   const [calendarOpen, setCalendarOpen] = useState(false);
   // Selezione "in corso" nel calendario: 1° click azzera e imposta solo l'inizio,
   // 2° click completa il range → applica e chiude.
@@ -1310,14 +1355,15 @@ export default function DashboardPage() {
                               variant='outline'
                               size='icon'
                               className='h-8 w-8'
-                              onClick={() =>
-                                router.push(
-                                  `/protected?store=${activity.store_id}&manage=1`
-                                )
-                              }
+                              onClick={() => openManage(activity.store_id)}
+                              disabled={manageLoadingId === activity.store_id}
                               title='Apri e gestisci la lead'
                             >
-                              <Settings className='h-4 w-4' />
+                              {manageLoadingId === activity.store_id ? (
+                                <Loader2 className='h-4 w-4 animate-spin' />
+                              ) : (
+                                <Settings className='h-4 w-4' />
+                              )}
                             </Button>
                           )}
                           {activity.type === 'photo' && activity.photo_url && (
@@ -1526,6 +1572,49 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Scheda punto vendita, centrata: stesso <StorePopup> della mappa e
+          stessa orchestrazione. `autoOpenManage` apre subito il pannello
+          "Gestisci", come faceva il vecchio deep-link — ma senza dipendere
+          dallo stato della mappa. */}
+      <Dialog
+        open={manageStore != null}
+        onOpenChange={(open) => {
+          if (!open) setManageStore(null);
+        }}
+      >
+        <DialogContent className='bg-[#224677] p-4 text-white'>
+          <DialogTitle className='sr-only'>
+            {manageStore?.name ?? 'Punto vendita'}
+          </DialogTitle>
+          {manageStore && (
+            <StorePopup
+              store={manageStore}
+              // Stesso valore che passa la mappa: le coordinate DEL PUNTO
+              // VENDITA (map.tsx passa `storeCoordinates`). Così il
+              // comportamento del bottone "Indicazioni" è identico nelle due
+              // superfici; `[0,0]` non è mai raggiungibile perché la RPC
+              // restituisce solo store geolocalizzati.
+              coord={parseCoords(manageStore.location) ?? [0, 0]}
+              statusLogs={{
+                [manageStore.id]: storeActions.statusLogs[manageStore.id] || [],
+              }}
+              loadingStatus={{
+                [manageStore.id]: !!storeActions.loadingStatus[manageStore.id],
+              }}
+              loadingEmail={false}
+              storeStatuses={storeActions.storeStatuses}
+              fetchStatusLogs={storeActions.fetchStatusLogs}
+              handleStatusChangeAttempt={storeActions.handleStatusChangeAttempt}
+              handleSendEmail={() => {}}
+              onEsitoLock={storeActions.applyEsitoLock}
+              onOutcomeSaved={storeActions.handleOutcomeSaved}
+              autoOpenManage
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+      <StoreActionDialogs actions={storeActions} />
     </div>
   );
 }
