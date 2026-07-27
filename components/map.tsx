@@ -1005,8 +1005,16 @@ const Map = ({ user }: any) => {
         // pin il colore del BUCKET giusto: con `lock_pin` (AiCall) lo status
         // grezzo è sempre `in_progress`, l'informazione vera è l'esito.
         // Scala col numero di pin A SCHERMO (≤ CLIENT_LIMIT), non col totale dei
-        // negozi: stesso identico pattern della query dei log qui sopra, e come
-        // quella è limitata ai soli store NON 'free' (un pin libero non ha esiti).
+        // negozi: stesso identico pattern della query dei log qui sopra.
+        //
+        // Riusa `nonFreeIds`, quindi assume che un pin 'free' non abbia esiti.
+        // Vero per tutti i workflow attuali, che al salvataggio portano il pin a
+        // `in_progress` (via `lock_pin` o `sets_status`) — verificato: tutti i
+        // 363 negozi con esito sono `in_progress`, nessuno è 'free'.
+        // Se un domani si configurasse un `manage_form` che salva l'esito SENZA
+        // toccare lo status, quei pin resterebbero del colore 'free' mentre la
+        // Dashboard li classificherebbe nel bucket dell'esito: in quel caso
+        // questa query va estesa a tutti gli id caricati.
         if (nonFreeIds.length > 0) {
           const { data: allOutcomes } = await supabase
             .from('store_visit_outcomes')
