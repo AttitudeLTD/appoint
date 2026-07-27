@@ -3,6 +3,8 @@
 > **Fonte di verità** dello schema del database Supabase del progetto.
 > Aggiornare questo file **ad ogni cambio di schema** (insieme alla migration corrispondente in [`./migrations/`](./migrations/)).
 >
+> _2026-07-27 (c) — **cliente escluso dalla mappa**: nuova colonna **`clients.show_on_map`** (`boolean`, not null, default `true`). Se `false`, `get_stores_within_radius` non restituisce i punti vendita del cliente → nessun pin su mappa e "Prospect vicini". Impostata a `false` per **Amex** (id 2, 2.079 store tutti nell'area di Milano). È una configurazione di **visualizzazione, non un permesso**: `user_can_see_store` / `user_can_see_client`, `user_client_access` e le RLS restano identiche, quindi storico, esiti ed export CSV supervisor sono intatti. Migration: [`migrations/20260727160000_clients_show_on_map.sql`](./migrations/20260727160000_clients_show_on_map.sql)._
+>
 > _2026-07-27 (b) — **scalabilità mappa**: `get_stores_within_radius` riscritta con filtro di visibilità **insiemistico** (lo scope del chiamante è risolto una volta per chiamata, non riga per riga con `user_can_see_store`) e promossa a **SECURITY DEFINER** per eliminare la doppia valutazione introdotta dalla RLS di `stores`. Firma argomenti e TABLE di ritorno **invariate**; nessuna regola di autorizzazione modificata (`user_can_see_store` / `user_can_see_client` restano intatte e continuano a reggere le RLS). Misure su produzione (~14,6k store): filtro AiCall 1.400 → 135 ms, Amex 1.390 → 110 ms, Scalapay 300 → 63 ms, default mappa 121 → 48 ms. Migration: [`migrations/20260727150000_gswr_set_based_visibility.sql`](./migrations/20260727150000_gswr_set_based_visibility.sql) (rollback nel file `…_rollback.sql` affiancato)._
 >
 > _2026-07-14 — **diagnostica errori**: nuova tabella **`public.error_logs`** (message, stack, digest, source, url, user_id, user_email, user_agent, extra). Popolata lato client da `utils/error-logger.ts` (dai due error boundary `app/error.tsx`/`app/global-error.tsx` e dal listener globale `components/ErrorListener.tsx`). RLS: **INSERT aperto** (anche `anon`, gli errori possono capitare pre-login); **SELECT solo ai `supervisor`**. Migration: [`migrations/20260714120000_error_logs_table.sql`](./migrations/20260714120000_error_logs_table.sql)._
@@ -106,6 +108,7 @@ Anagrafica dei clienti business (es. brand committenti). Ogni `store` appartiene
 | `name`       | `text`        | NO   | —                                    |                            |
 | `created_at` | `timestamptz` | YES  | `now()`                              |                            |
 | `logo`       | `text`        | YES  | —                                    | Path in bucket `client-logos` |
+| `show_on_map` | `boolean` | NO | `true` | Se `false`, i punti vendita del cliente **non vengono disegnati sulla mappa**: `get_stores_within_radius` li esclude, e il cliente sparisce dalla tendina filtro della mappa e da quella di "Prospect vicini". Configurazione di **visualizzazione, non un permesso**: non incide su `user_can_see_store` / `user_can_see_client`, RLS, storico, esiti o export. `false` per **Amex** (id 2). Riattivare = `update clients set show_on_map = true where id = …` (nessun deploy). |
 | `auto_grant_new_users` | `boolean` | NO | `true` | Se `false` il cliente è **riservato**: non concesso automaticamente ai nuovi utenti (`handle_new_user`) né a tutti alla creazione (`grant_new_client_to_all_users`); grant solo manuali via `user_client_access`. `false` per i clienti maintenance (id 3, 4). |
 
 **RLS:** lettura `authenticated` vincolata a `public.user_can_see_client(auth.uid(), id)`.
@@ -686,6 +689,81 @@ Vedi [`./migrations/README.md`](./migrations/README.md) per la convenzione di na
 ---
 
 ## Changelog
+
+### 2026-07-27 (c) — `clients.show_on_map`: Amex fuori dalla mappa
+
+**Requisito.** I 2.079 punti vendita **Amex** (id 2) — tutti nell'area di Milano:
+2.005 in provincia MI + 74 in MB — non devono più comparire come pin. Tutti gli altri
+clienti invariati; dashboard, estrazioni e storico non alterati.
+
+**Dove è applicato il filtro.** Nuova colonna **`clients.show_on_map`**
+(`boolean not null default true`), impostata a `false` per Amex. La esclusione avviene
+in **un solo punto logico**, `get_stores_within_radius`, che alimenta sia i pin della
+mappa sia "Prospect vicini" della dashboard:
+
+```sql
+and (
+  s.client_id = any(v_map_clients)                       -- v_map_clients = clienti con show_on_map
+  or exists (select 1 from public.store_clients sc
+             where sc.store_id = s.id and sc.client_id = any(v_map_clients))
+)
+```
+
+Semantica: uno store compare se ha **almeno un** cliente associato mappabile. Un
+ipotetico store con primario Amex ma associato anche a Scalapay resterebbe quindi
+visibile (è un target Scalapay legittimo) — verificato in transazione annullata.
+Oggi il caso non esiste: 0 store multi-cliente, 0 store con Amex come secondario.
+
+**Perché non revocare i grant `user_client_access`.** Sarebbe stata la scorciatoia
+sbagliata: avrebbe tolto Amex dalla RLS di `clients` e `client_workflows`, facendo
+sparire nome e logo dallo **storico** dei 48 store già lavorati e dai **68
+`store_status_logs`**, rompendo l'export supervisor; e il trigger `handle_new_user`
+(Amex ha `auto_grant_new_users = true`) lo avrebbe ri-concesso ad ogni nuovo utente.
+`show_on_map` invece **non tocca l'autorizzazione**: Amex resta autorizzato, solo non
+mappato.
+
+**Frontend (nessun id hardcoded).**
+
+| File | Modifica |
+| ---- | -------- |
+| `components/map.tsx` | tendina filtro clienti: `.eq('show_on_map', true)` |
+| `components/map.tsx` | **potatura della selezione persistita**: `selectedClientIds` viene ripulito dagli id non più presenti in `clients`. Senza questo, un agente con Amex selezionato in `localStorage` (`appoint.mapFilters`) si sarebbe trovato un filtro attivo su un cliente **senza più la sua chip** → mappa vuota e nessun modo di deselezionarlo |
+| `app/protected/dashboard/page.tsx` | tendina "Prospect vicini": `.eq('show_on_map', true)` |
+
+**Non modificati di proposito.**
+
+- **Export CSV "Esporta lista negozi"** (supervisor, `dashboard/page.tsx`): non passa
+  dalla RPC → Amex resta estraibile.
+- **`components/NewStoreForm.tsx`**: Amex resta selezionabile in creazione.
+  `show_on_map` riguarda il rendering dei pin, non il ritiro del cliente.
+- **`store_status_logs`, `store_visit_outcomes`, dashboard storico**: intatti.
+
+**Verifiche eseguite.**
+
+- Diff before/after su 77 utenti × 8 scenari: il delta è **esattamente** i 2.079 store
+  Amex. Filtro Scalapay 11.438 → 11.438, filtro AiCall 1.081 → 1.081, filtro cliente
+  riservato invariato, filtro Amex 2.079 → **0**.
+- Per entrambi i profili di visibilità: **0 store comparsi**, e ogni store rimosso ha
+  Amex come unico cliente associato (nessun non-Amex toccato).
+- Dati Amex ancora presenti e leggibili dopo la modifica: 2.079 store in tabella,
+  48 lavorati, 68 log, `clients.name = 'Amex'` risolvibile via RLS.
+- `tsc --noEmit` e `next build` verdi.
+
+**Rollback:** `update public.clients set show_on_map = true where id = 2;` — una riga,
+effetto immediato, nessun DDL. Ripristino completo (anche del filtro nella RPC) in
+`migrations/20260727160000_clients_show_on_map_rollback.sql`.
+
+**Nota di coerenza.** `get_client_stores_bounds` / `get_clients_stores_bounds` **non**
+applicano `show_on_map`. Oggi non le chiama più nessuno (la mappa calcola i bounds lato
+client dai pin già caricati), ma se venissero riattivate includerebbero Amex nel
+fit-bounds. Da allineare in quel caso.
+
+**Impatto sulle performance.** Il default mappa su Milano passa da 48 a 78 ms: Milano è
+esattamente dove stanno i pin Amex, quindi la KNN deve scartarne 2.079 prima di
+riempire il limite di 250 (resta comunque sotto i 121 ms di partenza). Il caso con
+filtro cliente migliora leggermente (135 → 122 ms). Vedi il "residuo noto" del
+changelog (b): togliendo l'indice ridondante `idx_store_clients_store_id` questo
+scenario scende a 61 ms (misurato in transazione annullata).
 
 ### 2026-07-27 (b) — Scalabilità di `get_stores_within_radius`
 

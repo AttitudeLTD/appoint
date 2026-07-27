@@ -562,11 +562,19 @@ const Map = ({ user }: any) => {
   // bottone "torna alla mia posizione".
   const [isAwayFromUser, setIsAwayFromUser] = useState(false);
 
+  // Clienti selezionabili nel filtro della mappa. Solo quelli con
+  // `clients.show_on_map = true`: un cliente escluso dalla mappa (oggi Amex) non
+  // ha pin da mostrare, quindi offrirlo come filtro darebbe una mappa vuota.
+  // Il criterio sta sul DB — nessun id hardcoded qui: per riattivarlo basta
+  // `update clients set show_on_map = true where id = …`, senza deploy.
+  // NB: le altre letture di `clients` NON filtrano (export supervisor della
+  // dashboard, form "Nuovo Punto Vendita"), perché lì il cliente serve ancora.
   useEffect(() => {
     const loadClients = async () => {
       const { data, error } = await supabase
         .from('clients')
         .select('id, name, logo')
+        .eq('show_on_map', true)
         .order('id', { ascending: true });
       if (!error && data) setClients(data);
     };
@@ -859,10 +867,12 @@ const Map = ({ user }: any) => {
         Math.abs(prev[0] - lat) < 1e-4 && // ~10 metri di tolleranza
         Math.abs(prev[1] - lng) < 1e-4;
 
-      // Questa RPC è COSTOSA (il filtro di visibilità è valutato riga per riga:
-      // ~3,5 s medi con il filtro cliente attivo). Va quindi chiamata solo quando
-      // servono davvero dati nuovi, altrimenti si saturano le connessioni e la
-      // funzione serverless va in timeout.
+      // Questa RPC resta la chiamata più pesante della mappa: va invocata solo
+      // quando servono davvero dati nuovi, altrimenti si saturano le connessioni.
+      // (Dal 2026-07-27 il filtro di visibilità è insiemistico e non più valutato
+      // riga per riga: ~120 ms con filtro cliente attivo, contro i ~1,4 s per
+      // cliente di prima. Vedi supabase/SCHEMA.md → Changelog 2026-07-27 (b).
+      // La logica di dedup qui sotto resta comunque valida e va mantenuta.)
       //
       // Regola 1 — zoom IN a centro invariato: il raggio si restringe, quindi il
       // set già in memoria è un SOVRAINSIEME di quello che serve. Nessuna fetch,
@@ -1255,6 +1265,29 @@ const Map = ({ user }: any) => {
     }
     filtersLoadedRef.current = true;
   }, []);
+
+  // Un cliente può uscire dall'elenco selezionabile (clients.show_on_map = false).
+  // La selezione persistita in localStorage però può contenerlo ancora: senza
+  // questa potatura resterebbe un filtro ATTIVO su un cliente che non ha più la
+  // sua chip → mappa vuota e nessun modo di deselezionarlo dalla UI.
+  // Gira solo a lista clienti caricata (altrimenti azzererebbe la selezione al
+  // primo render) e restituisce `prev` quando non c'è nulla da togliere, così
+  // non innesca un refetch inutile.
+  useEffect(() => {
+    if (clients.length === 0) return;
+    if (!filtersLoadedRef.current) return;
+    setSelectedClientIds((prev) => {
+      if (prev.size === 0) return prev;
+      const allowed = new Set(clients.map((c) => c.id));
+      const next = new Set<number>();
+      let changed = false;
+      prev.forEach((id) => {
+        if (allowed.has(id)) next.add(id);
+        else changed = true;
+      });
+      return changed ? next : prev;
+    });
+  }, [clients]);
 
   useEffect(() => {
     if (!filtersLoadedRef.current) return; // non salvare prima di aver caricato

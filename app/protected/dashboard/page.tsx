@@ -245,12 +245,18 @@ export default function DashboardPage() {
   }, []);
 
   // Clienti visibili all'utente (per la tendina dei prospect). RLS limita a ciò
-  // che l'utente può vedere.
+  // che l'utente può vedere; `show_on_map` esclude in più i clienti che non
+  // compaiono sulla mappa (oggi Amex). I prospect arrivano da
+  // `get_stores_within_radius`, la stessa RPC della mappa, che quei clienti li
+  // esclude già: offrirli qui darebbe una tendina con zero risultati.
+  // NB: la tendina dell'export "Esporta lista negozi" (più sotto) NON filtra —
+  // le estrazioni devono continuare a coprire tutti i clienti.
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase
         .from('clients')
         .select('id, name')
+        .eq('show_on_map', true)
         .order('name', { ascending: true });
       if (!error && data) {
         setVisibleClients(data.map((c: any) => ({ id: c.id, name: c.name })));
