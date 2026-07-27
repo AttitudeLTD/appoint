@@ -854,19 +854,30 @@ const Map = ({ user }: any) => {
       const now = Date.now();
       const prev = lastFetchCenter.current;
       const prevRadius = lastFetchRadiusRef.current;
-      // Duplicato solo se centro E raggio sono praticamente invariati: il raggio
-      // si confronta in modo relativo (±5%) per assorbire il rumore in virgola
-      // mobile di `viewportRadiusMeters()` tra due moveend allo stesso zoom.
+      const sameCenter =
+        prev != null &&
+        Math.abs(prev[0] - lat) < 1e-4 && // ~10 metri di tolleranza
+        Math.abs(prev[1] - lng) < 1e-4;
+
+      // Questa RPC è COSTOSA (il filtro di visibilità è valutato riga per riga:
+      // ~3,5 s medi con il filtro cliente attivo). Va quindi chiamata solo quando
+      // servono davvero dati nuovi, altrimenti si saturano le connessioni e la
+      // funzione serverless va in timeout.
+      //
+      // Regola 1 — zoom IN a centro invariato: il raggio si restringe, quindi il
+      // set già in memoria è un SOVRAINSIEME di quello che serve. Nessuna fetch,
+      // senza limite di tempo. (Prima si rifaceva la query per ottenere meno
+      // dati di quelli che avevamo già.)
+      if (sameCenter && prevRadius != null && effectiveRadius <= prevRadius * 1.05) {
+        return;
+      }
+      // Regola 2 — chiamate ravvicinate identiche (centro e raggio invariati):
+      // tipico di handleSelectLocation che fa il fetch esplicito + il moveend
+      // successivo al flyTo. Throttle a 1,5 s come in origine.
       const sameRadius =
         prevRadius != null &&
         Math.abs(prevRadius - effectiveRadius) <= prevRadius * 0.05;
-      if (
-        prev &&
-        now - lastFetchTsRef.current < 1500 &&
-        Math.abs(prev[0] - lat) < 1e-4 && // ~10 metri di tolleranza
-        Math.abs(prev[1] - lng) < 1e-4 &&
-        sameRadius
-      ) {
+      if (sameCenter && sameRadius && now - lastFetchTsRef.current < 1500) {
         return;
       }
       lastFetchTsRef.current = now;
@@ -1298,6 +1309,22 @@ const Map = ({ user }: any) => {
     [fetchStoresAndLogs]
   );
 
+  // Apertura popup: il `panTo` che centra il pin genera un `moveend` e quindi una
+  // fetch completa dei pin (costosa). Ma i dati non sono cambiati: stiamo solo
+  // ricentrando la vista su un pin GIÀ caricato. Questo flag fa ignorare il
+  // prossimo moveend, risparmiando una RPC da ~3,5 s per ogni scheda aperta.
+  const skipNextMoveFetchRef = useRef(false);
+  const handleMapMove = useCallback(
+    (lat: number, lng: number) => {
+      if (skipNextMoveFetchRef.current) {
+        skipNextMoveFetchRef.current = false;
+        return;
+      }
+      fetchStoresAndLogs(lat, lng);
+    },
+    [fetchStoresAndLogs]
+  );
+
   // ── Deep-link "apri lead" (dalla Dashboard) ────────────────────────────────
   // `/protected?store=<id>&manage=1`: la mappa vola sul pin, ne apre il popup e
   // (con manage=1) apre direttamente il pannello "Gestisci". Riusa StorePopup
@@ -1441,6 +1468,8 @@ const Map = ({ user }: any) => {
               popupopen: () => {
                 const map = mapRef.current;
                 if (!map) return;
+                // Il panTo qui sotto non deve innescare un ricaricamento pin.
+                skipNextMoveFetchRef.current = true;
                 // Il popup si estende verso l'alto dal marker. Centriamo la
                 // mappa SOPRA il marker (~25% dell'altezza visibile) così il
                 // pin risulta nella parte centro-bassa e il popup ha aria.
@@ -1489,6 +1518,8 @@ const Map = ({ user }: any) => {
               popupopen: () => {
                 const map = mapRef.current;
                 if (!map) return;
+                // Il panTo qui sotto non deve innescare un ricaricamento pin.
+                skipNextMoveFetchRef.current = true;
                 const targetLatLng = L.latLng(storeCoordinates[0], storeCoordinates[1]);
                 const z = map.getZoom();
                 const targetPoint = map.project(targetLatLng, z);
@@ -1805,7 +1836,7 @@ const Map = ({ user }: any) => {
             zoomControl={false}
           >
             <MapController newCenter={selectedLocation} />
-            <MapEventHandler onMapMove={fetchStoresAndLogs} />
+            <MapEventHandler onMapMove={handleMapMove} />
             {Array.isArray(coord) && (
               <UserLocationTracker
                 userCoord={coord as [number, number]}
