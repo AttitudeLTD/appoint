@@ -3,6 +3,8 @@
 > **Fonte di verità** dello schema del database Supabase del progetto.
 > Aggiornare questo file **ad ogni cambio di schema** (insieme alla migration corrispondente in [`./migrations/`](./migrations/)).
 >
+> _2026-07-27 (b) — **scalabilità mappa**: `get_stores_within_radius` riscritta con filtro di visibilità **insiemistico** (lo scope del chiamante è risolto una volta per chiamata, non riga per riga con `user_can_see_store`) e promossa a **SECURITY DEFINER** per eliminare la doppia valutazione introdotta dalla RLS di `stores`. Firma argomenti e TABLE di ritorno **invariate**; nessuna regola di autorizzazione modificata (`user_can_see_store` / `user_can_see_client` restano intatte e continuano a reggere le RLS). Misure su produzione (~14,6k store): filtro AiCall 1.400 → 135 ms, Amex 1.390 → 110 ms, Scalapay 300 → 63 ms, default mappa 121 → 48 ms. Migration: [`migrations/20260727150000_gswr_set_based_visibility.sql`](./migrations/20260727150000_gswr_set_based_visibility.sql) (rollback nel file `…_rollback.sql` affiancato)._
+>
 > _2026-07-14 — **diagnostica errori**: nuova tabella **`public.error_logs`** (message, stack, digest, source, url, user_id, user_email, user_agent, extra). Popolata lato client da `utils/error-logger.ts` (dai due error boundary `app/error.tsx`/`app/global-error.tsx` e dal listener globale `components/ErrorListener.tsx`). RLS: **INSERT aperto** (anche `anon`, gli errori possono capitare pre-login); **SELECT solo ai `supervisor`**. Migration: [`migrations/20260714120000_error_logs_table.sql`](./migrations/20260714120000_error_logs_table.sql)._
 >
 > _2026-07-02 (c) — **PROGETTO AICALL, lock del pin all'esito**: aggiunto `manage_form.submit.lock_pin = true` al workflow del cliente AiCall (`client_workflows`). Al salvataggio dell'esito il pin viene "preso in carico" → `stores.status = 'in_progress'` con log del modificatore, **senza** dialog di conferma e **senza** contare nel limite dei 10 pin. Effetto: il pin risulta **esitato** (icona in lavorazione), l'**autore** può riaprirlo e ri-esitare, gli **altri agenti** lo vedono **bloccato** ("trattativa in corso"). Solo frontend + dato workflow (nessuna modifica di schema); i 14 esiti già presenti sono stati backfillati a `in_progress` col rispettivo agente come modificatore._
@@ -575,7 +577,7 @@ where id = '<uuid>';
 | `convert_coordinates_to_location()`   | —                                                                               | trigger  | Trasforma il campo testuale `stores.coordinates` (`"lng,lat"`) nel punto PostGIS `stores.location`.                                                        |
 | `user_can_see_store(p_user_id uuid, p_store_id bigint)`     | `uuid, bigint`                                              | `boolean` | **SECURITY DEFINER / STABLE**. Predicato di visibilità sul negozio. Considera `user_store_access`, `user_client_access` ↔ `stores.client_id` **e** `user_client_access` ↔ `store_clients.client_id`. Usato dalla RLS di `stores` / `store_clients` e dalla RPC `get_stores_within_radius`. |
 | `user_can_see_client(p_user_id uuid, p_client_id smallint)` | `uuid, smallint`                                            | `boolean` | **SECURITY DEFINER / STABLE**. Predicato di visibilità sul cliente. Considera `user_client_access` **e** la presenza del cliente tra le associazioni (`stores.client_id` o `store_clients`) di uno store visibile via `user_store_access`. Usato dalla RLS di `clients` e `client_workflows`. |
-| `get_stores_within_radius(...)`       | `lat double precision, lng double precision, radius double precision, p_client_id bigint, p_limit integer, p_client_ids bigint[]` | TABLE    | Ritorna negozi entro un raggio (in metri) da un punto, filtrati per cliente **e** per scope di visibilità del chiamante (`auth.uid()`). Filtro cliente: `p_client_ids` (array, multi-select; ha precedenza) **oppure** `p_client_id` (singolo, legacy); match su `stores.client_id` **o** `store_clients.client_id`. La TABLE di ritorno include `data_setup` e `pi` (dal 2026-07-02), così arrivano al popup del pin e alla schermata "Gestisci". |
+| `get_stores_within_radius(...)`       | `lat double precision, lng double precision, radius double precision, p_client_id bigint, p_limit integer, p_client_ids bigint[]` | TABLE    | **SECURITY DEFINER / STABLE** (dal 2026-07-27). Ritorna negozi entro un raggio (in metri) da un punto, filtrati per cliente **e** per scope di visibilità del chiamante (`auth.uid()`). Filtro cliente: `p_client_ids` (array, multi-select; ha precedenza) **oppure** `p_client_id` (singolo, legacy); match su `stores.client_id` **o** `store_clients.client_id`. La TABLE di ritorno include `data_setup` e `pi` (dal 2026-07-02), così arrivano al popup del pin e alla schermata "Gestisci". Il filtro di visibilità è **insiemistico** — equivalente a `user_can_see_store` ma risolto una volta per chiamata; vedi il [Changelog 2026-07-27 (b)](#2026-07-27-b--scalabilit%C3%A0-di-get_stores_within_radius). EXECUTE: solo `authenticated` e `service_role`. |
 | `get_client_stores_bounds(p_client_id bigint)` | `bigint`                                                              | TABLE (`n, min_lat, min_lng, max_lat, max_lng`) | **SECURITY DEFINER / STABLE**. Conteggio + bounding box dei pin **visibili al chiamante** per UN cliente (filtrato da `user_can_see_store`). _Variante singola; la mappa usa la versione array._ |
 | `get_clients_stores_bounds(p_client_ids bigint[])` | `bigint[]`                                                        | TABLE (`n, min_lat, min_lng, max_lat, max_lng`) | **SECURITY DEFINER / STABLE**. Come sopra ma per un **INSIEME** di clienti (match su `stores.client_id` **o** `store_clients.client_id`). Usata dalla mappa per il fit-bounds automatico (dezoom) sulla selezione multi-cliente. |
 | `getstoreswithinradius(...)`          | `lat, lng, radius`                                                              | TABLE    | _Legacy / deprecato_ — versione precedente di `get_stores_within_radius`.                                                                                  |
@@ -684,6 +686,79 @@ Vedi [`./migrations/README.md`](./migrations/README.md) per la convenzione di na
 ---
 
 ## Changelog
+
+### 2026-07-27 (b) — Scalabilità di `get_stores_within_radius`
+
+**Problema misurato** (produzione, ~14,6k store, utente `restricted` con grant `{1,2,5}`).
+Il predicato di visibilità era la funzione plpgsql `user_can_see_store(auth.uid(), s.id)`
+valutata **riga per riga**, quindi con costo `O(N_store_totali)` invece di
+`O(N_store_visibili)`. Il piano mostrava `Rows Removed by Filter: 14395`, cioè
+l'intero indice GIST percorso per ogni chiamata. Tre difetti sovrapposti:
+
+1. **Doppia valutazione.** La funzione era `SECURITY INVOKER`, quindi la policy RLS
+   `Read stores via visibility scope` ri-applicava `user_can_see_store` **oltre** al
+   filtro esplicito già presente nel corpo → due chiamate plpgsql per riga:
+   ```
+   Filter: (user_can_see_store($0, id) AND user_can_see_store(…jwt…, id) AND …)
+   ```
+2. **`clients` in Seq Scan dentro Nested Loop**, una volta per pin: anche `clients` è
+   RLS-filtrata (`user_can_see_client`) e la tabella **non era mai stata analizzata**
+   (`reltuples = -1`) → il planner stimava 263 righe su 5.
+3. Predicato plpgsql non inlineabile → nessuna spinta verso l'indice.
+
+**Intervento.** Lo scope del chiamante viene risolto **una volta per chiamata**
+(`visibility_scope`, array dei `user_client_access`, presenza di `user_store_access`,
+array dei clienti visibili per il join nome/logo); il predicato per riga diventa un test
+di appartenenza ad array + lookup su PK. La funzione passa a **SECURITY DEFINER** per
+togliere la doppia valutazione, con `search_path` fissato, fail-closed su
+`auth.uid() is null` e su utente assente da `public.users`, ed EXECUTE revocato a
+`public`/`anon`. Aggiunto `analyze` su `clients` / `stores`.
+
+**Cosa NON cambia.** Firma argomenti, default dei parametri e TABLE di ritorno sono
+**identici** (nessun impatto sulla schema cache di PostgREST, `components/map.tsx` e
+`app/protected/dashboard/page.tsx` non toccati). `user_can_see_store` e
+`user_can_see_client` non sono state modificate e restano il predicato delle RLS.
+Il LEFT JOIN su `clients` continua a restituire `client_name`/`client_logo` **NULL**
+quando il cliente primario non è visibile al chiamante (comportamento riprodotto
+esplicitamente, dato che SECURITY DEFINER disattiva la RLS nel corpo).
+
+**Verifiche eseguite prima del commit.**
+
+- Parità **esaustiva** su tutti i 14.608 store geolocalizzati, per entrambi i profili di
+  visibilità presenti in produzione (`restricted {1,2,5}` → 74 utenti;
+  `restricted {1,2,3,4,5}` → 3 utenti): l'insieme di id restituito dalla RPC coincide
+  **esattamente** con `user_can_see_store`.
+- Matrice 77 utenti × 8 scenari (nessun filtro, singolo cliente, multi-cliente,
+  cliente riservato, default mappa): i fingerprint si raggruppano **esattamente** sui
+  due profili di grant → nessun utente devia.
+- Fail-closed verificato: chiamata senza JWT e con `sub` inesistente → 0 righe.
+- Ramo `user_store_access` (0 righe in produzione, quindi non coperto dai dati reali)
+  testato dentro una transazione annullata: grant su singolo store di un cliente non
+  concesso → lo store compare, sia senza filtro sia filtrando su quel cliente.
+- `client_name`/`client_logo` coerenti con `user_can_see_client` su tutti gli store.
+- `tsc --noEmit` e `next build` verdi.
+
+**Risultato.**
+
+| Scenario (raggio Italia, `p_limit` 2000) | Prima | Dopo | Δ |
+| ---------------------------------------- | ----- | ---- | - |
+| `p_client_id = 5` (AiCall)               | 1.400 ms | 135 ms | −90% |
+| `p_client_id = 2` (Amex)                 | 1.390 ms | 110 ms | −92% |
+| `p_client_id = 1` (Scalapay)             |   300 ms |  63 ms | −79% |
+| default mappa (2 km / 250 pin)           |   121 ms |  48 ms | −60% |
+
+Caricamento mappa completo (la mappa lancia una RPC per cliente selezionato in
+parallelo, `{1,2,5}`): da ~3,1 s a ~0,3 s di lavoro DB.
+
+**Rollback:** `migrations/20260727150000_gswr_set_based_visibility_rollback.sql`
+(ripristina il corpo precedente; nessun dato né schema toccati).
+
+**Residuo noto.** Con filtro cliente attivo la `ORDER BY … <->` percorre comunque tutto
+l'indice GIST (`Rows Removed by Filter: 13527`) e il 71% dei buffer restanti viene dalla
+sotto-query correlata `exists(store_clients)` del filtro cliente, che usa
+`idx_store_clients_store_id` (solo `store_id`) e deve poi leggere l'heap per `client_id`.
+`store_clients_pkey (store_id, client_id)` renderebbe l'accesso index-only e rende
+`idx_store_clients_store_id` ridondante. Non affrontato in questa migration.
 
 ### 2026-07-27 — Ricerca per nome punto vendita
 
