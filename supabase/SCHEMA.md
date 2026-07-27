@@ -165,6 +165,8 @@ Il JSON descrive `primary_actions` (bottoni in cima), una lista di `sections` co
 
 **Tipi di `primary_actions`:** `directions` · `phone` · `email` · `external_link` (con `url`) · `status_change` (con `status`).
 
+> ℹ️ Per il tipo **`phone`** il numero **non va scritto nel `label`**: il componente accoda da solo `stores.phone` all'etichetta del JSON (`"Chiama"` → `"Chiama 0635072117"`). Se il punto vendita non ha numero l'etichetta resta quella del JSON.
+
 **Esempio minimale per un cliente nuovo:**
 
 ```json

@@ -855,7 +855,12 @@ const StorePopup: React.FC<StorePopupProps> = ({
               : `Chiama ${store.phone}`
           }
         >
-          <Phone className='mr-2' /> Chiama
+          {/* Il numero è mostrato in etichetta esattamente come sta a DB
+              (`stores.phone`), senza normalizzazioni: oggi sono cifre nude
+              (es. "Chiama 0635072117"), ma un eventuale "+39…" verrebbe reso
+              tale e quale. Senza numero l'etichetta resta "Chiama" e il
+              bottone continua a essere grigio e disabilitato, come prima. */}
+          <Phone className='mr-2' /> {store.phone ? `Chiama ${store.phone}` : 'Chiama'}
         </Button>
 
         <Sheet open={manageOpen} onOpenChange={setManageOpen}>

@@ -167,6 +167,20 @@ export const DynamicManageForm: React.FC<Props> = ({
     [store, handleStatusChangeAttempt]
   );
 
+  // Etichetta del bottone di una primary action. Per il tipo `phone` accoda il
+  // numero effettivamente presente sul punto vendita → "Chiama 0635072117".
+  // L'etichetta base continua ad arrivare dal JSON del workflow
+  // (`client_workflows.workflow.manage_form.primary_actions[].label`), quindi
+  // vale per ogni cliente presente e futuro senza migrare i dati.
+  // Il numero è reso come sta a DB (`stores.phone`), senza normalizzazioni.
+  // Senza numero l'etichetta resta quella del JSON e il comportamento del
+  // bottone non cambia (il click era già inerte: vedi case 'phone' sopra).
+  const actionLabel = useCallback(
+    (a: DynamicAction) =>
+      a.type === 'phone' && store.phone ? `${a.label} ${store.phone}` : a.label,
+    [store.phone]
+  );
+
   // ── Photo upload ──────────────────────────────────────────────────────────
 
   const uploadPhoto = useCallback(
@@ -624,7 +638,7 @@ export const DynamicManageForm: React.FC<Props> = ({
                 onClick={() => handleAction(a)}
               >
                 {renderIcon(a.icon)}
-                {a.label}
+                {actionLabel(a)}
               </Button>
             ))}
         </div>
