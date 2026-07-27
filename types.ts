@@ -35,6 +35,12 @@ export interface Store {
   client_name?: string | null;
   client_logo?: string | null; // storage path in bucket client-logos
   /**
+   * `clients.editing_policy` del cliente primario ('exclusive' | 'shared').
+   * Popolato dalla mappa (dalla lista clienti già in memoria) e dalla RPC
+   * `get_store_for_manage`. Assente = comportamento storico 'exclusive'.
+   */
+  editing_policy?: string | null;
+  /**
    * Tutti i client a cui lo store è associato via `store_clients` (N:N).
    * Include sempre `client_id` (cliente primario). Popolato lato applicativo
    * dove serve (es. popup del pin); non sempre presente nei payload di mappa.

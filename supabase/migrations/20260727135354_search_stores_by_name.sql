@@ -50,7 +50,7 @@
 -- Ranking: prima i match per prefisso ("Esselunga …" prima di "Bar Esselunga"),
 --   poi i nomi più corti (più specifici), poi alfabetico. Deterministico.
 --
--- Rollback: ../rollback/20260727170000_search_stores_by_name_rollback.sql
+-- Rollback: ../rollback/20260727135354_search_stores_by_name_rollback.sql
 --   (drop della funzione; il frontend torna alla query diretta — che però
 --    resta affetta dai tre difetti sopra).
 -- =============================================================================

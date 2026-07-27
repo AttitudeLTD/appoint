@@ -1,5 +1,5 @@
 -- =============================================================================
--- ROLLBACK di 20260727170000_search_stores_by_name.sql
+-- ROLLBACK di 20260727135354_search_stores_by_name.sql
 -- Date: 2026-07-27
 -- Author: egidiosalinaro
 --

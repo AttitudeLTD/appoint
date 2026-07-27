@@ -1,0 +1,23 @@
+-- =============================================================================
+-- ROLLBACK di 20260727142706_clients_editing_policy.sql
+-- NON è una migration: non va applicata da `supabase db push`.
+--
+-- ── A) RIPORTARE AiCall AL COMPORTAMENTO STORICO (caso normale) ──────────────
+--    Una riga, effetto immediato, nessun DDL, nessun deploy:
+--
+--        update public.clients set editing_policy = 'exclusive' where id = 5;
+--
+--    Da quel momento i pin AiCall tornano "di proprietà" del primo agente che li
+--    ha esitati. Vale anche come interruttore per qualsiasi altro cliente.
+--
+-- ── B) RIMUOVERE DEL TUTTO LA COLONNA ────────────────────────────────────────
+--    Solo dopo aver revertito il frontend, che la legge in
+--    `components/map.tsx` e `app/protected/dashboard/page.tsx`:
+--
+--        alter table public.clients drop constraint if exists clients_editing_policy_check;
+--        alter table public.clients drop column if exists editing_policy;
+--
+--    Non necessario nella pratica: con default 'exclusive' la colonna è inerte.
+-- =============================================================================
+
+update public.clients set editing_policy = 'exclusive' where id = 5;

@@ -29,6 +29,7 @@ import { getClientLogoUrl } from '@/utils/client-logo';
 import { getMyLoc, parseCoords } from '@/utils/navigation';
 import { effectiveStoreStatus } from '@/utils/store-status';
 import { useStoreActions, StoreActionDialogs } from './store-actions';
+import { isLockedForMe } from '@/utils/editing-policy';
 import { generateMailBody, statuses } from '@/utils/utils';
 import {
   alreadyClientPin,
@@ -505,7 +506,9 @@ const Map = ({ user }: any) => {
   const [selectedLocation, setSelectedLocation] = useState<[number, number]>();
   const [showGeoMessage, setShowGeoMessage] = useState(false);
   const [governanceLevel, setGovernanceLevel] = useState<GovernanceLevel>('am'); // populated from users.role
-  const [clients, setClients] = useState<{ id: number; name: string; logo?: string | null }[]>([]);
+  const [clients, setClients] = useState<
+    { id: number; name: string; logo?: string | null; editing_policy?: string | null }[]
+  >([]);
   // Multi-select: insieme degli id cliente selezionati. Vuoto = "Tutti".
   const [selectedClientIds, setSelectedClientIds] = useState<Set<number>>(new Set());
   const [selectedTiers, setSelectedTiers] = useState<Set<string>>(new Set());
@@ -544,6 +547,15 @@ const Map = ({ user }: any) => {
   // deps → la callback non si ricrea ad ogni cambio filtro.
   const selectedClientIdsRef = useRef<number[]>([]);
   selectedClientIdsRef.current = Array.from(selectedClientIds);
+
+  // Policy di editing per cliente (clients.editing_policy). Letta dentro
+  // `fetchStoresAndLogs` da un ref, come il filtro cliente: così la callback non
+  // si ricrea quando la lista clienti arriva. Nessuna query in più — `clients`
+  // era già caricata al mount.
+  const clientPolicyRef = useRef<Record<number, string>>({});
+  clientPolicyRef.current = Object.fromEntries(
+    clients.map((c) => [c.id, c.editing_policy ?? 'exclusive'])
+  );
 
   // Ultimo centro usato per la fetch dei pin (aggiornato dentro fetchStoresAndLogs)
   const lastFetchCenter = useRef<[number, number] | null>(null);
@@ -584,7 +596,7 @@ const Map = ({ user }: any) => {
     const loadClients = async () => {
       const { data, error } = await supabase
         .from('clients')
-        .select('id, name, logo')
+        .select('id, name, logo, editing_policy')
         .eq('show_on_map', true)
         .order('id', { ascending: true });
       if (!error && data) setClients(data);
@@ -806,9 +818,20 @@ const Map = ({ user }: any) => {
 
         const storesWithLogs = storesList.map((store) => {
           const modifierId = modifierIdByStore[store.id];
+          const policy = clientPolicyRef.current[store.client_id as number];
           return {
             ...store,
-            modifiedByOtherUser: modifierId != null,
+            editing_policy: policy,
+            // Unico punto in cui si decide se il pin è bloccato. La regola sta
+            // in `utils/editing-policy.ts`, parametrizzata dal cliente: qui non
+            // c'è nessun riferimento a un cliente specifico.
+            // `modifierId` continua a essere calcolato anche in 'shared' → AM e
+            // supervisor mantengono l'indicazione "gestito da X".
+            modifiedByOtherUser: isLockedForMe({
+              policy,
+              modifierId,
+              myId: user.id,
+            }),
             modifierName: modifierId ? modifierNameById[modifierId] ?? '' : '',
             modifierId,
           };

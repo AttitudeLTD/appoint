@@ -125,6 +125,9 @@ const StorePopup: React.FC<StorePopupProps> = ({
   const [nonExistentReason, setNonExistentReason] = useState('');
   const [nonExistentText, setNonExistentText] = useState('');
   const [existingOutcome, setExistingOutcome] = useState<any>(null);
+  // true se `existingOutcome` è l'esito salvato DALL'UTENTE CORRENTE; false se
+  // è una precompilazione presa dall'esito di un altro agente (policy 'shared').
+  const [outcomeIsMine, setOutcomeIsMine] = useState(true);
   const [currentUserId, setCurrentUserId] = useState('');
   // Storico esiti del pin (tutti gli agenti): letto da store_visit_outcomes.
   const [outcomeHistory, setOutcomeHistory] = useState<
@@ -248,6 +251,8 @@ const StorePopup: React.FC<StorePopupProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setCurrentUserId(user.id);
+      // Esito PROPRIO dell'utente: se c'è, il form riparte da lì ed è a tutti
+      // gli effetti "già salvato".
       const { data } = await supabase
         .from('store_visit_outcomes')
         .select('outcome_data')
@@ -255,8 +260,33 @@ const StorePopup: React.FC<StorePopupProps> = ({
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
-      if (data) setExistingOutcome(data.outcome_data);
+        .maybeSingle();
+      if (data) {
+        setExistingOutcome(data.outcome_data);
+        setOutcomeIsMine(true);
+        return;
+      }
+
+      // Nessun esito proprio. Con `editing_policy = 'shared'` il punto vendita è
+      // lavorabile da chiunque: si PRECOMPILA il form con l'ultimo esito
+      // registrato da un qualsiasi agente, così chi riapre continua da dove si
+      // era arrivati invece di ripartire da un form vuoto.
+      // `outcomeIsMine` resta false → il bottone di salvataggio non parte nello
+      // stato "Salvato": quei valori non li ho ancora scritti io.
+      // Con 'exclusive' (default) qui non ci si arriva mai per un pin di un
+      // altro agente: la mappa non espone nemmeno il pannello "Gestisci".
+      if (store.editing_policy !== 'shared') return;
+      const { data: last } = await supabase
+        .from('store_visit_outcomes')
+        .select('outcome_data')
+        .eq('store_id', store.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (last) {
+        setExistingOutcome(last.outcome_data);
+        setOutcomeIsMine(false);
+      }
     };
 
     // Storico esiti del pin: tutti gli esiti (ogni agente) salvati su questo store.
@@ -1022,6 +1052,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
                 userId={currentUserId}
                 form={clientWorkflow.manage_form}
                 existingOutcome={existingOutcome}
+                prefillOnly={!outcomeIsMine}
                 handleStatusChangeAttempt={handleStatusChangeAttempt}
                 storeStatuses={storeStatuses}
                 onEsitoLock={onEsitoLock}

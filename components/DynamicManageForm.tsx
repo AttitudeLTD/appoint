@@ -70,6 +70,12 @@ interface Props {
    * senza rifare alcuna fetch. Chiamata dopo un salvataggio andato a buon fine.
    */
   onOutcomeSaved?: (storeId: number, esito: string | null) => void;
+  /**
+   * `existingOutcome` è solo una PRECOMPILAZIONE (esito di un altro agente,
+   * clienti con `editing_policy = 'shared'`), non un esito già salvato da me:
+   * i valori popolano il form ma il bottone non parte nello stato "Salvato".
+   */
+  prefillOnly?: boolean;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -116,21 +122,26 @@ export const DynamicManageForm: React.FC<Props> = ({
   storeStatuses,
   onEsitoLock,
   onOutcomeSaved,
+  prefillOnly = false,
 }) => {
   const supabase = createClient();
   const [values, setValues] = useState<FormValues>(existingOutcome ?? {});
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(!!existingOutcome);
+  const [saved, setSaved] = useState(!!existingOutcome && !prefillOnly);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  // Sync se l'outcome esistente arriva in ritardo (fetch async lato parent)
+  // Sync se l'outcome esistente arriva in ritardo (fetch async lato parent).
+  // NB: `saved` deve seguire `prefillOnly` anche qui — è il percorso NORMALE,
+  // perché il parent carica l'esito in modo asincrono. Se qui si forzasse
+  // `true`, una precompilazione presa dall'esito di un altro agente farebbe
+  // partire il bottone come "Salvato" pur non avendo salvato nulla.
   useEffect(() => {
     if (existingOutcome) {
       setValues(existingOutcome);
-      setSaved(true);
+      setSaved(!prefillOnly);
     }
-  }, [existingOutcome]);
+  }, [existingOutcome, prefillOnly]);
 
   const setField = useCallback((id: string, v: unknown) => {
     setValues((prev) => ({ ...prev, [id]: v }));

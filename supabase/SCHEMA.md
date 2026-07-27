@@ -3,7 +3,9 @@
 > **Fonte di verità** dello schema del database Supabase del progetto.
 > Aggiornare questo file **ad ogni cambio di schema** (insieme alla migration corrispondente in [`./migrations/`](./migrations/)).
 >
-> _2026-07-27 (d) — **ricerca punti vendita + colore pin**: nuova RPC **`search_stores_by_name(p_query, p_limit)`** (SECURITY DEFINER) per la barra di ricerca della mappa: la query diretta `from('stores').ilike(...)` faceva **Seq Scan** (706 ms, 132.737 buffer su ~14,6k store) perché la RLS inietta `user_can_see_store` per riga e l'indice trigram non veniva mai usato; inoltre non applicava `show_on_map` e restituiva `location` come WKB esadecimale, illeggibile per `parseCoords`. Ora: Bitmap Index Scan, 42 ms. Migration: [`migrations/20260727170000_search_stores_by_name.sql`](./migrations/20260727170000_search_stores_by_name.sql). Nuovo modulo condiviso **`utils/store-status.ts`** (`effectiveStoreStatus`, `STATUS_CARD_UI`): mappa e Dashboard partono dallo stesso status canonico, quindi il pin assume il colore del bucket dell'esito. Solo frontend, nessuna modifica di schema._
+> _2026-07-27 (e) — **editing policy per cliente**: nuova colonna **`clients.editing_policy`** (`text not null default 'exclusive'`, CHECK `in ('exclusive','shared')`). `'shared'` per **AiCall** (id 5): qualsiasi agente autorizzato può riaprire un punto vendita già esitato e registrarne uno proprio; gli altri clienti restano `'exclusive'` (il primo agente mantiene il controllo). **Nessuna modifica alle RLS**: l'esclusività non è mai stata imposta dal DB, è una regola di interfaccia — vive tutta in `utils/editing-policy.ts → isLockedForMe`, usata sia dalla mappa sia dalla Dashboard. Nuova RPC **`get_store_for_manage(p_store_id)`** per aprire la scheda da fuori dalla mappa. Migration: [`migrations/20260727142706_clients_editing_policy.sql`](./migrations/20260727142706_clients_editing_policy.sql)._
+>
+> _2026-07-27 (d) — **ricerca punti vendita + colore pin**: nuova RPC **`search_stores_by_name(p_query, p_limit)`** (SECURITY DEFINER) per la barra di ricerca della mappa: la query diretta `from('stores').ilike(...)` faceva **Seq Scan** (706 ms, 132.737 buffer su ~14,6k store) perché la RLS inietta `user_can_see_store` per riga e l'indice trigram non veniva mai usato; inoltre non applicava `show_on_map` e restituiva `location` come WKB esadecimale, illeggibile per `parseCoords`. Ora: Bitmap Index Scan, 42 ms. Migration: [`migrations/20260727135354_search_stores_by_name.sql`](./migrations/20260727135354_search_stores_by_name.sql). Nuovo modulo condiviso **`utils/store-status.ts`** (`effectiveStoreStatus`, `STATUS_CARD_UI`): mappa e Dashboard partono dallo stesso status canonico, quindi il pin assume il colore del bucket dell'esito. Solo frontend, nessuna modifica di schema._
 >
 > _2026-07-27 (c) — **cliente escluso dalla mappa**: nuova colonna **`clients.show_on_map`** (`boolean`, not null, default `true`). Se `false`, `get_stores_within_radius` non restituisce i punti vendita del cliente → nessun pin su mappa e "Prospect vicini". Impostata a `false` per **Amex** (id 2, 2.079 store tutti nell'area di Milano). È una configurazione di **visualizzazione, non un permesso**: `user_can_see_store` / `user_can_see_client`, `user_client_access` e le RLS restano identiche, quindi storico, esiti ed export CSV supervisor sono intatti. Migration: [`migrations/20260727131525_clients_show_on_map.sql`](./migrations/20260727131525_clients_show_on_map.sql)._
 >
@@ -111,6 +113,7 @@ Anagrafica dei clienti business (es. brand committenti). Ogni `store` appartiene
 | `created_at` | `timestamptz` | YES  | `now()`                              |                            |
 | `logo`       | `text`        | YES  | —                                    | Path in bucket `client-logos` |
 | `show_on_map` | `boolean` | NO | `true` | Se `false`, i punti vendita del cliente **non vengono disegnati sulla mappa**: `get_stores_within_radius` li esclude, e il cliente sparisce dalla tendina filtro della mappa e da quella di "Prospect vicini". Configurazione di **visualizzazione, non un permesso**: non incide su `user_can_see_store` / `user_can_see_client`, RLS, storico, esiti o export. `false` per **Amex** (id 2). Riattivare = `update clients set show_on_map = true where id = …` (nessun deploy). |
+| `editing_policy` | `text` | NO | `'exclusive'` | CHECK `in ('exclusive','shared')`. `'exclusive'`: il primo agente che esita mantiene il controllo del punto vendita (per gli altri il pin risulta "trattativa in corso" e non espone "Gestisci"). `'shared'`: qualunque agente autorizzato può riaprirlo e registrare un proprio esito. **Regola di interfaccia, non di autorizzazione**: le RLS non cambiano. `'shared'` per **AiCall** (id 5). |
 | `auto_grant_new_users` | `boolean` | NO | `true` | Se `false` il cliente è **riservato**: non concesso automaticamente ai nuovi utenti (`handle_new_user`) né a tutti alla creazione (`grant_new_client_to_all_users`); grant solo manuali via `user_client_access`. `false` per i clienti maintenance (id 3, 4). |
 
 **RLS:** lettura `authenticated` vincolata a `public.user_can_see_client(auth.uid(), id)`.
@@ -585,6 +588,7 @@ where id = '<uuid>';
 | `user_can_see_store(p_user_id uuid, p_store_id bigint)`     | `uuid, bigint`                                              | `boolean` | **SECURITY DEFINER / STABLE**. Predicato di visibilità sul negozio. Considera `user_store_access`, `user_client_access` ↔ `stores.client_id` **e** `user_client_access` ↔ `store_clients.client_id`. Usato dalla RLS di `stores` / `store_clients` e dalla RPC `get_stores_within_radius`. |
 | `user_can_see_client(p_user_id uuid, p_client_id smallint)` | `uuid, smallint`                                            | `boolean` | **SECURITY DEFINER / STABLE**. Predicato di visibilità sul cliente. Considera `user_client_access` **e** la presenza del cliente tra le associazioni (`stores.client_id` o `store_clients`) di uno store visibile via `user_store_access`. Usato dalla RLS di `clients` e `client_workflows`. |
 | `get_stores_within_radius(...)`       | `lat double precision, lng double precision, radius double precision, p_client_id bigint, p_limit integer, p_client_ids bigint[]` | TABLE    | **SECURITY DEFINER / STABLE** (dal 2026-07-27). Ritorna negozi entro un raggio (in metri) da un punto, filtrati per cliente **e** per scope di visibilità del chiamante (`auth.uid()`). Filtro cliente: `p_client_ids` (array, multi-select; ha precedenza) **oppure** `p_client_id` (singolo, legacy); match su `stores.client_id` **o** `store_clients.client_id`. La TABLE di ritorno include `data_setup` e `pi` (dal 2026-07-02), così arrivano al popup del pin e alla schermata "Gestisci". Il filtro di visibilità è **insiemistico** — equivalente a `user_can_see_store` ma risolto una volta per chiamata; vedi il [Changelog 2026-07-27 (b)](#2026-07-27-b--scalabilit%C3%A0-di-get_stores_within_radius). EXECUTE: solo `authenticated` e `service_role`. |
+| `get_store_for_manage(p_store_id bigint)` | `bigint` | TABLE (come `get_stores_within_radius` + `editing_policy`) | **SECURITY DEFINER / STABLE**. Carica UN punto vendita per aprire la scheda "Gestisci" fuori dalla mappa (Dashboard). Ritorna `ST_AsText(location)`, non il WKB grezzo. Applica il predicato di visibilità ma **non** `show_on_map`: dallo storico si deve poter riaprire anche una lead di un cliente non mappato. Espone `clients.editing_policy` del cliente primario. |
 | `search_stores_by_name(p_query text, p_limit integer)` | `text, integer` | TABLE (`id, name, address, comune, provincia, location`) | **SECURITY DEFINER / STABLE**. Ricerca punti vendita per ragione sociale, per la barra di ricerca della mappa. Stesso predicato di visibilità insiemistico di `get_stores_within_radius` + filtro `clients.show_on_map`. Minimo 2 caratteri, cap risultati a 20, wildcard LIKE neutralizzati lato server. Ritorna `ST_AsText(location)` (`POINT(lng lat)`), non il WKB grezzo. Ranking: prefisso, poi nome più corto, poi alfabetico. |
 | `get_client_stores_bounds(p_client_id bigint)` | `bigint`                                                              | TABLE (`n, min_lat, min_lng, max_lat, max_lng`) | **SECURITY DEFINER / STABLE**. Conteggio + bounding box dei pin **visibili al chiamante** per UN cliente (filtrato da `user_can_see_store`). _Variante singola; la mappa usa la versione array._ |
 | `get_clients_stores_bounds(p_client_ids bigint[])` | `bigint[]`                                                        | TABLE (`n, min_lat, min_lng, max_lat, max_lng`) | **SECURITY DEFINER / STABLE**. Come sopra ma per un **INSIEME** di clienti (match su `stores.client_id` **o** `store_clients.client_id`). Usata dalla mappa per il fit-bounds automatico (dezoom) sulla selezione multi-cliente. |
@@ -694,6 +698,76 @@ Vedi [`./migrations/README.md`](./migrations/README.md) per la convenzione di na
 ---
 
 ## Changelog
+
+### 2026-07-27 (e) — `clients.editing_policy`: lead condivisi per AiCall
+
+**Requisito.** Per AiCall, dopo il primo esito qualsiasi agente autorizzato deve
+poter riaprire il punto vendita e modificarne gli esiti. Per tutti gli altri
+clienti il comportamento resta quello storico: il primo agente che esita mantiene
+il controllo.
+
+**Dove veniva presa la decisione (una sola volta, in un solo punto).**
+`components/map.tsx`, dentro `fetchStoresAndLogs`:
+
+```js
+const otherLog = (logsByStore[store.id] ?? []).find((l) => l.modifier !== user.id);
+…
+modifiedByOtherUser: modifierId != null
+```
+
+e poi nel rendering del marker: se `modifiedByOtherUser` è vero, **`StorePopup`
+non viene proprio renderizzato** — al suo posto un popup di sola lettura. Il lock
+quindi **non è mai stato un permesso**: è l'assenza dell'interfaccia. Il database
+non lo ha mai imposto (la policy UPDATE di `stores` è `user_can_see_store`, senza
+alcun controllo di proprietà).
+
+**Soluzione.** Nuova colonna `clients.editing_policy` (`'exclusive'` default |
+`'shared'`), e un unico helper condiviso:
+
+```ts
+// utils/editing-policy.ts
+export function isLockedForMe({ policy, modifierId, myId }) {
+  if (policy === 'shared') return false;
+  return modifierId != null && modifierId !== myId;
+}
+```
+
+Nessun riferimento a un cliente specifico da nessuna parte del codice: per un
+cliente nuovo basta impostare la colonna, senza deploy.
+
+| Superficie | Come applica la regola |
+| ---------- | ---------------------- |
+| Mappa | `clients` era già in memoria → `clientPolicyRef`, **zero query aggiuntive**. Una riga: `modifiedByOtherUser: isLockedForMe(...)` |
+| Dashboard | La scheda aperta dallo storico applica lo stesso helper; la policy arriva da `get_store_for_manage` |
+
+`modifierId` continua a essere calcolato anche in `'shared'` → AM e supervisor
+mantengono l'indicazione "gestito da X". Cambia solo se questo **blocca** o no.
+
+**Nessuna modifica alle RLS.** `store_visit_outcomes` ha già UNIQUE
+`(store_id, user_id)` e UPDATE limitato al proprio record: in `'shared'` l'agente
+B **scrive la propria riga** senza sovrascrivere quella di A, e lo storico esiti
+del pin resta completo. L'esito "corrente" del negozio è il più recente — che è
+già come la Dashboard calcola i bucket. Se il form è aperto da un agente che non
+ha ancora un proprio esito, viene **precompilato con l'ultimo esito di chiunque**
+(`prefillOnly`), così si continua da dove si era arrivati; il bottone però non
+parte nello stato "Salvato", perché quei valori non sono ancora suoi.
+
+**Come è garantito che gli altri clienti non cambino.** Tre livelli: `default
+'exclusive'` sulla colonna; CHECK sul dominio; e `isLockedForMe` che tratta
+**qualsiasi** valore diverso da `'shared'` (incluso NULL, stringa vuota o un
+valore futuro non ancora gestito) come `'exclusive'`. Verificato con 10 casi:
+
+| policy | pin di | atteso | esito |
+| ------ | ------ | ------ | ----- |
+| `exclusive` | altro agente | bloccato | ✔ |
+| `exclusive` | me / nessuno | libero | ✔ |
+| assente / NULL / `''` / valore futuro | altro agente | bloccato (fail-safe) | ✔ |
+| `shared` | altro agente / me / nessuno | libero | ✔ |
+
+Stato in produzione: `editing_policy = 'shared'` **solo** per AiCall; Scalapay,
+Amex, Maintenance Amex e Lead da Maintenance restano `'exclusive'`. Impatto: i
+363 punti vendita AiCall con storico diventano lavorabili da qualsiasi agente del
+progetto; i 204 di Scalapay e i 48 di Amex non cambiano.
 
 ### 2026-07-27 (d) — Ricerca punti vendita scalabile + colore pin coerente
 

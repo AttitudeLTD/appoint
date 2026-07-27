@@ -33,6 +33,7 @@ import StorePopup from '@/components/StorePopup';
 import { useStoreActions, StoreActionDialogs } from '@/components/store-actions';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { Store as StoreType } from '@/types';
+import { isLockedForMe } from '@/utils/editing-policy';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -225,6 +226,8 @@ export default function DashboardPage() {
   // dipendenza dallo stato della mappa, nessuna logica duplicata.
   const [manageStore, setManageStore] = useState<StoreType | null>(null);
   const [manageLoadingId, setManageLoadingId] = useState<number | null>(null);
+  // true se il punto vendita aperto è in carico a un altro agente (policy 'exclusive').
+  const [manageLocked, setManageLocked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>('');
 
   useEffect(() => {
@@ -250,12 +253,34 @@ export default function DashboardPage() {
           console.error('Apertura scheda punto vendita fallita:', error);
           return;
         }
-        setManageStore(data[0] as StoreType);
+        const store = data[0] as StoreType;
+
+        // Stessa regola della mappa, stesso helper: un punto vendita in carico
+        // a un altro agente non è modificabile nemmeno da qui. Prima della
+        // scheda in Dashboard il vincolo era implicito (il deep-link portava
+        // sulla mappa, dove il pin bloccato non espone "Gestisci"); ora va
+        // applicato esplicitamente, altrimenti la Dashboard lo aggirerebbe.
+        const { data: logs } = await supabase
+          .from('store_status_logs')
+          .select('modifier')
+          .eq('store_id', storeId)
+          .order('created_at', { ascending: false });
+        const otherModifier =
+          (logs ?? []).find((l: any) => l.modifier !== currentUserId)?.modifier ?? null;
+
+        setManageLocked(
+          isLockedForMe({
+            policy: store.editing_policy,
+            modifierId: otherModifier,
+            myId: currentUserId,
+          })
+        );
+        setManageStore(store);
       } finally {
         setManageLoadingId(null);
       }
     },
-    [supabase]
+    [supabase, currentUserId]
   );
   const [calendarOpen, setCalendarOpen] = useState(false);
   // Selezione "in corso" nel calendario: 1° click azzera e imposta solo l'inizio,
@@ -1587,7 +1612,13 @@ export default function DashboardPage() {
           <DialogTitle className='sr-only'>
             {manageStore?.name ?? 'Punto vendita'}
           </DialogTitle>
-          {manageStore && (
+          {manageStore && manageLocked && (
+            <div className='py-6 text-center text-sm text-white'>
+              In questo punto vendita è in corso una trattativa gestita da un
+              altro agente.
+            </div>
+          )}
+          {manageStore && !manageLocked && (
             <StorePopup
               store={manageStore}
               // Stesso valore che passa la mappa: le coordinate DEL PUNTO
