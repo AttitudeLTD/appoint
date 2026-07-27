@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Loader, LogOut, Plus, List, LayoutDashboard, Map } from 'lucide-react';
+import { Loader, LogOut, Plus, LayoutDashboard, Map } from 'lucide-react';
 import { signOutAction } from '@/app/actions';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { NewStoreForm } from './NewStoreForm';
-import { UserList } from './user-list';
 
 type Role = 'agent' | 'am' | 'supervisor';
 
@@ -49,7 +48,6 @@ export function ProfileMenu({ email, name, role }: ProfileMenuProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [newStoreOpen, setNewStoreOpen] = useState(false);
-  const [activityOpen, setActivityOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
   const isDashboard = pathname?.includes('/dashboard');
@@ -66,7 +64,6 @@ export function ProfileMenu({ email, name, role }: ProfileMenuProps) {
     <>
       {/* Sheets rendered outside dropdown to avoid portal conflicts */}
       <NewStoreForm open={newStoreOpen} onOpenChange={setNewStoreOpen} />
-      <UserList open={activityOpen} onOpenChange={setActivityOpen} />
 
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
@@ -146,17 +143,6 @@ export function ProfileMenu({ email, name, role }: ProfileMenuProps) {
             >
               <Plus className='h-4 w-4 flex-shrink-0' />
               Nuovo punto vendita
-            </button>
-
-            <button
-              className='flex w-full items-center gap-3 px-4 py-2.5 text-sm text-white/80 hover:bg-white/10 hover:text-white transition-colors'
-              onClick={() => {
-                setOpen(false);
-                setActivityOpen(true);
-              }}
-            >
-              <List className='h-4 w-4 flex-shrink-0' />
-              Attività in corso
             </button>
           </div>
 

@@ -98,8 +98,12 @@ const StorePopup: React.FC<StorePopupProps> = ({
   handleStatusChangeAttempt,
   handleSendEmail,
   onEsitoLock,
+  autoOpenManage = false,
 }) => {
   const [selectedNote, setSelectedNote] = useState('');
+  // Sheet "Gestisci" controllato: serve per poterlo aprire da fuori (deep-link
+  // dalla Dashboard, `?store=<id>&manage=1`) senza duplicare la scheda lead.
+  const [manageOpen, setManageOpen] = useState(false);
   const [logsOffset, setLogsOffset] = useState(0);
   const [loadingMoreLogs, setLoadingMoreLogs] = useState(false);
   const [hasMoreLogs, setHasMoreLogs] = useState(true);
@@ -288,6 +292,21 @@ const StorePopup: React.FC<StorePopupProps> = ({
     fetchOutcome();
     fetchOutcomeHistory();
   }, [store.id, store.client_id]);
+
+  // Deep-link dalla Dashboard: apre direttamente il pannello "Gestisci", con lo
+  // stesso caricamento dei log che fa il click sul pulsante. Così la scheda
+  // aperta dalla Dashboard è identica a quella aperta dalla mappa (dati, storico
+  // esiti, note, cronologia) perché è letteralmente lo stesso componente.
+  useEffect(() => {
+    if (!autoOpenManage) return;
+    setLogsOffset(0);
+    setHasMoreLogs(true);
+    fetchStatusLogs(store.id, 0);
+    setManageOpen(true);
+    // Volutamente solo su [autoOpenManage, store.id]: non deve riaprirsi se
+    // l'utente chiude il pannello mentre il flag è ancora true.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenManage, store.id]);
 
   // Function to get current user position
   const getUserPosition = () => {
@@ -839,7 +858,7 @@ const StorePopup: React.FC<StorePopupProps> = ({
           <Phone className='mr-2' /> Chiama
         </Button>
 
-        <Sheet>
+        <Sheet open={manageOpen} onOpenChange={setManageOpen}>
           <SheetTrigger asChild>
             <Button
               variant='secondary'

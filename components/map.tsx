@@ -1,7 +1,15 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { Filter, Loader, LocateFixed, MapPin, Search, X } from 'lucide-react';
+import {
+  Filter,
+  Loader,
+  LocateFixed,
+  MapPin,
+  Search,
+  Store as StoreIcon,
+  X,
+} from 'lucide-react';
 
 import L, { LatLngExpression } from 'leaflet';
 import {
@@ -104,6 +112,16 @@ type SearchResult = {
   lon: string;
 };
 
+// Risultato "punto vendita" della ricerca per nome (sorgente: tabella stores,
+// via Supabase con RLS → l'utente vede solo i negozi che può già vedere).
+type StoreSearchResult = {
+  id: number;
+  name: string;
+  subtitle: string;
+  lat: number;
+  lng: number;
+};
+
 // Add this new component to handle map movement.
 // Chiudiamo eventuale popup aperto PRIMA di volare alla nuova posizione:
 // evita la transizione visiva ambigua quando l'utente cerca un indirizzo
@@ -167,14 +185,26 @@ function AddressSearchBar({
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [storeResults, setStoreResults] = useState<StoreSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showSearchResults, setShowSearchResults] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+  const supabase = useMemo(() => createClient(), []);
+
+  // Lista unificata su cui agiscono tastiera e click: prima i punti vendita
+  // (match esatto sui nostri dati), poi gli indirizzi da Nominatim.
+  const combinedResults = useMemo(
+    () => [
+      ...storeResults.map((s) => ({ kind: 'store' as const, store: s })),
+      ...searchResults.map((r) => ({ kind: 'address' as const, address: r })),
+    ],
+    [storeResults, searchResults]
+  );
 
   useEffect(() => {
     setFocusedIndex(-1);
-  }, [searchResults]);
+  }, [combinedResults]);
 
   // Chiude il dropdown quando l'utente clicca fuori (es. sulla mappa).
   // Prima questa logica viveva in un MapClickHandler nel parent.
@@ -192,28 +222,84 @@ function AddressSearchBar({
   }, []);
 
   useEffect(() => {
-    if (!searchQuery.trim()) {
+    const q = searchQuery.trim();
+    if (!q) {
       setSearchResults([]);
+      setStoreResults([]);
       return;
     }
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       setIsSearching(true);
-      try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-            searchQuery
-          )}&limit=5&countrycodes=it&accept-language=it`,
-          { signal: controller.signal }
-        );
-        const data = await response.json();
-        setSearchResults(data);
-      } catch (error: any) {
-        if (error?.name !== 'AbortError') {
-          console.error('Error searching address:', error);
+
+      // Indirizzi: Nominatim (comportamento preesistente, invariato).
+      const addressPromise = (async () => {
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+              q
+            )}&limit=5&countrycodes=it&accept-language=it`,
+            { signal: controller.signal }
+          );
+          const data = await response.json();
+          if (!controller.signal.aborted) setSearchResults(data);
+        } catch (error: any) {
+          if (error?.name !== 'AbortError') {
+            console.error('Error searching address:', error);
+          }
         }
+      })();
+
+      // Punti vendita: ricerca lato SERVER su stores.name, con cap basso di
+      // risultati. Non si scarica mai l'intero dataset sul client; l'indice GIN
+      // trigram (migration 20260727120000) tiene la query index-assisted.
+      // La RLS di `stores` si applica automaticamente → nessun leak di negozi
+      // non visibili all'utente. Serve almeno 2 caratteri per evitare query
+      // inutilmente ampie ad ogni singolo tasto.
+      const storePromise = (async () => {
+        if (q.length < 2) {
+          setStoreResults([]);
+          return;
+        }
+        try {
+          // `%` e `_` sono wildcard in ilike: vanno neutralizzati, altrimenti una
+          // ricerca contenente '%' matcherebbe qualsiasi cosa.
+          const safe = q.replace(/[\\%_]/g, (m) => `\\${m}`);
+          const { data, error } = await supabase
+            .from('stores')
+            .select('id, name, address, comune, provincia, location')
+            .ilike('name', `%${safe}%`)
+            .limit(6);
+          if (error) {
+            console.error('Error searching stores by name:', error);
+            return;
+          }
+          if (controller.signal.aborted) return;
+          const mapped = (data ?? [])
+            .map((s: any) => {
+              const c = parseCoords(s.location);
+              if (!c) return null;
+              return {
+                id: s.id as number,
+                name: (s.name as string) ?? '',
+                subtitle: [s.address, s.comune, s.provincia ? `(${s.provincia})` : '']
+                  .filter(Boolean)
+                  .join(' '),
+                lat: c[0],
+                lng: c[1],
+              } as StoreSearchResult;
+            })
+            .filter(Boolean) as StoreSearchResult[];
+          setStoreResults(mapped);
+        } catch (error) {
+          console.error('Unexpected error searching stores:', error);
+        }
+      })();
+
+      try {
+        await Promise.all([addressPromise, storePromise]);
       } finally {
-        setIsSearching(false);
+        if (!controller.signal.aborted) setIsSearching(false);
       }
     }, 300);
 
@@ -221,24 +307,44 @@ function AddressSearchBar({
       controller.abort();
       clearTimeout(timer);
     };
-  }, [searchQuery]);
+  }, [searchQuery, supabase]);
+
+  const clearSearch = () => {
+    setSearchResults([]);
+    setStoreResults([]);
+    setSearchQuery('');
+    setShowSearchResults(false);
+  };
 
   const handleSelect = (result: SearchResult) => {
     const lat = parseFloat(result.lat);
     const lng = parseFloat(result.lon);
-    setSearchResults([]);
-    setSearchQuery('');
-    setShowSearchResults(false);
+    clearSearch();
     onSelect(lat, lng);
   };
 
+  // Selezione di un punto vendita: atterriamo sulle sue coordinate esattamente
+  // come per un indirizzo, quindi il pin entra nel raggio di caricamento e si
+  // può aprire il popup. Nessuna logica di fetch duplicata.
+  const handleSelectStore = (s: StoreSearchResult) => {
+    clearSearch();
+    onSelect(s.lat, s.lng);
+  };
+
+  const handleSelectIndex = (i: number) => {
+    const item = combinedResults[i];
+    if (!item) return;
+    if (item.kind === 'store') handleSelectStore(item.store);
+    else handleSelect(item.address);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (searchResults.length === 0) return;
+    if (combinedResults.length === 0) return;
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
         setFocusedIndex((prev) =>
-          prev < searchResults.length - 1 ? prev + 1 : prev
+          prev < combinedResults.length - 1 ? prev + 1 : prev
         );
         break;
       case 'ArrowUp':
@@ -248,7 +354,7 @@ function AddressSearchBar({
       case 'Enter':
         e.preventDefault();
         if (focusedIndex >= 0) {
-          handleSelect(searchResults[focusedIndex]);
+          handleSelectIndex(focusedIndex);
         }
         break;
     }
@@ -266,7 +372,7 @@ function AddressSearchBar({
               setShowSearchResults(true);
             }}
             onKeyDown={handleKeyDown}
-            placeholder='Cerca indirizzo...'
+            placeholder='Cerca punto vendita o indirizzo...'
             className='w-full px-4 py-2 pl-10 border rounded-full shadow-md bg-white text-black'
             style={{ backgroundColor: 'white', color: 'black' }}
           />
@@ -279,23 +385,55 @@ function AddressSearchBar({
         </div>
       </div>
 
-      {searchResults.length > 0 && showSearchResults && (
+      {combinedResults.length > 0 && showSearchResults && (
         <div className='w-full shadow-lg max-h-60 overflow-auto rounded-md bg-white'>
-          {searchResults.map((result, index) => (
-            <Button
-              key={index}
-              variant='outline'
-              className={`w-full px-4 py-1 text-left flex justify-start border-none focus:outline-none rounded-none ${
-                index === 0 ? 'rounded-t-md' : ''
-              } ${
-                index === searchResults.length - 1 ? 'rounded-b-md' : ''
-              } ${focusedIndex === index ? 'bg-accent text-accent-foreground' : ''}`}
-              onClick={() => handleSelect(result)}
-            >
-              <MapPin className='h-4 w-4 text-gray-400 flex-shrink-0' />
-              <p className='text-sm truncate'>{result.display_name}</p>
-            </Button>
-          ))}
+          {storeResults.length > 0 && (
+            <p className='px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400'>
+              Punti vendita
+            </p>
+          )}
+          {combinedResults.map((item, index) => {
+            // Intestazione "Indirizzi" prima del primo risultato Nominatim.
+            const isFirstAddress =
+              item.kind === 'address' && index === storeResults.length;
+            return (
+              <div key={item.kind === 'store' ? `s-${item.store.id}` : `a-${index}`}>
+                {isFirstAddress && (
+                  <p className='px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400 border-t'>
+                    Indirizzi
+                  </p>
+                )}
+                <Button
+                  variant='outline'
+                  className={`w-full px-4 py-1 text-left flex justify-start border-none focus:outline-none rounded-none ${
+                    focusedIndex === index ? 'bg-accent text-accent-foreground' : ''
+                  }`}
+                  onClick={() => handleSelectIndex(index)}
+                >
+                  {item.kind === 'store' ? (
+                    <>
+                      <StoreIcon className='h-4 w-4 text-gray-400 flex-shrink-0' />
+                      <span className='min-w-0 flex flex-col items-start'>
+                        <span className='text-sm truncate max-w-full'>
+                          {item.store.name}
+                        </span>
+                        {item.store.subtitle && (
+                          <span className='text-[11px] text-gray-500 truncate max-w-full'>
+                            {item.store.subtitle}
+                          </span>
+                        )}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className='h-4 w-4 text-gray-400 flex-shrink-0' />
+                      <p className='text-sm truncate'>{item.address.display_name}</p>
+                    </>
+                  )}
+                </Button>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -401,6 +539,10 @@ const Map = ({ user }: any) => {
   // Timestamp dell'ultima fetch effettiva: serve a dedup chiamate ravvicinate
   // (es. handleSelectLocation che chiama il fetch + moveend che lo rifa).
   const lastFetchTsRef = useRef<number>(0);
+  // Raggio (m) usato nell'ultima fetch: fa parte della chiave di dedup. Senza di
+  // esso uno zoom-out (che NON muove il centro) veniva scartato come duplicato e
+  // i pin caricati con il raggio più piccolo restavano gli unici visibili.
+  const lastFetchRadiusRef = useRef<number | null>(null);
   const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Sequence guard anti-race: ogni fetch incrementa il contatore; quando una
   // risposta torna, se nel frattempo è partita una fetch più recente, la
@@ -694,27 +836,47 @@ const Map = ({ user }: any) => {
       // handleSelectLocation triggera un fetch esplicito + Leaflet emette poi
       // moveend dopo flyTo). La finestra deve coprire la durata dell'animazione
       // flyTo (~800ms) + il debounce del moveend (250ms) + buffer.
+      // Legge il filtro client (multi) dal ref (non nelle deps → la callback
+      // non si ricrea al cambio filtro).
+      const clientIds = selectedClientIdsRef.current;
+      const hasClientFilter = clientIds.length > 0;
+
+      // Raggio effettivo di QUESTA fetch. Va calcolato prima del dedup perché ne
+      // fa parte: con filtro cliente il raggio dipende dallo zoom, quindi due
+      // fetch sullo stesso centro ma con zoom diversi NON sono duplicati.
+      const effectiveRadius = hasClientFilter
+        ? Math.min(
+            radiusOverride ?? viewportRadiusMeters() ?? DEFAULT_RADIUS_M,
+            CLIENT_MAX_RADIUS_M
+          )
+        : DEFAULT_RADIUS_M;
+
       const now = Date.now();
       const prev = lastFetchCenter.current;
+      const prevRadius = lastFetchRadiusRef.current;
+      // Duplicato solo se centro E raggio sono praticamente invariati: il raggio
+      // si confronta in modo relativo (±5%) per assorbire il rumore in virgola
+      // mobile di `viewportRadiusMeters()` tra due moveend allo stesso zoom.
+      const sameRadius =
+        prevRadius != null &&
+        Math.abs(prevRadius - effectiveRadius) <= prevRadius * 0.05;
       if (
         prev &&
         now - lastFetchTsRef.current < 1500 &&
         Math.abs(prev[0] - lat) < 1e-4 && // ~10 metri di tolleranza
-        Math.abs(prev[1] - lng) < 1e-4
+        Math.abs(prev[1] - lng) < 1e-4 &&
+        sameRadius
       ) {
         return;
       }
       lastFetchTsRef.current = now;
       lastFetchCenter.current = [lat, lng];
+      lastFetchRadiusRef.current = effectiveRadius;
 
       const seq = ++fetchSeqRef.current; // questa è la fetch più recente
 
       setIsLoadingStores(true);
       try {
-        // Legge il filtro client (multi) dal ref (non nelle deps → la callback
-        // non si ricrea al cambio filtro).
-        const clientIds = selectedClientIdsRef.current;
-        const hasClientFilter = clientIds.length > 0;
 
         // NB: usiamo SEMPRE il parametro `p_client_id` (singolo), che PostgREST
         // conosce da sempre → robusto rispetto alla schema-cache. Per il
@@ -723,10 +885,8 @@ const Map = ({ user }: any) => {
         if (hasClientFilter) {
           // Raggio = override (= estensione, passato al cambio selezione) oppure
           // mezza diagonale del viewport corrente (durante pan/zoom). Capped.
-          const radius = Math.min(
-            radiusOverride ?? viewportRadiusMeters() ?? DEFAULT_RADIUS_M,
-            CLIENT_MAX_RADIUS_M
-          );
+          // Già calcolato sopra come `effectiveRadius` (fa parte del dedup).
+          const radius = effectiveRadius;
           const perClient = await Promise.all(
             clientIds.map((cid) =>
               supabase.rpc('get_stores_within_radius', {
@@ -1138,6 +1298,65 @@ const Map = ({ user }: any) => {
     [fetchStoresAndLogs]
   );
 
+  // ── Deep-link "apri lead" (dalla Dashboard) ────────────────────────────────
+  // `/protected?store=<id>&manage=1`: la mappa vola sul pin, ne apre il popup e
+  // (con manage=1) apre direttamente il pannello "Gestisci". Riusa StorePopup
+  // così com'è: nessuna scheda lead duplicata in Dashboard.
+  const [deepLinkStoreId, setDeepLinkStoreId] = useState<number | null>(null);
+  const [deepLinkManage, setDeepLinkManage] = useState(false);
+  // Ref ai marker, per poter aprire il popup via codice.
+  const markerRefs = useRef<Record<number, L.Marker | null>>({});
+  const deepLinkOpenedRef = useRef(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('store');
+    if (!raw) return;
+    const id = Number(raw);
+    if (!Number.isFinite(id)) return;
+    setDeepLinkStoreId(id);
+    setDeepLinkManage(params.get('manage') === '1');
+
+    // Pulisce la query string: un refresh non deve riaprire la scheda.
+    const url = new URL(window.location.href);
+    url.searchParams.delete('store');
+    url.searchParams.delete('manage');
+    window.history.replaceState({}, '', url.pathname + url.search);
+
+    // Coordinate del pin: una singola select per id (la RLS di `stores` si
+    // applica → se l'utente non può vederlo, non si sposta nulla). Poi si
+    // riusa il normale caricamento pin attorno a quel punto.
+    (async () => {
+      const { data, error } = await supabase
+        .from('stores')
+        .select('id, location')
+        .eq('id', id)
+        .maybeSingle();
+      if (error || !data) {
+        console.error('Deep-link: punto vendita non trovato o non visibile', error);
+        return;
+      }
+      const c = parseCoords((data as any).location);
+      if (!c) return;
+      setSelectedLocation([c[0], c[1]]);
+      fetchStoresAndLogs(c[0], c[1]);
+    })();
+  }, [supabase, fetchStoresAndLogs]);
+
+  // Quando il pin del deep-link è finalmente tra quelli caricati, apriamo il suo
+  // popup. Una volta sola: dopo, l'utente resta libero di navigare.
+  useEffect(() => {
+    if (deepLinkStoreId == null || deepLinkOpenedRef.current) return;
+    if (!stores.some((s) => s.id === deepLinkStoreId)) return;
+    const marker = markerRefs.current[deepLinkStoreId];
+    if (!marker) return;
+    deepLinkOpenedRef.current = true;
+    // Piccolo ritardo: lascia concludere il flyTo di MapController (che chiude i
+    // popup all'inizio dell'animazione) prima di aprire il nostro.
+    const t = setTimeout(() => marker.openPopup(), 850);
+    return () => clearTimeout(t);
+  }, [stores, deepLinkStoreId]);
+
   // Memo del cluster + markers: ad ogni rerender di Map che non cambia queste
   // deps (es. moveend che setta isAwayFromUser allo stesso valore, o qualsiasi
   // rerender "innocuo"), restituiamo la STESSA reference JSX → React skippa il
@@ -1263,6 +1482,9 @@ const Map = ({ user }: any) => {
             key={store.id}
             position={storeCoordinates}
             icon={finalIcon}
+            ref={(m) => {
+              markerRefs.current[store.id] = m;
+            }}
             eventHandlers={{
               popupopen: () => {
                 const map = mapRef.current;
@@ -1291,6 +1513,7 @@ const Map = ({ user }: any) => {
                 handleStatusChangeAttempt={handleStatusChangeAttempt}
                 handleSendEmail={handleSendEmail}
                 onEsitoLock={applyEsitoLock}
+                autoOpenManage={deepLinkManage && deepLinkStoreId === store.id}
               />
             </Popup>
           </Marker>
@@ -1311,6 +1534,8 @@ const Map = ({ user }: any) => {
     handleStatusChangeAttempt,
     handleSendEmail,
     applyEsitoLock,
+    deepLinkManage,
+    deepLinkStoreId,
   ]);
 
   return (

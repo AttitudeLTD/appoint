@@ -86,6 +86,7 @@ Stack: **PostgreSQL** + **PostGIS** (geolocalizzazione) + **Supabase Auth** + **
 | `pgsodium`           | 3.1.8    | `pgsodium`   | Crittografia simmetrica              |
 | `supabase_vault`     | 0.3.1    | `vault`      | Vault per secret                     |
 | `postgis`            | 3.3.7    | `public`     | **Geolocalizzazione store** (chiave) |
+| `pg_trgm`            | 1.6      | `public`     | Ricerca fuzzy per nome punto vendita |
 
 ---
 
@@ -679,3 +680,18 @@ La sola integrazione custom è il trigger `auth.on_auth_user_created` che popola
 ### Migration
 
 Vedi [`./migrations/README.md`](./migrations/README.md) per la convenzione di naming/numerazione delle migration.
+
+---
+
+## Changelog
+
+### 2026-07-27 — Ricerca per nome punto vendita
+
+- Estensione `pg_trgm` + indice GIN `stores_name_trgm_idx` su `stores.name`
+  (migration `20260727120000_stores_name_trgm_index.sql`).
+- Serve alla barra di ricerca della mappa, che ora cerca sia gli indirizzi
+  (Nominatim) sia i punti vendita per ragione sociale (`stores.name ilike`,
+  lato server con `limit` basso, mai client-side sull'intero dataset).
+- Modifica **additiva**: nessuna colonna/tabella toccata, RLS invariata.
+  Verificato: `Bitmap Index Scan` su `stores_name_trgm_idx`, ~0.3 ms su ~14.5k
+  negozi (prima: `Seq Scan`).

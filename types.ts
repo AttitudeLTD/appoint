@@ -281,4 +281,10 @@ export type StorePopupProps = {
    * dialog di conferma. `prevStatus` è lo stato corrente (per il log).
    */
   onEsitoLock?: (storeId: number, prevStatus: string) => Promise<void>;
+  /**
+   * Apre automaticamente il pannello "Gestisci" al mount. Usato dal deep-link
+   * `/protected?store=<id>&manage=1` con cui la Dashboard apre una lead senza
+   * costringere l'utente a cercarla a mano sulla mappa.
+   */
+  autoOpenManage?: boolean;
 };

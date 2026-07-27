@@ -5,7 +5,6 @@ import { Button } from './ui/button';
 import { createClient } from '@/utils/supabase/server';
 import { LogOut } from 'lucide-react';
 import { Avatar } from './ui/avatar';
-import { UserList } from './user-list';
 
 export default async function AuthButton() {
   const supabase = createClient();
@@ -31,7 +30,6 @@ export default async function AuthButton() {
   }
   return userName ? (
     <div className='flex items-center gap-4'>
-      <UserList />
       <form action={signOutAction}>
         <Button variant='ghost' className='p-0 h-8 w-8 rounded-full hover:bg-white/20 transition-colors'>
           <Avatar className='h-8 w-8 flex items-center justify-center bg-transparent'>

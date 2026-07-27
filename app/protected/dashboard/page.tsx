@@ -21,8 +21,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Settings,
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
+import { useRouter } from 'next/navigation';
 import { fetchUserStores, getDashboardContext } from '@/utils/stores';
 import { getMyLoc, parseCoords } from '@/utils/navigation';
 import { useEffect, useState, useMemo, useCallback } from 'react';
@@ -169,6 +171,7 @@ function MultiSelectPopover({
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [nearbyProspects, setNearbyProspects] = useState<any[]>([]);
   const [nearbyLoading, setNearbyLoading] = useState(true);
@@ -531,6 +534,93 @@ export default function DashboardPage() {
         }
       }
 
+      // 4-bis) Agente che ha GESTITO la lead (≠ "Creato da", che è chi ha creato
+      // il record). Si ricava da dati già presenti, senza nuove tabelle:
+      //   • `store_visit_outcomes` → autore dell'ultimo esito manage_form (AiCall);
+      //   • `store_status_logs`    → autore dell'ultimo cambio di stato.
+      // L'esito, se c'è, è il segnale più preciso: è chi ha effettivamente
+      // lavorato il pin. Altrimenti si ricade sull'ultimo log di stato.
+      // Le query sono in blocchi da 500 id per non superare i limiti di lunghezza
+      // della querystring sui clienti con molti negozi.
+      const chunk = <T,>(arr: T[], size: number): T[][] => {
+        const out: T[][] = [];
+        for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+        return out;
+      };
+      const idChunks = chunk(storeIds, 500);
+
+      // Ultimo esito per negozio (le righe arrivano già ordinate desc → la prima
+      // vista per uno store_id è la più recente).
+      const outcomeByStore = new Map<number, { userId: string; esito: string }>();
+      for (const ids of idChunks) {
+        const { data } = await supabase
+          .from('store_visit_outcomes')
+          .select('store_id, user_id, outcome_data, created_at')
+          .in('store_id', ids)
+          .order('created_at', { ascending: false });
+        for (const o of data ?? []) {
+          if (outcomeByStore.has(o.store_id as number)) continue;
+          outcomeByStore.set(o.store_id as number, {
+            userId: o.user_id as string,
+            esito: ((o.outcome_data ?? {}) as any)?.esito ?? '',
+          });
+        }
+      }
+
+      // Ultimo cambio di stato per negozio (fallback).
+      const statusUserByStore = new Map<number, string>();
+      for (const ids of idChunks) {
+        const { data } = await supabase
+          .from('store_status_logs')
+          .select('store_id, modifier, created_at')
+          .in('store_id', ids)
+          .order('created_at', { ascending: false });
+        for (const l of data ?? []) {
+          if (statusUserByStore.has(l.store_id as number)) continue;
+          statusUserByStore.set(l.store_id as number, l.modifier as string);
+        }
+      }
+
+      // Nomi degli agenti coinvolti (una sola query, riusa lo schema di creatorById).
+      const agentIdByStore = new Map<number, string>();
+      for (const sid of storeIds) {
+        const uid = outcomeByStore.get(sid)?.userId ?? statusUserByStore.get(sid);
+        if (uid) agentIdByStore.set(sid, uid);
+      }
+      const agentNameById = new Map<string, string>();
+      const agentIds = Array.from(new Set(Array.from(agentIdByStore.values())));
+      if (agentIds.length > 0) {
+        const { data: agentsData } = await supabase
+          .from('users')
+          .select('id, name, surname')
+          .in('id', agentIds);
+        for (const u of agentsData ?? []) {
+          agentNameById.set(
+            u.id as string,
+            `${u.name ?? ''} ${u.surname ?? ''}`.trim() || (u.id as string)
+          );
+        }
+      }
+
+      // Etichette esito leggibili dal workflow del cliente (value → label).
+      const esitoLabelByValue = new Map<string, string>();
+      if (outcomeByStore.size > 0) {
+        const { data: wf } = await supabase
+          .from('client_workflows')
+          .select('workflow')
+          .eq('client_id', clientIdNum)
+          .maybeSingle();
+        for (const sec of (wf as any)?.workflow?.manage_form?.sections ?? []) {
+          for (const f of sec?.fields ?? []) {
+            for (const opt of f?.options ?? []) {
+              if (opt?.value != null) {
+                esitoLabelByValue.set(String(opt.value), opt.label ?? String(opt.value));
+              }
+            }
+          }
+        }
+      }
+
       const clientName =
         allClients.find((c) => c.id === clientIdNum)?.name ?? `cliente_${clientIdNum}`;
 
@@ -553,6 +643,8 @@ export default function DashboardPage() {
         'Fatturato',
         'Tier',
         'Status',
+        'Ultimo esito',
+        'Agente',
         'Data setup',
         'Cliente',
         'Cliente primario',
@@ -561,6 +653,8 @@ export default function DashboardPage() {
       ];
       const rows = (storesData ?? []).map((s: any) => {
         const isPrimary = primaryByStoreId.get(s.id) === true;
+        const esitoVal = outcomeByStore.get(s.id)?.esito ?? '';
+        const agentId = agentIdByStore.get(s.id);
         return [
           s.id,
           s.name ?? '',
@@ -579,6 +673,8 @@ export default function DashboardPage() {
           s.fatturato ?? '',
           s.tier ?? '',
           getStatusLabel(s.status) || s.status || '',
+          esitoVal ? esitoLabelByValue.get(esitoVal) ?? esitoVal : '',
+          agentId ? agentNameById.get(agentId) ?? '' : '',
           formatDataSetup(s.data_setup),
           clientName,
           isPrimary ? 'Sì' : 'No',
@@ -1186,6 +1282,24 @@ export default function DashboardPage() {
 
                         {/* Azioni */}
                         <div className='flex gap-1.5 flex-shrink-0'>
+                          {/* Apre la lead senza passare dalla ricerca manuale
+                              sulla mappa: deep-link che vola sul pin e apre il
+                              pannello "Gestisci" (stesso componente della mappa). */}
+                          {activity.store_id != null && (
+                            <Button
+                              variant='outline'
+                              size='icon'
+                              className='h-8 w-8'
+                              onClick={() =>
+                                router.push(
+                                  `/protected?store=${activity.store_id}&manage=1`
+                                )
+                              }
+                              title='Apri e gestisci la lead'
+                            >
+                              <Settings className='h-4 w-4' />
+                            </Button>
+                          )}
                           {activity.type === 'photo' && activity.photo_url && (
                             <Button
                               variant='outline'
