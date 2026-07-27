@@ -58,7 +58,7 @@
 --   il modello dati lo ammette.
 --
 -- Rollback:
---   `supabase/migrations/20260727150000_gswr_set_based_visibility_rollback.sql`
+--   `supabase/rollback/20260727125237_gswr_set_based_visibility_rollback.sql`
 --   (ripristina il corpo attuale, identico a 20260702140000_stores_pi_in_rpc).
 --   Nessun dato e nessuno schema vengono toccati: si sostituisce una funzione.
 -- =============================================================================

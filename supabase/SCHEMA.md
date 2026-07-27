@@ -3,9 +3,9 @@
 > **Fonte di verità** dello schema del database Supabase del progetto.
 > Aggiornare questo file **ad ogni cambio di schema** (insieme alla migration corrispondente in [`./migrations/`](./migrations/)).
 >
-> _2026-07-27 (c) — **cliente escluso dalla mappa**: nuova colonna **`clients.show_on_map`** (`boolean`, not null, default `true`). Se `false`, `get_stores_within_radius` non restituisce i punti vendita del cliente → nessun pin su mappa e "Prospect vicini". Impostata a `false` per **Amex** (id 2, 2.079 store tutti nell'area di Milano). È una configurazione di **visualizzazione, non un permesso**: `user_can_see_store` / `user_can_see_client`, `user_client_access` e le RLS restano identiche, quindi storico, esiti ed export CSV supervisor sono intatti. Migration: [`migrations/20260727160000_clients_show_on_map.sql`](./migrations/20260727160000_clients_show_on_map.sql)._
+> _2026-07-27 (c) — **cliente escluso dalla mappa**: nuova colonna **`clients.show_on_map`** (`boolean`, not null, default `true`). Se `false`, `get_stores_within_radius` non restituisce i punti vendita del cliente → nessun pin su mappa e "Prospect vicini". Impostata a `false` per **Amex** (id 2, 2.079 store tutti nell'area di Milano). È una configurazione di **visualizzazione, non un permesso**: `user_can_see_store` / `user_can_see_client`, `user_client_access` e le RLS restano identiche, quindi storico, esiti ed export CSV supervisor sono intatti. Migration: [`migrations/20260727131525_clients_show_on_map.sql`](./migrations/20260727131525_clients_show_on_map.sql)._
 >
-> _2026-07-27 (b) — **scalabilità mappa**: `get_stores_within_radius` riscritta con filtro di visibilità **insiemistico** (lo scope del chiamante è risolto una volta per chiamata, non riga per riga con `user_can_see_store`) e promossa a **SECURITY DEFINER** per eliminare la doppia valutazione introdotta dalla RLS di `stores`. Firma argomenti e TABLE di ritorno **invariate**; nessuna regola di autorizzazione modificata (`user_can_see_store` / `user_can_see_client` restano intatte e continuano a reggere le RLS). Misure su produzione (~14,6k store): filtro AiCall 1.400 → 135 ms, Amex 1.390 → 110 ms, Scalapay 300 → 63 ms, default mappa 121 → 48 ms. Migration: [`migrations/20260727150000_gswr_set_based_visibility.sql`](./migrations/20260727150000_gswr_set_based_visibility.sql) (rollback nel file `…_rollback.sql` affiancato)._
+> _2026-07-27 (b) — **scalabilità mappa**: `get_stores_within_radius` riscritta con filtro di visibilità **insiemistico** (lo scope del chiamante è risolto una volta per chiamata, non riga per riga con `user_can_see_store`) e promossa a **SECURITY DEFINER** per eliminare la doppia valutazione introdotta dalla RLS di `stores`. Firma argomenti e TABLE di ritorno **invariate**; nessuna regola di autorizzazione modificata (`user_can_see_store` / `user_can_see_client` restano intatte e continuano a reggere le RLS). Misure su produzione (~14,6k store): filtro AiCall 1.400 → 135 ms, Amex 1.390 → 110 ms, Scalapay 300 → 63 ms, default mappa 121 → 48 ms. Migration: [`migrations/20260727125237_gswr_set_based_visibility.sql`](./migrations/20260727125237_gswr_set_based_visibility.sql) (rollback in [`rollback/`](./rollback/))._
 >
 > _2026-07-14 — **diagnostica errori**: nuova tabella **`public.error_logs`** (message, stack, digest, source, url, user_id, user_email, user_agent, extra). Popolata lato client da `utils/error-logger.ts` (dai due error boundary `app/error.tsx`/`app/global-error.tsx` e dal listener globale `components/ErrorListener.tsx`). RLS: **INSERT aperto** (anche `anon`, gli errori possono capitare pre-login); **SELECT solo ai `supervisor`**. Migration: [`migrations/20260714120000_error_logs_table.sql`](./migrations/20260714120000_error_logs_table.sql)._
 >
@@ -753,7 +753,7 @@ mappato.
 
 **Rollback:** `update public.clients set show_on_map = true where id = 2;` — una riga,
 effetto immediato, nessun DDL. Ripristino completo (anche del filtro nella RPC) in
-`migrations/20260727160000_clients_show_on_map_rollback.sql`.
+`rollback/20260727131525_clients_show_on_map_rollback.sql`.
 
 **Nota di coerenza.** `get_client_stores_bounds` / `get_clients_stores_bounds` **non**
 applicano `show_on_map`. Oggi non le chiama più nessuno (la mappa calcola i bounds lato
@@ -830,7 +830,7 @@ esplicitamente, dato che SECURITY DEFINER disattiva la RLS nel corpo).
 Caricamento mappa completo (la mappa lancia una RPC per cliente selezionato in
 parallelo, `{1,2,5}`): da ~3,1 s a ~0,3 s di lavoro DB.
 
-**Rollback:** `migrations/20260727150000_gswr_set_based_visibility_rollback.sql`
+**Rollback:** `rollback/20260727125237_gswr_set_based_visibility_rollback.sql`
 (ripristina il corpo precedente; nessun dato né schema toccati).
 
 **Residuo noto.** Con filtro cliente attivo la `ORDER BY … <->` percorre comunque tutto

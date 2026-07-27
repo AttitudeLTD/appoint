@@ -1,5 +1,5 @@
 -- =============================================================================
--- ROLLBACK di 20260727160000_clients_show_on_map.sql
+-- ROLLBACK di 20260727131525_clients_show_on_map.sql
 -- Date: 2026-07-27
 -- Author: egidiosalinaro
 --
@@ -17,7 +17,7 @@
 --    in futuro. Il frontend torna a mostrare la chip Amex al reload.
 --
 -- ── B) RIPRISTINO COMPLETO (togliere anche il filtro dalla RPC) ──────────────
---    Sotto. Rimette il corpo della RPC alla versione 20260727150000 (Fase 1,
+--    Sotto. Rimette il corpo della RPC alla versione 20260727125237 (Fase 1,
 --    filtro insiemistico SENZA `show_on_map`). La colonna `clients.show_on_map`
 --    viene lasciata: è innocua con default true e droppandola si perderebbe la
 --    configurazione. Per toglierla davvero:

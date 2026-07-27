@@ -5,6 +5,11 @@ Questa cartella contiene le **migration SQL incrementali** dello schema del data
 Per la documentazione completa dello schema corrente vedi [`../SCHEMA.md`](../SCHEMA.md).
 Per uno snapshot SQL del baseline vedi [`../schema/public_schema.sql`](../schema/public_schema.sql).
 
+> ⚠️ **Solo migration qui dentro.** Il CLI `supabase` applica **ogni** file `.sql`
+> presente in questa cartella. Uno script di *rollback* lasciato qui verrebbe
+> eseguito da `supabase db push` subito dopo la migration che deve annullare,
+> disfacendola in produzione. I rollback vanno in [`../rollback/`](../rollback/).
+
 ---
 
 ## Convenzione di naming

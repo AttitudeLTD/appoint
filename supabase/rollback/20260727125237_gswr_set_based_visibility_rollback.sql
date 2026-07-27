@@ -1,5 +1,5 @@
 -- =============================================================================
--- ROLLBACK di 20260727150000_gswr_set_based_visibility.sql
+-- ROLLBACK di 20260727125237_gswr_set_based_visibility.sql
 -- Date: 2026-07-27
 -- Author: egidiosalinaro
 --

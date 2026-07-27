@@ -54,7 +54,7 @@
 --   Amex nel fit-bounds. Da allineare se si tornasse a usarle.
 --
 -- Rollback:
---   `20260727160000_clients_show_on_map_rollback.sql` (riporta Amex a
+--   `20260727131525_clients_show_on_map_rollback.sql` (riporta Amex a
 --   `show_on_map = true` e ripristina la RPC senza il filtro; la colonna può
 --   restare, è innocua con default true).
 -- =============================================================================
@@ -247,7 +247,7 @@ begin
 end;
 $function$;
 
--- ACL: come da 20260727150000 (SECURITY DEFINER → solo i ruoli necessari).
+-- ACL: come da 20260727125237 (SECURITY DEFINER → solo i ruoli necessari).
 -- `revoke from public` non basta: le ALTER DEFAULT PRIVILEGES di Supabase danno
 -- un grant ESPLICITO ad anon su ogni funzione creata in `public`.
 revoke all     on function public.get_stores_within_radius(
