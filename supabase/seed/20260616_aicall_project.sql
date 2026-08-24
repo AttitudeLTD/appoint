@@ -1,6 +1,8 @@
 -- =============================================================================
 -- Seed: PROGETTO AICALL / AiCall — nuovo cliente + workflow + visibilità
--- Date: 2026-06-16 (agg. 2026-06-26: rename → "AiCall" + logo Amex condiviso)
+-- Date: 2026-06-16 (agg. 2026-06-26: rename → "AiCall" + logo Amex condiviso;
+--                    agg. 2026-08-24: mappatura esiti → "Status - Sub status" Amex
+--                    via chiave `amex_status` su ogni opzione della tendina ESITO)
 -- Author: egidiosalinaro
 --
 -- NOTA rename: il cliente è stato creato come "PROGETTO AICALL" e in seguito
@@ -67,15 +69,15 @@ select
             "required": true,
             "placeholder": "Seleziona esito",
             "options": [
-              { "value": "ok_in_trattativa",     "label": "OK - In trattativa" },
-              { "value": "ko_non_interessato",   "label": "KO - Non interessato" },
-              { "value": "ok_inviata_amex",      "label": "OK - Inviata ad Amex" },
-              { "value": "ko_lead_non_valido",   "label": "KO - Lead non valido" },
-              { "value": "ko_irreperibile",      "label": "KO - Irreperibile" },
-              { "value": "ko_gia_cliente",       "label": "KO - Già Cliente" },
-              { "value": "ok_richiamare",        "label": "OK - Richiamare" },
-              { "value": "ko_blocco_dap",        "label": "KO - Blocco DAP" },
-              { "value": "ok_appuntamento_preso","label": "OK - Appuntamento preso" }
+              { "value": "ok_in_trattativa",     "label": "OK - In trattativa",      "amex_status": "Qualified - Appointment" },
+              { "value": "ko_non_interessato",   "label": "KO - Non interessato",    "amex_status": "Disqualified - Not Interested" },
+              { "value": "ok_inviata_amex",      "label": "OK - Inviata ad Amex",    "amex_status": "Qualified - Stage 7" },
+              { "value": "ko_lead_non_valido",   "label": "KO - Lead non valido",    "amex_status": "Disqualified - Incorrect Contact Information" },
+              { "value": "ko_irreperibile",      "label": "KO - Irreperibile",       "amex_status": "Disqualified - Incorrect Contact Information" },
+              { "value": "ko_gia_cliente",       "label": "KO - Già Cliente",        "amex_status": "Disqualified - Existing Client" },
+              { "value": "ok_richiamare",        "label": "OK - Richiamare",         "amex_status": "Qualified - Accepted" },
+              { "value": "ko_blocco_dap",        "label": "KO - Blocco DAP",         "amex_status": "Disqualified - Not Eligible" },
+              { "value": "ok_appuntamento_preso","label": "OK - Appuntamento preso", "amex_status": "Qualified - Appointment" }
             ]
           },
           {

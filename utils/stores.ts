@@ -324,7 +324,10 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
   // Esiti dei workflow manage_form: costruiamo la mappa value→label leggendo le
   // `options` dei field del workflow dei clienti coinvolti (così l'etichetta
   // mostrata è quella configurata, non lo slug grezzo). Chiave: `${client_id}:${value}`.
+  // Ogni opzione può avere anche `amex_status` ("Status - Sub status" richiesto
+  // da Amex per il reporting delle lead AiCall): lo mappiamo allo stesso modo.
   const esitoLabelByClientValue = new Map<string, string>();
+  const amexStatusByClientValue = new Map<string, string>();
   const outcomeClientIds = Array.from(
     new Set((visitOutcomes ?? []).map((o: { client_id: number }) => o.client_id))
   );
@@ -340,6 +343,9 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
           for (const opt of f?.options ?? []) {
             if (opt?.value != null) {
               esitoLabelByClientValue.set(`${wf.client_id}:${opt.value}`, opt.label ?? String(opt.value));
+              if (opt.amex_status) {
+                amexStatusByClientValue.set(`${wf.client_id}:${opt.value}`, String(opt.amex_status));
+              }
             }
           }
         }
@@ -356,6 +362,9 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
       const esitoLabel = esitoVal
         ? esitoLabelByClientValue.get(`${o.client_id}:${esitoVal}`) ?? String(esitoVal)
         : '';
+      const amexStatus = esitoVal
+        ? amexStatusByClientValue.get(`${o.client_id}:${esitoVal}`) ?? ''
+        : '';
       const clientId = o.client_id ?? store?.client_id ?? null;
       return {
         type: 'outcome' as const,
@@ -369,6 +378,7 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
         status: store?.status || '',
         esito: esitoVal,
         esito_label: esitoLabel,
+        amex_status: amexStatus,
         note: (data.note as string | undefined) ?? '',
         created_at: o.created_at,
         owner_name: store?.owner_name,

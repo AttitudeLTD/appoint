@@ -483,6 +483,7 @@ export default function DashboardPage() {
       'Provincia',
       'Data setup',
       'Stato',
+      'Status Amex',
       ...(withAgent ? ['Agente'] : []),
       'Data',
       'URL Foto',
@@ -511,6 +512,7 @@ export default function DashboardPage() {
         entry.provincia || '',
         formatDataSetup(entry.data_setup),
         stato,
+        entry.type === 'outcome' ? entry.amex_status || '' : '',
         ...(withAgent ? [entry.modifier_display_name ?? ''] : []),
         new Date(entry.created_at).toLocaleString('it-IT'),
         entry.type === 'photo' ? entry.photo_url || '' : '',
@@ -639,8 +641,12 @@ export default function DashboardPage() {
       const idChunks = chunk(storeIds, 500);
 
       // Ultimo esito per negozio (le righe arrivano già ordinate desc → la prima
-      // vista per uno store_id è la più recente).
-      const outcomeByStore = new Map<number, { userId: string; esito: string }>();
+      // vista per uno store_id è la più recente). `createdAt` è la data in cui
+      // l'agente ha esitato la lead (richiesta Amex: "Data esito" in estrazione).
+      const outcomeByStore = new Map<
+        number,
+        { userId: string; esito: string; createdAt: string }
+      >();
       for (const ids of idChunks) {
         const { data } = await supabase
           .from('store_visit_outcomes')
@@ -652,6 +658,7 @@ export default function DashboardPage() {
           outcomeByStore.set(o.store_id as number, {
             userId: o.user_id as string,
             esito: ((o.outcome_data ?? {}) as any)?.esito ?? '',
+            createdAt: (o.created_at as string) ?? '',
           });
         }
       }
@@ -691,8 +698,11 @@ export default function DashboardPage() {
         }
       }
 
-      // Etichette esito leggibili dal workflow del cliente (value → label).
+      // Etichette esito leggibili dal workflow del cliente (value → label) +
+      // mappa value → "Status - Sub status" Amex (chiave `amex_status` sulle
+      // opzioni; presente per AiCall, vuota per gli altri clienti).
       const esitoLabelByValue = new Map<string, string>();
+      const amexStatusByValue = new Map<string, string>();
       if (outcomeByStore.size > 0) {
         const { data: wf } = await supabase
           .from('client_workflows')
@@ -704,6 +714,9 @@ export default function DashboardPage() {
             for (const opt of f?.options ?? []) {
               if (opt?.value != null) {
                 esitoLabelByValue.set(String(opt.value), opt.label ?? String(opt.value));
+                if (opt.amex_status) {
+                  amexStatusByValue.set(String(opt.value), String(opt.amex_status));
+                }
               }
             }
           }
@@ -733,6 +746,8 @@ export default function DashboardPage() {
         'Tier',
         'Status',
         'Ultimo esito',
+        'Status Amex',
+        'Data esito',
         'Agente',
         'Data setup',
         'Cliente',
@@ -742,7 +757,8 @@ export default function DashboardPage() {
       ];
       const rows = (storesData ?? []).map((s: any) => {
         const isPrimary = primaryByStoreId.get(s.id) === true;
-        const esitoVal = outcomeByStore.get(s.id)?.esito ?? '';
+        const outcome = outcomeByStore.get(s.id);
+        const esitoVal = outcome?.esito ?? '';
         const agentId = agentIdByStore.get(s.id);
         return [
           s.id,
@@ -763,6 +779,8 @@ export default function DashboardPage() {
           s.tier ?? '',
           getStatusLabel(s.status) || s.status || '',
           esitoVal ? esitoLabelByValue.get(esitoVal) ?? esitoVal : '',
+          esitoVal ? amexStatusByValue.get(esitoVal) ?? '' : '',
+          outcome?.createdAt ? new Date(outcome.createdAt).toLocaleString('it-IT') : '',
           agentId ? agentNameById.get(agentId) ?? '' : '',
           formatDataSetup(s.data_setup),
           clientName,

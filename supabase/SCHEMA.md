@@ -247,6 +247,22 @@ I valori vengono persistiti in `store_visit_outcomes.outcome_data` (jsonb) come 
 **AiCall** _(creato come "PROGETTO AICALL", poi rinominato)_ — lead generati dal partner _AiCall_: i pin sono visibili a **tutti** gli agenti (grant su `user_client_access` per ogni utente). Lo Sheet "Gestisci" mostra un `select` obbligatorio `esito` con i valori:
 `OK - In trattativa`, `KO - Non interessato`, `OK - Inviata ad Amex`, `KO - Lead non valido`, `KO - Irreperibile`, `KO - Già Cliente`, `OK - Richiamare`, `KO - Blocco DAP`, `OK - Appuntamento preso`; più un `textarea` `note`. Al salvataggio i valori finiscono in `store_visit_outcomes.outcome_data` (lo status del pin non viene cambiato). Vedi [`seed/20260616_aicall_project.sql`](./seed/20260616_aicall_project.sql).
 
+_Agg. 2026-08-24_ — ogni opzione della tendina ESITO porta anche la chiave **`amex_status`** con il "Status - Sub status" richiesto da Amex per il reporting:
+
+| Esito                     | `amex_status`                                  |
+| ------------------------- | ---------------------------------------------- |
+| OK - In trattativa        | Qualified - Appointment                        |
+| KO - Non interessato      | Disqualified - Not Interested                  |
+| OK - Inviata ad Amex      | Qualified - Stage 7                            |
+| KO - Lead non valido      | Disqualified - Incorrect Contact Information   |
+| KO - Irreperibile         | Disqualified - Incorrect Contact Information   |
+| KO - Già Cliente          | Disqualified - Existing Client                 |
+| OK - Richiamare           | Qualified - Accepted                           |
+| KO - Blocco DAP           | Disqualified - Not Eligible                    |
+| OK - Appuntamento preso   | Qualified - Appointment                        |
+
+Gli agenti continuano a vedere le etichette italiane nella tendina; `amex_status` compare nelle estrazioni CSV della dashboard ("Storico Attività" → colonna _Status Amex_; "Esporta lista negozi" → colonne _Status Amex_ e _Data esito_).
+
 > ℹ️ I **nuovi** utenti (signup successivo al seed) sono `restricted` senza grant: per far vedere loro PROGETTO AICALL va ri-eseguito lo step 3 del seed o concesso il grant in onboarding.
 
 ---
