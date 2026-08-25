@@ -34,9 +34,10 @@ function toIsoDate(raw) {
 
 const STREET_KEYWORDS = [
   'VIALE', 'VIA', 'V.LE', 'CORSO', 'C.SO', 'PIAZZALE', 'PIAZZA', 'P.ZZA',
-  'P.ZA', 'P.LE', 'LARGO', 'STRADA', 'S.DA', 'S.STATALE', 'ST. PROVINCIALE',
-  'LOCALITA', "LOCALITA'", 'LOC', 'LOC.', 'CONTRADA', 'C.DA', 'BORGO',
-  'FRAZIONE', 'NUCLEO', 'VICOLO', 'CUPA',
+  'P.ZA', 'P.LE', 'LARGO', 'STRADALE', 'STRADA', 'S.DA', 'S.STATALE',
+  'ST. PROVINCIALE', 'LOCALITA', "LOCALITA'", 'LOC', 'LOC.', 'CONTRADA',
+  'C.DA', 'BORGO', 'FRAZIONE', 'NUCLEO', 'VICOLO', 'CUPA', 'CASCINA',
+  'CANTONE', 'LUNGOMARE',
 ];
 
 // Rimuove prefissi/postfissi operativi e isola la parte indirizzo.
