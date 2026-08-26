@@ -22,6 +22,9 @@ import {
 } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
+// Basemap vettoriale (OpenFreeMap) renderizzato da MapLibre GL dentro Leaflet.
+import '@maplibre/maplibre-gl-leaflet';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { Agent, Store } from '@/types';
 import { createClient } from '@/utils/supabase/client';
@@ -65,6 +68,48 @@ import StorePopup from './StorePopup';
 import { Button } from './ui/button';
 
 type GovernanceLevel = 'agent' | 'am' | 'supervisor';
+
+// Basemap vettoriale OpenFreeMap (https://openfreemap.org): gratuito, senza
+// API key e senza limiti di traffico, servito come vector tiles e renderizzato
+// da MapLibre GL agganciato a Leaflet (plugin @maplibre/maplibre-gl-leaflet).
+// Sostituisce i raster CARTO Voyager, che da ago-2026 richiedono una API key
+// (watermark "API KEY REQUIRED" senza chiave). Lo stile "liberty" è il più
+// vicino al look Voyager che avevamo. In più il vettoriale è nitido anche su
+// schermi retina e negli zoom intermedi.
+function VectorBaseLayer({ styleUrl }: { styleUrl: string }) {
+  const map = useMap();
+  useEffect(() => {
+    const layer = L.maplibreGL({
+      style: styleUrl,
+      // opzioni Leaflet extra (attribution) non tipizzate dal plugin
+      ...({
+        attribution:
+          '&copy; <a href="https://openfreemap.org">OpenFreeMap</a> &copy; <a href="https://www.openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      } as object),
+    });
+    layer.addTo(map);
+    return () => {
+      map.removeLayer(layer);
+    };
+  }, [map, styleUrl]);
+  return null;
+}
+
+// WebGL è richiesto da MapLibre: su device/WebView senza WebGL (rarissimi)
+// ricadiamo sui raster OSM così la mappa resta comunque funzionante.
+// Cache del risultato: il check crea un canvas, inutile ripeterlo a ogni render.
+let webglSupport: boolean | null = null;
+function supportsWebGL(): boolean {
+  if (webglSupport == null) {
+    try {
+      const canvas = document.createElement('canvas');
+      webglSupport = !!(canvas.getContext('webgl2') || canvas.getContext('webgl'));
+    } catch {
+      webglSupport = false;
+    }
+  }
+  return webglSupport;
+}
 
 // Create a new component to handle map movements.
 // Debounciamo `moveend` per evitare lo "spam" di fetch durante un pan rapido
@@ -1651,6 +1696,9 @@ const Map = ({ user }: any) => {
             }}
             center={coord}
             zoom={16}
+            // limite mappa (prima era sul TileLayer raster; col layer
+            // vettoriale MapLibre va messo qui, altrimenti zoom infinito)
+            maxZoom={20}
             scrollWheelZoom={true}
             zoomControl={false}
           >
@@ -1662,28 +1710,11 @@ const Map = ({ user }: any) => {
                 onVisibilityChange={setIsAwayFromUser}
               />
             )}
-            {/* Tile delle strade. Da ago-2026 CARTO richiede una API key sui
-                basemap raster (senza chiave i tile arrivano col watermark
-                "API KEY REQUIRED"): con NEXT_PUBLIC_CARTO_BASEMAP_KEY usiamo
-                Voyager come sempre, senza chiave fallback su OSM standard
-                (stile diverso ma nessun watermark). Chiave gratuita fino a
-                5M tile/mese: https://carto.com/basemaps/apikey
-                Ottimizzazioni di caricamento:
-                - subdomains → più host paralleli (più download in parallelo);
-                - updateWhenIdle={false} → carica i tile DURANTE il pan, non solo a fine gesto;
-                - updateWhenZooming={false} → niente fetch intermedi mentre si zooma (meno richieste sprecate);
-                - keepBuffer={4} → tiene in cache una corona di tile attorno al viewport
-                  (pan brevi non riscaricano nulla → mappa "istantanea"). */}
-            {process.env.NEXT_PUBLIC_CARTO_BASEMAP_KEY ? (
-              <TileLayer
-                url={`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${process.env.NEXT_PUBLIC_CARTO_BASEMAP_KEY}`}
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                subdomains={['a', 'b', 'c', 'd']}
-                updateWhenIdle={false}
-                updateWhenZooming={false}
-                keepBuffer={4}
-                maxZoom={20}
-              />
+            {/* Basemap. Default: vettoriale OpenFreeMap "liberty" (gratuito,
+                senza API key né limiti — vedi VectorBaseLayer). Fallback raster
+                OSM solo se il device non supporta WebGL. */}
+            {supportsWebGL() ? (
+              <VectorBaseLayer styleUrl='https://tiles.openfreemap.org/styles/liberty' />
             ) : (
               <TileLayer
                 url='https://tile.openstreetmap.org/{z}/{x}/{y}.png'
