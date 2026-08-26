@@ -1711,10 +1711,14 @@ const Map = ({ user }: any) => {
               />
             )}
             {/* Basemap. Default: vettoriale OpenFreeMap "liberty" (gratuito,
-                senza API key né limiti — vedi VectorBaseLayer). Fallback raster
-                OSM solo se il device non supporta WebGL. */}
+                senza API key né limiti — vedi VectorBaseLayer). Lo stile è la
+                copia locale /map-styles/liberty-it.json: identica all'originale
+                ma con le etichette che preferiscono i nomi italiani (name:it →
+                "Roma" invece di "Rome"); tile/font/sprite restano su
+                tiles.openfreemap.org. Fallback raster OSM solo se il device
+                non supporta WebGL. */}
             {supportsWebGL() ? (
-              <VectorBaseLayer styleUrl='https://tiles.openfreemap.org/styles/liberty' />
+              <VectorBaseLayer styleUrl='/map-styles/liberty-it.json' />
             ) : (
               <TileLayer
                 url='https://tile.openstreetmap.org/{z}/{x}/{y}.png'
