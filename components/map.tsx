@@ -1662,20 +1662,38 @@ const Map = ({ user }: any) => {
                 onVisibilityChange={setIsAwayFromUser}
               />
             )}
-            {/* Tile delle strade. Ottimizzazioni di caricamento:
-                - subdomains a–d → fino a 4 host paralleli (più download in parallelo);
+            {/* Tile delle strade. Da ago-2026 CARTO richiede una API key sui
+                basemap raster (senza chiave i tile arrivano col watermark
+                "API KEY REQUIRED"): con NEXT_PUBLIC_CARTO_BASEMAP_KEY usiamo
+                Voyager come sempre, senza chiave fallback su OSM standard
+                (stile diverso ma nessun watermark). Chiave gratuita fino a
+                5M tile/mese: https://carto.com/basemaps/apikey
+                Ottimizzazioni di caricamento:
+                - subdomains → più host paralleli (più download in parallelo);
                 - updateWhenIdle={false} → carica i tile DURANTE il pan, non solo a fine gesto;
                 - updateWhenZooming={false} → niente fetch intermedi mentre si zooma (meno richieste sprecate);
                 - keepBuffer={4} → tiene in cache una corona di tile attorno al viewport
                   (pan brevi non riscaricano nulla → mappa "istantanea"). */}
-            <TileLayer
-              url='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
-              subdomains={['a', 'b', 'c', 'd']}
-              updateWhenIdle={false}
-              updateWhenZooming={false}
-              keepBuffer={4}
-              maxZoom={20}
-            />
+            {process.env.NEXT_PUBLIC_CARTO_BASEMAP_KEY ? (
+              <TileLayer
+                url={`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${process.env.NEXT_PUBLIC_CARTO_BASEMAP_KEY}`}
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                subdomains={['a', 'b', 'c', 'd']}
+                updateWhenIdle={false}
+                updateWhenZooming={false}
+                keepBuffer={4}
+                maxZoom={20}
+              />
+            ) : (
+              <TileLayer
+                url='https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                updateWhenIdle={false}
+                updateWhenZooming={false}
+                keepBuffer={4}
+                maxZoom={19}
+              />
+            )}
             <ZoomControl position='bottomright' />
 
             {/* Marker for the user's current location */}
