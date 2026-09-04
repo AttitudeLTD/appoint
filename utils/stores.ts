@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
+import { chunk, fetchAllRows } from '@/utils/supabase/fetch-all';
 
 export type FetchUserStoresOptions = {
   dateFrom?: string;
@@ -104,17 +105,22 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
       ? Array.from(new Set([userId, ...baseIds]))
       : baseIds;
 
-  // Build date filter for history mode (storico attività)
-  let statusQuery = supabase
-    .from('store_status_logs')
-    .select('*')
-    .in('modifier', targetIds)
-    .order('created_at', { ascending: false })
-    .limit(2000);
-  if (dateFrom) statusQuery = statusQuery.gte('created_at', dateFrom);
-  if (dateTo) statusQuery = statusQuery.lte('created_at', dateTo);
+  // Tutte le query "attività" sono paginate con fetchAllRows: Supabase tronca
+  // a 1000 righe per risposta (anche con .limit più alto) e su "tutto il
+  // periodo" lo storico supera la soglia. Ordine stabile: created_at desc + id.
 
-  const { data: storeStatuses, error: statusError } = await statusQuery;
+  // Build date filter for history mode (storico attività)
+  const { data: storeStatuses, error: statusError } = await fetchAllRows((from, to) => {
+    let q = supabase
+      .from('store_status_logs')
+      .select('*')
+      .in('modifier', targetIds)
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false });
+    if (dateFrom) q = q.gte('created_at', dateFrom);
+    if (dateTo) q = q.lte('created_at', dateTo);
+    return q.range(from, to);
+  });
 
   if (statusError) {
     console.error('Error fetching store statuses:', statusError);
@@ -122,28 +128,34 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
   }
 
   // Get photos for target agents (from "Mi trovo qui")
-  let photosQuery = supabase
-    .from('store_photos')
-    .select('*')
-    .in('user_id', targetIds)
-    .order('created_at', { ascending: false });
-  if (dateFrom) photosQuery = photosQuery.gte('created_at', dateFrom);
-  if (dateTo) photosQuery = photosQuery.lte('created_at', dateTo);
-  const { data: storePhotos, error: photosError } = await photosQuery;
+  const { data: storePhotos, error: photosError } = await fetchAllRows((from, to) => {
+    let q = supabase
+      .from('store_photos')
+      .select('*')
+      .in('user_id', targetIds)
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false });
+    if (dateFrom) q = q.gte('created_at', dateFrom);
+    if (dateTo) q = q.lte('created_at', dateTo);
+    return q.range(from, to);
+  });
 
   if (photosError) {
     console.error('Error fetching store photos:', photosError);
   }
 
   // Get generic photos for target agents (from "Inserisci foto")
-  let genericQuery = supabase
-    .from('generic_photos')
-    .select('*')
-    .in('user_id', targetIds)
-    .order('created_at', { ascending: false });
-  if (dateFrom) genericQuery = genericQuery.gte('created_at', dateFrom);
-  if (dateTo) genericQuery = genericQuery.lte('created_at', dateTo);
-  const { data: genericPhotos, error: genericPhotosError } = await genericQuery;
+  const { data: genericPhotos, error: genericPhotosError } = await fetchAllRows((from, to) => {
+    let q = supabase
+      .from('generic_photos')
+      .select('*')
+      .in('user_id', targetIds)
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false });
+    if (dateFrom) q = q.gte('created_at', dateFrom);
+    if (dateTo) q = q.lte('created_at', dateTo);
+    return q.range(from, to);
+  });
 
   if (genericPhotosError) {
     console.error('Error fetching generic photos:', genericPhotosError);
@@ -153,14 +165,17 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
   // viene salvato in `store_visit_outcomes.outcome_data` e NON cambia lo status
   // del pin, quindi non comparirebbe nello storico basato su status_logs. Lo
   // recuperiamo a parte per renderlo visibile in dashboard/CSV.
-  let outcomesQuery = supabase
-    .from('store_visit_outcomes')
-    .select('store_id, client_id, user_id, outcome_data, created_at')
-    .in('user_id', targetIds)
-    .order('created_at', { ascending: false });
-  if (dateFrom) outcomesQuery = outcomesQuery.gte('created_at', dateFrom);
-  if (dateTo) outcomesQuery = outcomesQuery.lte('created_at', dateTo);
-  const { data: visitOutcomes, error: outcomesError } = await outcomesQuery;
+  const { data: visitOutcomes, error: outcomesError } = await fetchAllRows((from, to) => {
+    let q = supabase
+      .from('store_visit_outcomes')
+      .select('store_id, client_id, user_id, outcome_data, created_at')
+      .in('user_id', targetIds)
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false });
+    if (dateFrom) q = q.gte('created_at', dateFrom);
+    if (dateTo) q = q.lte('created_at', dateTo);
+    return q.range(from, to);
+  });
 
   if (outcomesError) {
     console.error('Error fetching store visit outcomes:', outcomesError);
@@ -193,14 +208,18 @@ export async function fetchUserStores(userId: string, options?: FetchUserStoresO
   // NB: esistono DUE relazioni stores↔clients (FK diretta `stores.client_id` e
   // N:N via `store_clients`), quindi va disambiguata la FK nell'embed, altrimenti
   // PostgREST risponde PGRST201 e la query fallisce (storico vuoto).
-  const { data: storeDetails, error: storeError } = await supabase
-    .from('stores')
-    .select('*, client:clients!stores_client_id_fkey(id, name)')
-    .in('id', uniqueStoreIds);
-
-  if (storeError) {
-    console.error('Error fetching store details:', storeError);
-    return [];
+  // A blocchi di 500 id: querystring corta e risposte sempre sotto max-rows.
+  const storeDetails: any[] = [];
+  for (const ids of chunk(uniqueStoreIds, 500)) {
+    const { data, error: storeError } = await supabase
+      .from('stores')
+      .select('*, client:clients!stores_client_id_fkey(id, name)')
+      .in('id', ids);
+    if (storeError) {
+      console.error('Error fetching store details:', storeError);
+      return [];
+    }
+    storeDetails.push(...(data ?? []));
   }
 
   // Create a map of store details for easy lookup
