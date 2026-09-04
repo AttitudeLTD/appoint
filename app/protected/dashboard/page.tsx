@@ -24,6 +24,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
+import { chunk, fetchAllRows } from '@/utils/supabase/fetch-all';
 import { fetchUserStores, getDashboardContext } from '@/utils/stores';
 import { getMyLoc, parseCoords } from '@/utils/navigation';
 import { useEffect, useState, useMemo, useCallback } from 'react';
@@ -566,20 +567,31 @@ export default function DashboardPage() {
     setExportLoading(true);
     try {
       const clientIdNum = Number(exportClientId);
+      // NB: Supabase tronca ogni risposta a 1000 righe. AiCall ha superato la
+      // soglia (l'export "si fermava" alla data setup della millesima lead):
+      // le liste per cliente vanno paginate con fetchAllRows.
       // 1) Tutti gli store_id collegati a questo cliente (primary o secondary).
-      const { data: links, error: linksErr } = await supabase
-        .from('store_clients')
-        .select('store_id, is_primary')
-        .eq('client_id', clientIdNum);
+      const { data: links, error: linksErr } = await fetchAllRows((from, to) =>
+        supabase
+          .from('store_clients')
+          .select('store_id, is_primary')
+          .eq('client_id', clientIdNum)
+          .order('store_id', { ascending: true })
+          .range(from, to)
+      );
       if (linksErr) throw linksErr;
 
       // 2) Aggiungiamo anche i (eventuali) negozi che hanno SOLO il vecchio
       //    campo `stores.client_id` valorizzato e nessuna riga in store_clients
       //    (back-compat con il modello pre-multicliente).
-      const { data: legacyStores, error: legacyErr } = await supabase
-        .from('stores')
-        .select('id')
-        .eq('client_id', clientIdNum);
+      const { data: legacyStores, error: legacyErr } = await fetchAllRows((from, to) =>
+        supabase
+          .from('stores')
+          .select('id')
+          .eq('client_id', clientIdNum)
+          .order('id', { ascending: true })
+          .range(from, to)
+      );
       if (legacyErr) throw legacyErr;
 
       const primaryByStoreId = new Map<number, boolean>();
@@ -594,14 +606,23 @@ export default function DashboardPage() {
         return;
       }
 
-      // 3) Fetch dei dettagli negozio.
-      const { data: storesData, error: storesErr } = await supabase
-        .from('stores')
-        .select(
-          'id, name, pi, cf_azienda, address, comune, provincia, cap, regione, phone, email, category, codice_ateco, dipendenti, fatturato, tier, status, data_setup, created_at, created_by'
-        )
-        .in('id', storeIds);
-      if (storesErr) throw storesErr;
+      // Le query per id sono in blocchi da 500 per non superare i limiti di
+      // lunghezza della querystring e restare sotto max-rows per risposta.
+      const idChunks = chunk(storeIds, 500);
+
+      // 3) Fetch dei dettagli negozio (a blocchi, ordinati per id).
+      const storesData: any[] = [];
+      for (const ids of idChunks) {
+        const { data, error: storesErr } = await supabase
+          .from('stores')
+          .select(
+            'id, name, pi, cf_azienda, address, comune, provincia, cap, regione, phone, email, category, codice_ateco, dipendenti, fatturato, tier, status, data_setup, created_at, created_by'
+          )
+          .in('id', ids)
+          .order('id', { ascending: true });
+        if (storesErr) throw storesErr;
+        storesData.push(...(data ?? []));
+      }
 
       // 4) Lookup nominativo creatore (solo per chi ce l'ha valorizzato).
       const creatorIds = Array.from(
@@ -631,15 +652,6 @@ export default function DashboardPage() {
       //   • `store_status_logs`    → autore dell'ultimo cambio di stato.
       // L'esito, se c'è, è il segnale più preciso: è chi ha effettivamente
       // lavorato il pin. Altrimenti si ricade sull'ultimo log di stato.
-      // Le query sono in blocchi da 500 id per non superare i limiti di lunghezza
-      // della querystring sui clienti con molti negozi.
-      const chunk = <T,>(arr: T[], size: number): T[][] => {
-        const out: T[][] = [];
-        for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-        return out;
-      };
-      const idChunks = chunk(storeIds, 500);
-
       // Ultimo esito per negozio (le righe arrivano già ordinate desc → la prima
       // vista per uno store_id è la più recente). `createdAt` è la data in cui
       // l'agente ha esitato la lead (richiesta Amex: "Data esito" in estrazione).
@@ -648,11 +660,15 @@ export default function DashboardPage() {
         { userId: string; esito: string; createdAt: string }
       >();
       for (const ids of idChunks) {
-        const { data } = await supabase
-          .from('store_visit_outcomes')
-          .select('store_id, user_id, outcome_data, created_at')
-          .in('store_id', ids)
-          .order('created_at', { ascending: false });
+        const { data } = await fetchAllRows((from, to) =>
+          supabase
+            .from('store_visit_outcomes')
+            .select('store_id, user_id, outcome_data, created_at')
+            .in('store_id', ids)
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .range(from, to)
+        );
         for (const o of data ?? []) {
           if (outcomeByStore.has(o.store_id as number)) continue;
           outcomeByStore.set(o.store_id as number, {
@@ -666,11 +682,15 @@ export default function DashboardPage() {
       // Ultimo cambio di stato per negozio (fallback).
       const statusUserByStore = new Map<number, string>();
       for (const ids of idChunks) {
-        const { data } = await supabase
-          .from('store_status_logs')
-          .select('store_id, modifier, created_at')
-          .in('store_id', ids)
-          .order('created_at', { ascending: false });
+        const { data } = await fetchAllRows((from, to) =>
+          supabase
+            .from('store_status_logs')
+            .select('store_id, modifier, created_at')
+            .in('store_id', ids)
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .range(from, to)
+        );
         for (const l of data ?? []) {
           if (statusUserByStore.has(l.store_id as number)) continue;
           statusUserByStore.set(l.store_id as number, l.modifier as string);
@@ -780,7 +800,8 @@ export default function DashboardPage() {
           getStatusLabel(s.status) || s.status || '',
           esitoVal ? esitoLabelByValue.get(esitoVal) ?? esitoVal : '',
           esitoVal ? amexStatusByValue.get(esitoVal) ?? '' : '',
-          outcome?.createdAt ? new Date(outcome.createdAt).toLocaleString('it-IT') : '',
+          // solo data, senza orario (richiesta Tiziana)
+          outcome?.createdAt ? new Date(outcome.createdAt).toLocaleDateString('it-IT') : '',
           agentId ? agentNameById.get(agentId) ?? '' : '',
           formatDataSetup(s.data_setup),
           clientName,
