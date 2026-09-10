@@ -263,6 +263,8 @@ _Agg. 2026-08-24_ — ogni opzione della tendina ESITO porta anche la chiave **`
 
 Gli agenti continuano a vedere le etichette italiane nella tendina; `amex_status` compare nelle estrazioni CSV della dashboard ("Storico Attività" → colonna _Status Amex_; "Esporta lista negozi" → colonne _Status Amex_ e _Data esito_).
 
+_Agg. 2026-09-10_ — gli appuntamenti presi dal **call center** arrivano via webhook (`POST /api/webhooks/callcenter`, vedi [changelog](#2026-09-10--webhook-appuntamenti-dal-crm-del-call-center)) e vengono registrati come esito `ok_appuntamento_preso` dell'utente tecnico **Call Center AiCall** (`users.email = callcenter.aicall@appoint.invalid`, `role = 'agent'`, non può fare login). Se la P.IVA non esiste il webhook crea anche il punto vendita.
+
 > ℹ️ I **nuovi** utenti (signup successivo al seed) sono `restricted` senza grant: per far vedere loro PROGETTO AICALL va ri-eseguito lo step 3 del seed o concesso il grant in onboarding.
 
 ---
@@ -714,6 +716,82 @@ Vedi [`./migrations/README.md`](./migrations/README.md) per la convenzione di na
 ---
 
 ## Changelog
+
+### 2026-09-10 — Webhook appuntamenti dal CRM del call center
+
+**Requisito.** Un call center fissa appuntamenti per gli agenti AiCall. Invece di
+farli caricare a mano (o di leggere periodicamente un endpoint del partner), il
+CRM del call center fa una **POST HTTPS verso Appoint** ogni volta che chiude un
+appuntamento, autenticata con un token che diamo noi. Il pin risulta così già
+esitato "OK - Appuntamento preso" senza alcuna azione dell'agente.
+
+**Endpoint.** `POST /api/webhooks/callcenter` (`app/api/webhooks/callcenter/route.ts`),
+Node runtime, escluso dal matcher del middleware (nessuna sessione utente). Spec
+per il partner: [`docs/webhook-callcenter.md`](../docs/webhook-callcenter.md).
+Logica in `utils/callcenter/`:
+
+| Modulo        | Ruolo |
+| ------------- | ----- |
+| `payload.ts`  | validazione/normalizzazione del JSON (P.IVA a 11 cifre, date ISO/italiane → istante UTC assumendo ora italiana se senza fuso, indirizzo "in una riga" → via/CAP/comune/provincia) |
+| `italy.ts`    | sigle province → nome/regione (stessa grafia dei lead importati: "Emilia Romagna") |
+| `geocode.ts`  | Nominatim **strutturato** (street/postalcode/city) con controllo che il risultato ricada nel comune; fallback al centro del comune (`precision: 'comune'`) |
+| `register.ts` | l'unica funzione che scrive: `registerAppointment()` |
+
+**Nessuna modifica allo schema.** Il webhook scrive con la **service role**
+(bypass RLS) esattamente le stesse righe che scriverebbe un agente dallo Sheet
+"Gestisci" con `lock_pin`:
+
+1. `stores`: match su `(client_id = 5, pi)`. Se manca → INSERT (`status =
+   'in_progress'`, `category = 'altro'`, `created_by` = utente tecnico,
+   `data_setup` = data creazione esito, `coordinates` nel formato storico
+   `"[lat, lng]"` → trigger `convert_coordinates_to_location`) + riga in
+   `store_clients` (`is_primary = true`). Se esiste → completa **solo i campi
+   vuoti** (referente, telefono, CAP…); il pin **non si sposta** se ha già
+   coordinate (l'indirizzo dell'appuntamento, se diverso, va nella nota).
+2. `store_status_logs`: se il pin era `free` → `in_progress`, `modifier` = utente
+   tecnico. Necessario perché la mappa legge gli esiti solo dei pin non-`free`
+   (`nonFreeIds` in `components/map.tsx`).
+3. `store_visit_outcomes`: UPSERT su `(store_id, user_id)` con
+   `outcome_data = { esito: 'ok_appuntamento_preso', note, data_appuntamento,
+   indirizzo_appuntamento, note_operatore, origine: 'callcenter', id_esterno }`
+   e `created_at` = data creazione esito del CRM. Il campo `note` è l'unico che
+   la scheda mostra oltre all'esito, quindi contiene tutto: `Appuntamento:
+   15/09/2026 ore 10:30 — Titolare: … — Note operatore: …`. Un secondo invio
+   per la stessa P.IVA **aggiorna** l'appuntamento (spostamenti) invece di
+   duplicarlo.
+
+**Utente tecnico "Call Center AiCall".** `store_visit_outcomes.user_id`,
+`stores.created_by` e `store_status_logs.modifier` richiedono una riga in
+`public.users` (FK → `auth.users`). Il webhook la risolve per email
+(`callcenter.aicall@appoint.invalid`) e, se manca, la crea al primo invio con
+`auth.admin.createUser` (email confermata, nessuna password, `ban_duration`
+100 anni; il dominio non è comunque tra quelli ammessi da `utils/auth.ts`), poi
+fissa `name/surname/role = 'Call Center'/'AiCall'/'agent'` e il grant
+`user_client_access` su AiCall. `role = 'agent'` fa entrare il call center nei
+filtri agente della Dashboard e nello storico visibile a supervisor/AM. Seed
+equivalente da SQL editor: [`seed/20260910_callcenter_user.sql`](./seed/20260910_callcenter_user.sql).
+
+**Perché non blocca i pin.** AiCall ha `editing_policy = 'shared'` (vedi
+2026-07-27 (e)): l'esito dell'utente tecnico fa comparire "gestito da Call Center
+AiCall" ma non toglie il pannello Gestisci a nessuno; l'agente che poi visita
+salva la **propria** riga esito, quella del call center resta nello storico.
+Effetto sul colore del pin: `ESITO_TO_STATUS['ok_appuntamento_preso'] =
+'in_progress'`, coerente con lo status scritto.
+
+**Variabili d'ambiente (Vercel).** `SUPABASE_SERVICE_ROLE_KEY`,
+`CALLCENTER_WEBHOOK_TOKEN` (≥ 16 caratteri, condiviso col partner); opzionali
+`CALLCENTER_CLIENT_ID` (default 5) e `CALLCENTER_USER_ID`. Senza le prime due
+l'endpoint risponde `503 not_configured`.
+
+**Verifica.** Parser e geocoder esercitati con casi reali (San Prisco → stesse
+coordinate del lead importato; "Via Roma 10, Milano" senza CAP → Nominatim
+propone Legnano, scartato dal controllo comune → centro di Milano con
+`precision: 'comune'`). `registerAppointment()` coperta da 9 scenari su un client
+Supabase finto (lead nuovo, re-invio idempotente, lead `free` esistente, esito
+dell'agente intatto, lead senza pin, geocodifica fallita/approssimata, dry run
+senza scritture, utente tecnico da seed/env, status non-`free` non toccato).
+HTTP verificato su build di produzione: 405/503/401/400/500 e middleware che
+continua a proteggere `/protected`.
 
 ### 2026-07-27 (e) — `clients.editing_policy`: lead condivisi per AiCall
 

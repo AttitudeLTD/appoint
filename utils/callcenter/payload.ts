@@ -1,0 +1,336 @@
+/**
+ * Parsing e validazione del JSON inviato dal CRM del call center al webhook
+ * `POST /api/webhooks/callcenter` (vedi docs/webhook-callcenter.md).
+ *
+ * Modulo puro (nessun I/O): riceve il body già deserializzato e restituisce o un
+ * payload normalizzato o la lista degli errori da rimandare al partner con 400.
+ */
+import { normalizeProvincia, regioneByProvincia } from './italy';
+
+export interface AppointmentPayload {
+  /** Id univoco dell'appuntamento nel CRM del partner (idempotenza / tracciabilità). */
+  idEsterno: string | null;
+  ragioneSociale: string;
+  /** 11 cifre, senza prefisso "IT" né spazi. Chiave di matching con `stores.pi`. */
+  partitaIva: string;
+  /** Via e civico. */
+  indirizzo: string;
+  cap: string | null;
+  comune: string;
+  /** Sigla a 2 lettere. */
+  provincia: string | null;
+  regione: string | null;
+  titolare: string | null;
+  telefono: string | null;
+  email: string | null;
+  dataCreazioneEsito: Date;
+  dataAppuntamento: Date;
+  /** false se il partner ha mandato solo la data (senza orario). */
+  dataAppuntamentoHasTime: boolean;
+  noteOperatore: string | null;
+  /** true → valida e geocodifica ma non scrive nulla. */
+  dryRun: boolean;
+}
+
+export type ParseResult =
+  | { ok: true; value: AppointmentPayload; warnings: string[] }
+  | { ok: false; errors: string[] };
+
+const TZ = 'Europe/Rome';
+
+const collapse = (s: string) => s.replace(/\s+/g, ' ').trim();
+
+/** Primo campo presente tra i nomi indicati (nome canonico + alias tollerati). */
+function pick(body: Record<string, unknown>, ...names: string[]): unknown {
+  for (const n of names) {
+    if (n in body && body[n] !== undefined) return body[n];
+  }
+  return undefined;
+}
+
+function str(v: unknown): string | null {
+  if (v == null) return null;
+  if (typeof v === 'number') return String(v);
+  if (typeof v !== 'string') return null;
+  const s = collapse(v);
+  return s.length > 0 ? s : null;
+}
+
+// --- Date --------------------------------------------------------------------
+
+/** Offset (ms) di Europe/Rome rispetto a UTC nell'istante indicato. */
+function romeOffsetMs(utcMs: number): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: TZ,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(new Date(utcMs));
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
+  const local = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute'), get('second'));
+  return local - utcMs;
+}
+
+/** Interpreta una data/ora "da orologio italiano" (senza fuso) come istante UTC. */
+function romeLocalToDate(y: number, mo: number, d: number, h = 0, mi = 0, s = 0): Date {
+  const asUtc = Date.UTC(y, mo - 1, d, h, mi, s);
+  let result = asUtc - romeOffsetMs(asUtc);
+  // Secondo passaggio: a cavallo del cambio ora l'offset stimato può differire.
+  const off2 = romeOffsetMs(result);
+  if (off2 !== romeOffsetMs(asUtc)) result = asUtc - off2;
+  return new Date(result);
+}
+
+/**
+ * Accetta ISO 8601 con fuso ("2026-09-15T10:30:00+02:00", "...Z"), ISO senza
+ * fuso ("2026-09-15T10:30" / "2026-09-15 10:30" / "2026-09-15") e formato
+ * italiano ("15/09/2026 10:30" / "15/09/2026"). Senza fuso ⇒ ora italiana.
+ */
+export function parseDateTime(raw: unknown): { date: Date; hasTime: boolean } | null {
+  const s = str(raw);
+  if (!s) return null;
+
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?\s*(Z|[+-]\d{2}:?\d{2})$/i);
+  if (m) {
+    const tz = m[7].toUpperCase() === 'Z' ? 'Z' : m[7].replace(/^([+-]\d{2})(\d{2})$/, '$1:$2');
+    const d = new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6] ?? '00'}${tz}`);
+    return isNaN(d.getTime()) ? null : { date: d, hasTime: true };
+  }
+
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+  if (m) {
+    const hasTime = m[4] != null;
+    const d = romeLocalToDate(+m[1], +m[2], +m[3], +(m[4] ?? 0), +(m[5] ?? 0), +(m[6] ?? 0));
+    return isValidYmd(+m[1], +m[2], +m[3]) && !isNaN(d.getTime()) ? { date: d, hasTime } : null;
+  }
+
+  m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})(?:[ T](\d{1,2})[:.](\d{2}))?$/);
+  if (m) {
+    const hasTime = m[4] != null;
+    const d = romeLocalToDate(+m[3], +m[2], +m[1], +(m[4] ?? 0), +(m[5] ?? 0));
+    return isValidYmd(+m[3], +m[2], +m[1]) && !isNaN(d.getTime()) ? { date: d, hasTime } : null;
+  }
+
+  return null;
+}
+
+function isValidYmd(y: number, m: number, d: number): boolean {
+  if (m < 1 || m > 12 || d < 1 || d > 31) return false;
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+}
+
+/** "15/09/2026 ore 10:30" (o solo "15/09/2026") in ora italiana. */
+export function formatRome(date: Date, withTime: boolean): string {
+  const day = date.toLocaleDateString('it-IT', {
+    timeZone: TZ,
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+  if (!withTime) return day;
+  const time = date.toLocaleTimeString('it-IT', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
+  return `${day} ore ${time}`;
+}
+
+/** Data in ISO `yyyy-mm-dd` secondo il calendario italiano (per `stores.data_setup`). */
+export function romeIsoDate(date: Date): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
+
+// --- Campi -------------------------------------------------------------------
+
+export function normalizePartitaIva(raw: unknown): string | null {
+  const s = str(raw);
+  if (!s) return null;
+  const digits = s.replace(/^IT/i, '').replace(/[\s.\-]/g, '');
+  return /^\d{11}$/.test(digits) ? digits : null;
+}
+
+function normalizePhone(raw: unknown): string | null {
+  const s = str(raw);
+  if (!s) return null;
+  const cleaned = s.replace(/[\s.\-()\/]/g, '');
+  return /^\+?\d{6,15}$/.test(cleaned) ? cleaned : s;
+}
+
+function normalizeCap(raw: unknown): string | null {
+  const s = str(raw);
+  if (!s) return null;
+  const digits = s.replace(/\D/g, '');
+  return digits.length === 5 ? digits : null;
+}
+
+/**
+ * Se il partner manda l'indirizzo "tutto in una riga" senza `comune`, prova a
+ * separare via / CAP / comune / provincia da "Via Roma 10, 20121 Milano (MI)".
+ */
+function splitAddress(full: string): { via: string; cap: string | null; comune: string | null; prov: string | null } {
+  let s = collapse(full);
+  let prov: string | null = null;
+  const pm = s.match(/\(([A-Za-z]{2})\)\s*$/);
+  if (pm) {
+    prov = normalizeProvincia(pm[1]);
+    s = s.slice(0, pm.index).trim().replace(/[,\s-]+$/, '');
+  }
+  let cap: string | null = null;
+  const cm = s.match(/(^|[\s,])(\d{5})(?=[\s,]|$)/);
+  if (cm && cm.index != null) {
+    cap = cm[2];
+  }
+  const segs = s.split(',').map((x) => x.trim()).filter(Boolean);
+  if (segs.length >= 2) {
+    const via = segs.slice(0, -1).join(', ');
+    const last = segs[segs.length - 1].replace(/\b\d{5}\b/, '').trim();
+    const tail = last.match(/^(.*?)\s+([A-Za-z]{2})$/);
+    if (tail && !prov && normalizeProvincia(tail[2])) {
+      prov = normalizeProvincia(tail[2]);
+      return { via: via.replace(/\b\d{5}\b/, '').trim(), cap, comune: tail[1] || null, prov };
+    }
+    return { via: via.replace(/\b\d{5}\b/, '').trim(), cap, comune: last || null, prov };
+  }
+  if (cap) {
+    // "Via Roma 10 20121 Milano": via prima del CAP, comune dopo
+    const idx = s.indexOf(cap);
+    const via = s.slice(0, idx).trim().replace(/[,\s-]+$/, '');
+    const comune = s.slice(idx + 5).trim().replace(/^[,\s-]+/, '') || null;
+    return { via: via || s, cap, comune, prov };
+  }
+  return { via: s, cap: null, comune: null, prov };
+}
+
+// --- Entry point -------------------------------------------------------------
+
+export function parseAppointmentPayload(input: unknown): ParseResult {
+  if (input == null || typeof input !== 'object' || Array.isArray(input)) {
+    return { ok: false, errors: ['il body deve essere un oggetto JSON'] };
+  }
+  const body = input as Record<string, unknown>;
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  const ragioneSociale = str(pick(body, 'ragione_sociale', 'ragioneSociale', 'azienda', 'nome_azienda'));
+  if (!ragioneSociale) errors.push('ragione_sociale: obbligatoria');
+  else if (ragioneSociale.length > 200) errors.push('ragione_sociale: massimo 200 caratteri');
+
+  const pivaRaw = pick(body, 'partita_iva', 'partitaIva', 'piva', 'p_iva', 'vat');
+  const partitaIva = normalizePartitaIva(pivaRaw);
+  if (pivaRaw == null || str(pivaRaw) == null) errors.push('partita_iva: obbligatoria');
+  else if (!partitaIva) errors.push('partita_iva: deve essere composta da 11 cifre (es. "01234567890")');
+
+  let indirizzo = str(pick(body, 'indirizzo', 'indirizzo_appuntamento', 'via', 'address'));
+  let cap = normalizeCap(pick(body, 'cap', 'codice_postale', 'postal_code', 'zip'));
+  const capRaw = str(pick(body, 'cap', 'codice_postale', 'postal_code', 'zip'));
+  if (capRaw && !cap) warnings.push(`cap: "${capRaw}" non è un CAP a 5 cifre, ignorato`);
+  let comune = str(pick(body, 'comune', 'citta', 'città', 'city', 'localita', 'località'));
+  const provRaw = str(pick(body, 'provincia', 'prov', 'sigla_provincia'));
+  let provincia = normalizeProvincia(provRaw);
+  if (provRaw && !provincia) warnings.push(`provincia: "${provRaw}" non riconosciuta, ignorata`);
+
+  if (!indirizzo) {
+    errors.push('indirizzo: obbligatorio (via e numero civico)');
+  } else if (!comune) {
+    // indirizzo "in una riga": proviamo a ricavare comune/CAP/provincia
+    const split = splitAddress(indirizzo);
+    if (split.comune) {
+      indirizzo = split.via;
+      comune = split.comune;
+      cap = cap ?? split.cap;
+      provincia = provincia ?? split.prov;
+      warnings.push(`comune: assente, dedotto dall'indirizzo ("${comune}")`);
+    } else {
+      errors.push('comune: obbligatorio (oppure indirizzo nel formato "Via Roma 10, 20121 Milano (MI)")');
+    }
+  }
+  if (!provincia && comune) {
+    warnings.push('provincia: assente, la regione del punto vendita resterà vuota');
+  }
+
+  const titolare = str(pick(body, 'titolare', 'nome_titolare', 'nomeTitolare', 'referente', 'owner_name'));
+  const telefono = normalizePhone(pick(body, 'telefono', 'telefono_titolare', 'telefonoTitolare', 'phone', 'cellulare'));
+  const emailRaw = str(pick(body, 'email', 'email_titolare'));
+  const email = emailRaw && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw) ? emailRaw.toLowerCase() : null;
+  if (emailRaw && !email) warnings.push(`email: "${emailRaw}" non valida, ignorata`);
+
+  const creazioneRaw = pick(body, 'data_creazione_esito', 'dataCreazioneEsito', 'data_esito', 'created_at');
+  let dataCreazioneEsito: Date;
+  if (creazioneRaw == null || str(creazioneRaw) == null) {
+    dataCreazioneEsito = new Date();
+    warnings.push('data_creazione_esito: assente, usata la data/ora di ricezione');
+  } else {
+    const parsed = parseDateTime(creazioneRaw);
+    if (!parsed) {
+      errors.push('data_creazione_esito: formato non riconosciuto (usare ISO 8601, es. "2026-09-10T10:32:00+02:00")');
+      dataCreazioneEsito = new Date();
+    } else {
+      dataCreazioneEsito = parsed.date;
+      if (dataCreazioneEsito.getTime() > Date.now() + 24 * 3600 * 1000) {
+        errors.push('data_creazione_esito: non può essere nel futuro');
+      }
+    }
+  }
+
+  const appRaw = pick(body, 'data_appuntamento', 'dataAppuntamento', 'appuntamento');
+  let dataAppuntamento = new Date(0);
+  let dataAppuntamentoHasTime = false;
+  if (appRaw == null || str(appRaw) == null) {
+    errors.push('data_appuntamento: obbligatoria');
+  } else {
+    const parsed = parseDateTime(appRaw);
+    if (!parsed) {
+      errors.push('data_appuntamento: formato non riconosciuto (usare ISO 8601, es. "2026-09-15T10:30:00+02:00")');
+    } else {
+      dataAppuntamento = parsed.date;
+      dataAppuntamentoHasTime = parsed.hasTime;
+      if (!parsed.hasTime) warnings.push("data_appuntamento: senza orario, l'agente vedrà solo la data");
+    }
+  }
+
+  let noteOperatore = str(pick(body, 'note_operatore', 'noteOperatore', 'note', 'notes'));
+  if (noteOperatore && noteOperatore.length > 2000) {
+    noteOperatore = noteOperatore.slice(0, 2000);
+    warnings.push('note_operatore: troncate a 2000 caratteri');
+  }
+
+  const idEsterno = str(pick(body, 'id_esterno', 'idEsterno', 'external_id', 'id_appuntamento', 'id'));
+  if (!idEsterno) warnings.push('id_esterno: assente (consigliato per tracciare gli invii)');
+
+  const dryRaw = pick(body, 'dry_run', 'dryRun');
+  const dryRun = dryRaw === true || dryRaw === 'true' || dryRaw === 1 || dryRaw === '1';
+
+  if (errors.length > 0) return { ok: false, errors };
+
+  return {
+    ok: true,
+    warnings,
+    value: {
+      idEsterno,
+      ragioneSociale: ragioneSociale!,
+      partitaIva: partitaIva!,
+      indirizzo: indirizzo!,
+      cap,
+      comune: comune!,
+      provincia,
+      regione: regioneByProvincia(provincia),
+      titolare,
+      telefono,
+      email,
+      dataCreazioneEsito,
+      dataAppuntamento,
+      dataAppuntamentoHasTime,
+      noteOperatore,
+      dryRun,
+    },
+  };
+}

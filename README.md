@@ -73,6 +73,16 @@ If you wish to just develop locally and not deploy to Vercel, [follow the steps 
 
    Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://app.supabase.com/project/_/settings/api)
 
+   Server-only variables for the call center webhook (`POST /api/webhooks/callcenter`, see [`docs/webhook-callcenter.md`](docs/webhook-callcenter.md)); without them the endpoint answers `503 not_configured` and the rest of the app is unaffected:
+
+   ```
+   SUPABASE_SERVICE_ROLE_KEY=[SUPABASE SERVICE ROLE KEY — never expose client-side]
+   CALLCENTER_WEBHOOK_TOKEN=[SHARED SECRET GIVEN TO THE CALL CENTER PARTNER, >= 16 chars]
+   # optional
+   CALLCENTER_CLIENT_ID=5
+   CALLCENTER_USER_ID=[UUID OF THE TECHNICAL USER, otherwise resolved/created by email]
+   ```
+
 5. You can now run the Next.js local development server:
 
    ```bash
