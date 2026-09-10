@@ -11,7 +11,7 @@
   <a href="#features"><strong>Features</strong></a> ·
   <a href="#demo"><strong>Demo</strong></a> ·
   <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> 
-  <a href="#clone-and-run-locally"><strong>Clone and runlò locally</strong></a> ·...
+  <a href="#clone-and-run-locally"><strong>Clone and runlò locally</strong></a> ·..
   <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
   <a href="#more-supabase-examples"><strong>More Examples.</strong></a>
 </p> 
