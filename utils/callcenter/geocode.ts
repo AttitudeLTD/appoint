@@ -12,8 +12,10 @@
  *   4. strutturata: solo comune (+ CAP)           → precision 'comune'
  *      (pin al centro del paese: l'agente ha comunque l'indirizzo nella scheda)
  *
- * Volume atteso: pochi appuntamenti al giorno → ben dentro la policy Nominatim
- * (1 req/s). Le richieste sono sequenziali e ci fermiamo al primo risultato.
+ * Policy Nominatim: 1 richiesta al secondo. Tutte le richieste dell'istanza
+ * passano da un'unica coda con pacing (`paced`), anche quando il batch elabora
+ * più appuntamenti in parallelo. Con una `deadline` la catena si interrompe e
+ * restituisce `'timeout'`: l'indirizzo verrà geocodificato dopo (backfill).
  */
 import { PROVINCE } from './italy';
 
@@ -36,6 +38,11 @@ export interface GeocodeInput {
 const UA = 'appoint-callcenter-webhook/1.0 (+https://github.com/AttitudeLTD/appoint)';
 const ITALY = { minLat: 35, maxLat: 47.5, minLng: 6, maxLng: 19 };
 
+/** Policy Nominatim: massimo 1 richiesta al secondo. */
+const MIN_INTERVAL_MS = 1000;
+/** Quanto deve mancare alla deadline per permetterci un'altra richiesta. */
+const REQUEST_RESERVE_MS = 1500;
+
 interface NominatimRow {
   lat: string;
   lon: string;
@@ -43,7 +50,35 @@ interface NominatimRow {
   address?: Record<string, string>;
 }
 
-async function nominatim(params: Record<string, string>): Promise<NominatimRow[]> {
+/** Restituito quando la deadline non lascia il tempo per (altre) richieste. */
+export const GEOCODE_TIMEOUT = 'timeout' as const;
+export type GeocodeOutcome = GeocodeResult | null | typeof GEOCODE_TIMEOUT;
+
+// Pacing per istanza: le richieste a Nominatim sono serializzate e distanziate
+// di almeno MIN_INTERVAL_MS, anche se arrivano da item elaborati in parallelo.
+let lastRequestAt = 0;
+let queue: Promise<unknown> = Promise.resolve();
+
+class DeadlineError extends Error {}
+
+function paced<T>(fn: () => Promise<T>, deadline?: number): Promise<T> {
+  const run = async () => {
+    const wait = lastRequestAt + MIN_INTERVAL_MS - Date.now();
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    if (deadline != null && Date.now() + REQUEST_RESERVE_MS > deadline) throw new DeadlineError();
+    lastRequestAt = Date.now();
+    return fn();
+  };
+  const p = queue.then(run, run);
+  queue = p.catch(() => undefined);
+  return p;
+}
+
+async function nominatim(params: Record<string, string>, deadline?: number): Promise<NominatimRow[]> {
+  return paced(() => nominatimRaw(params), deadline);
+}
+
+async function nominatimRaw(params: Record<string, string>): Promise<NominatimRow[]> {
   const qs = new URLSearchParams({
     format: 'jsonv2',
     limit: '1',
@@ -110,7 +145,22 @@ function cleanStreet(via: string): string {
     .trim();
 }
 
-export async function geocodeAddress(input: GeocodeInput): Promise<GeocodeResult | null> {
+/**
+ * @param deadline epoch ms oltre cui NON avviare altre richieste: la funzione
+ *   restituisce `'timeout'` (l'indirizzo andrà geocodificato in un secondo
+ *   momento, vedi `backfillPendingGeocodes`). Senza deadline prova tutta la
+ *   catena di fallback.
+ */
+export async function geocodeAddress(input: GeocodeInput, deadline?: number): Promise<GeocodeOutcome> {
+  try {
+    return await geocodeChain(input, deadline);
+  } catch (e) {
+    if (e instanceof DeadlineError) return GEOCODE_TIMEOUT;
+    throw e;
+  }
+}
+
+async function geocodeChain(input: GeocodeInput, deadline?: number): Promise<GeocodeResult | null> {
   const street = cleanStreet(input.indirizzo);
   const city = input.comune.trim();
 
@@ -119,16 +169,16 @@ export async function geocodeAddress(input: GeocodeInput): Promise<GeocodeResult
       rows[0] && inComune(rows[0], city) ? toResult(rows[0], 'street') : null;
 
     if (input.cap) {
-      const r = streetResult(await nominatim({ street, postalcode: input.cap, city, country: 'Italia' }));
+      const r = streetResult(await nominatim({ street, postalcode: input.cap, city, country: 'Italia' }, deadline));
       if (r) return r;
     }
     {
-      const r = streetResult(await nominatim({ street, city, country: 'Italia' }));
+      const r = streetResult(await nominatim({ street, city, country: 'Italia' }, deadline));
       if (r) return r;
     }
     {
       const q = `${street}, ${input.cap ?? ''} ${city}${input.provincia ? ` (${input.provincia})` : ''}, Italia`;
-      const r = streetResult(await nominatim({ q: q.replace(/\s+/g, ' ') }));
+      const r = streetResult(await nominatim({ q: q.replace(/\s+/g, ' ') }, deadline));
       if (r) return r;
     }
   }
@@ -138,8 +188,8 @@ export async function geocodeAddress(input: GeocodeInput): Promise<GeocodeResult
     if (input.cap) params.postalcode = input.cap;
     const provName = input.provincia ? PROVINCE[input.provincia]?.nome : null;
     if (provName) params.county = provName;
-    let rows = await nominatim(params);
-    if (!rows[0] && (input.cap || input.provincia)) rows = await nominatim({ city, country: 'Italia' });
+    let rows = await nominatim(params, deadline);
+    if (!rows[0] && (input.cap || input.provincia)) rows = await nominatim({ city, country: 'Italia' }, deadline);
     const r = rows[0] ? toResult(rows[0], 'comune') : null;
     if (r) return r;
   }

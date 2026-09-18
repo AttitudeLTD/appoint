@@ -780,8 +780,33 @@ Effetto sul colore del pin: `ESITO_TO_STATUS['ok_appuntamento_preso'] =
 
 **Variabili d'ambiente (Vercel).** `SUPABASE_SERVICE_ROLE_KEY`,
 `CALLCENTER_WEBHOOK_TOKEN` (≥ 16 caratteri, condiviso col partner); opzionali
-`CALLCENTER_CLIENT_ID` (default 5) e `CALLCENTER_USER_ID`. Senza le prime due
-l'endpoint risponde `503 not_configured`.
+`CALLCENTER_CLIENT_ID` (default 5), `CALLCENTER_USER_ID` e `CRON_SECRET` (abilita
+il cron giornaliero, vedi sotto). Senza le prime due l'endpoint risponde
+`503 not_configured`.
+
+**Batch (agg. 2026-09-18).** Il body può essere un array (o
+`{ "appuntamenti": [...] }`) fino a `MAX_BATCH = 200` elementi; ogni elemento
+viene validato e registrato da solo, la risposta ha un `risultati[]` nello
+stesso ordine con `indice`. Il vincolo è il tempo: `maxDuration = 60` s su
+Vercel e Nominatim a 1 richiesta/s. Quindi in `registerAppointments()`:
+
+- i punti vendita esistenti si leggono **in blocco** (`.in('pi', …)`, a blocchi
+  di 100) → un batch di 100 lead già importati costa ~350 query in parallelo
+  (6 P.IVA alla volta), zero geocodifiche;
+- la geocodifica è sequenziale con pacing (`utils/callcenter/geocode.ts`,
+  coda unica per istanza) e si ferma a 30 s dall'inizio: i lead nuovi oltre il
+  budget vengono **comunque creati** (pin + esito + status) ma senza coordinate,
+  con `outcome_data.geocode = 'pending'` e `outcome_data.geocode_input`
+  (via/CAP/comune/provincia) per il completamento;
+- `backfillPendingGeocodes()` completa i pending: gira in coda a ogni ricezione
+  veloce (max 5), su `GET|POST /api/webhooks/callcenter/geocode` (token webhook
+  o `CRON_SECRET`, max 40, 50 s) e dal cron Vercel giornaliero in `vercel.json`
+  (05:00 UTC; Vercel lo autentica con `CRON_SECRET`, che va impostato). Un
+  indirizzo che Nominatim non trova viene marcato `geocode = 'failed'` e non
+  ritentato; un pin posizionato a mano nel frattempo viene marcato `'existing'`.
+
+`outcome_data.geocode` vale quindi `street | comune | existing | pending | failed | none`
+ed è l'unico stato aggiunto: nessuna colonna nuova.
 
 **Verifica.** Parser e geocoder esercitati con casi reali (San Prisco → stesse
 coordinate del lead importato; "Via Roma 10, Milano" senza CAP → Nominatim

@@ -23,10 +23,11 @@ Authorization: Bearer <TOKEN>
   separato. Il token va custodito come una password: non deve finire in log,
   repository o email.
 - In alternativa all'header `Authorization` è accettato `X-Webhook-Token: <TOKEN>`.
-- **Una richiesta = un appuntamento.** Non sono accettati array.
+- Il body può contenere **un appuntamento** (oggetto JSON) oppure **un batch** di
+  appuntamenti (array JSON, fino a 200 elementi): vedi §3.
 - Solo HTTPS. Metodi diversi da POST ricevono `405`.
 
-## 2. Body JSON
+## 2. Body JSON (singolo appuntamento)
 
 | Campo                  | Tipo     | Obbl. | Descrizione                                                                                                                         |
 | ---------------------- | -------- | :---: | ----------------------------------------------------------------------------------------------------------------------------------- |
@@ -84,7 +85,66 @@ curl -X POST https://<dominio-appoint>/api/webhooks/callcenter \
   -d @appuntamento.json
 ```
 
-## 3. Risposte
+## 3. Batch: più appuntamenti in una chiamata
+
+Per inviare più appuntamenti insieme (es. tutti quelli chiusi nella giornata)
+il body è un **array** degli stessi oggetti del §2:
+
+```json
+[
+  { "id_esterno": "CRM-2026-000123", "ragione_sociale": "ROSSI SRL", "partita_iva": "01234567890", "...": "..." },
+  { "id_esterno": "CRM-2026-000124", "ragione_sociale": "BIANCHI SNC", "partita_iva": "09876543210", "...": "..." }
+]
+```
+
+È accettata anche la forma `{ "appuntamenti": [ ... ] }`, utile per mettere
+`dry_run` una volta sola: `{ "dry_run": true, "appuntamenti": [ ... ] }`.
+
+Regole:
+
+- **Massimo 200 appuntamenti** per chiamata (oltre: `400`). Consigliato restare
+  entro 100.
+- Ogni elemento viene **validato e registrato singolarmente**: un elemento con
+  dati mancanti non blocca gli altri. La risposta riporta l'esito di ciascuno
+  nello stesso ordine dell'array inviato (campo `indice`, da 0).
+- `dry_run` deve valere per tutto il batch (in tutti gli elementi, oppure a
+  livello di wrapper); un batch con `dry_run` solo su alcuni elementi è
+  rifiutato con `400`.
+- Se la stessa Partita IVA compare più volte nel batch, gli invii vengono
+  applicati nell'ordine dell'array: l'ultimo vince (vedi §5).
+- Tempo di risposta: fino a **60 secondi** per batch grandi con molte aziende
+  nuove. Impostare il timeout HTTP del client a **≥ 90 s**.
+- Per i lead nuovi la posizione in mappa viene calcolata dall'indirizzo; con
+  molti lead nuovi nello stesso batch alcuni vengono creati **subito** ma
+  posizionati **entro poche ore** (`geocoded: "pending"`). Per il partner non
+  cambia nulla: l'appuntamento è registrato.
+
+### Risposta del batch (`200`)
+
+```json
+{
+  "ok": true,
+  "totale": 3,
+  "registrati": 2,
+  "falliti": 1,
+  "geocodifica_in_sospeso": 0,
+  "risultati": [
+    { "indice": 0, "ok": true, "store_id": 15709, "store_created": false, "status_changed": true, "geocoded": "existing", "esito": "ok_appuntamento_preso", "outcome": "created", "id_esterno": "CRM-2026-000123", "warnings": [] },
+    { "indice": 1, "ok": false, "error": "validation_error", "details": ["data_appuntamento: obbligatoria"], "id_esterno": "CRM-2026-000124" },
+    { "indice": 2, "ok": true, "store_id": 15810, "store_created": true, "status_changed": true, "geocoded": "street", "esito": "ok_appuntamento_preso", "outcome": "created", "id_esterno": "CRM-2026-000125", "warnings": [] }
+  ]
+}
+```
+
+- `ok` a livello di batch è `true` solo se **tutti** gli elementi sono andati a
+  buon fine; lo status HTTP è comunque `200` quando il batch è stato elaborato.
+- Gli elementi con `ok: false` e `error: "validation_error"` vanno corretti e
+  rimandati (da soli o in un batch successivo). Quelli con
+  `error: "internal_error"` vanno **ritentati** più tardi: l'invio è idempotente.
+- `401`, `400` (JSON non valido, batch vuoto o troppo grande, `dry_run` incoerente)
+  e `500` si applicano all'intera chiamata, come per il singolo.
+
+## 4. Risposte (singolo appuntamento)
 
 Tutte le risposte sono JSON con il campo `ok`.
 
@@ -109,8 +169,8 @@ Tutte le risposte sono JSON con il campo `ok`.
 | `store_id`       | Id del punto vendita in Appoint.                                                                                                                      |
 | `store_created`  | `true` se la Partita IVA non esisteva e il punto vendita è stato creato ora.                                                                          |
 | `status_changed` | `true` se il pin è passato da "libero" a "in lavorazione".                                                                                            |
-| `geocoded`       | `"existing"` (il pin aveva già una posizione), `"street"` (indirizzo trovato), `"comune"` (solo centro del comune), `"none"` (indirizzo non trovato). |
-| `outcome`        | `"created"` al primo invio per quella Partita IVA, `"updated"` ai successivi (vedi §4).                                                               |
+| `geocoded`       | `"existing"` (il pin aveva già una posizione), `"street"` (indirizzo trovato), `"comune"` (solo centro del comune), `"pending"` (posizione calcolata entro poche ore), `"none"` (indirizzo non trovato). |
+| `outcome`        | `"created"` al primo invio per quella Partita IVA, `"updated"` ai successivi (vedi §5).                                                               |
 | `warnings`       | Avvisi non bloccanti (campo ignorato perché non valido, indirizzo approssimato, …). Utili in fase di test.                                            |
 
 Con `dry_run: true` la risposta `200` ha invece `dry_run: true`, `would_create_store`,
@@ -127,7 +187,7 @@ Con `dry_run: true` la risposta `200` ha invece `dry_run: true`, `would_create_s
 | `500` | `internal_error`   | Errore lato nostro.                                                          | **Ritentare** con backoff (es. 1, 5, 30 minuti): l'invio è idempotente. |
 | `503` | `not_configured`   | Endpoint non ancora configurato lato nostro.                                 | Contattare Attitude.                                                    |
 
-## 4. Idempotenza e re-invii
+## 5. Idempotenza e re-invii
 
 - Il punto vendita è identificato dalla **Partita IVA**: due invii per la stessa
   P.IVA non creano due pin.
@@ -139,7 +199,7 @@ Con `dry_run: true` la risposta `200` ha invece `dry_run: true`, `would_create_s
 - Non è previsto un messaggio di **annullamento**: se l'appuntamento viene
   cancellato, comunicarlo per ora al referente Attitude.
 
-## 5. Cosa vede l'agente
+## 6. Cosa vede l'agente
 
 Sul pin del punto vendita, sezione "Storico esiti":
 
@@ -154,7 +214,7 @@ vendita, nella nota compare anche `Indirizzo appuntamento: …` (il pin non vien
 spostato). I dati già presenti sul punto vendita (telefono, referente, …) non
 vengono sovrascritti: vengono completati solo se vuoti.
 
-## 6. Test di integrazione consigliato
+## 7. Test di integrazione consigliato
 
 1. Inviare l'esempio del §2 con `"dry_run": true` → attendersi `200` con
    `dry_run: true` e `geocode.precision = "street"`.
@@ -162,6 +222,8 @@ vengono sovrascritti: vengono completati solo se vuoti.
 3. Inviare senza `data_appuntamento` → `400` con `details`.
 4. Inviare l'esempio senza `dry_run` → `200`, `outcome: "created"`.
 5. Re-inviare cambiando `data_appuntamento` → `200`, `outcome: "updated"`.
+6. Inviare un array con 2–3 appuntamenti di prova (uno volutamente senza
+   `data_appuntamento`) → `200` con `risultati` per elemento, `falliti: 1`.
 
 Per i test concordare con Attitude una Partita IVA di prova, così il punto
 vendita fittizio può essere rimosso a fine collaudo.

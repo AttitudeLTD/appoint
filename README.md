@@ -81,6 +81,7 @@ If you wish to just develop locally and not deploy to Vercel, [follow the steps 
    # optional
    CALLCENTER_CLIENT_ID=5
    CALLCENTER_USER_ID=[UUID OF THE TECHNICAL USER, otherwise resolved/created by email]
+   CRON_SECRET=[RANDOM STRING, >= 16 chars — enables the daily geocode backfill cron in vercel.json]
    ```
 
 5. You can now run the Next.js local development server:

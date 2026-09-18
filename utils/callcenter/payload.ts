@@ -36,6 +36,14 @@ export type ParseResult =
   | { ok: true; value: AppointmentPayload; warnings: string[] }
   | { ok: false; errors: string[] };
 
+/** Massimo numero di appuntamenti per chiamata (il partner ne prevede ~100). */
+export const MAX_BATCH = 200;
+
+export type WebhookBody =
+  | { kind: 'single'; item: ParseResult }
+  | { kind: 'batch'; items: ParseResult[]; dryRun: boolean }
+  | { kind: 'error'; errors: string[] };
+
 const TZ = 'Europe/Rome';
 
 const collapse = (s: string) => s.replace(/\s+/g, ' ').trim();
@@ -211,6 +219,72 @@ function splitAddress(full: string): { via: string; cap: string | null; comune: 
 }
 
 // --- Entry point -------------------------------------------------------------
+
+function isDryFlag(v: unknown): boolean {
+  return v === true || v === 'true' || v === 1 || v === '1';
+}
+
+/**
+ * Body del webhook: un singolo appuntamento (oggetto), oppure un batch
+ * (array di oggetti, o wrapper `{ "appuntamenti": [...] }` con eventuale
+ * `dry_run` a livello di batch). In batch il `dry_run` vale per TUTTI gli
+ * elementi: metterlo solo su alcuni è un errore, non un'ambiguità da indovinare.
+ */
+export function parseWebhookBody(body: unknown): WebhookBody {
+  if (body == null || typeof body !== 'object') {
+    return { kind: 'error', errors: ['il body deve essere un oggetto JSON o un array di oggetti'] };
+  }
+
+  let list: unknown[] | null = null;
+  let wrapperDry: boolean | null = null;
+  if (Array.isArray(body)) {
+    list = body;
+  } else {
+    const obj = body as Record<string, unknown>;
+    const wrapped = pick(obj, 'appuntamenti', 'appointments', 'items', 'data');
+    if (Array.isArray(wrapped)) {
+      list = wrapped;
+      const d = pick(obj, 'dry_run', 'dryRun');
+      wrapperDry = d === undefined ? null : isDryFlag(d);
+    } else if (wrapped !== undefined) {
+      return { kind: 'error', errors: ['"appuntamenti" deve essere un array di oggetti'] };
+    }
+  }
+
+  if (list == null) {
+    return { kind: 'single', item: parseAppointmentPayload(body) };
+  }
+  if (list.length === 0) {
+    return { kind: 'error', errors: ['il batch è vuoto'] };
+  }
+  if (list.length > MAX_BATCH) {
+    return { kind: 'error', errors: [`troppi appuntamenti in una chiamata: ${list.length} (massimo ${MAX_BATCH})`] };
+  }
+
+  const items = list.map((el) => {
+    if (el == null || typeof el !== 'object' || Array.isArray(el)) {
+      return { ok: false, errors: ['ogni elemento del batch deve essere un oggetto JSON'] } as ParseResult;
+    }
+    if (wrapperDry != null) {
+      const withDry = { ...(el as Record<string, unknown>) };
+      if (pick(withDry, 'dry_run', 'dryRun') === undefined) withDry.dry_run = wrapperDry;
+      return parseAppointmentPayload(withDry);
+    }
+    return parseAppointmentPayload(el);
+  });
+
+  const flags = items.filter((r) => r.ok).map((r) => (r.ok ? r.value.dryRun : false));
+  const anyDry = flags.some(Boolean);
+  const allDry = flags.length > 0 && flags.every(Boolean);
+  if (anyDry && !allDry) {
+    return {
+      kind: 'error',
+      errors: ['dry_run deve essere uguale per tutti gli elementi del batch (oppure indicato una volta sola a livello di batch)'],
+    };
+  }
+
+  return { kind: 'batch', items, dryRun: anyDry };
+}
 
 export function parseAppointmentPayload(input: unknown): ParseResult {
   if (input == null || typeof input !== 'object' || Array.isArray(input)) {

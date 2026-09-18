@@ -6,7 +6,7 @@
  * Separata dal route handler per poterla esercitare con un client Supabase
  * finto (nessuna dipendenza da HTTP/env qui dentro).
  *
- * Effetti, in ordine:
+ * Effetti per ogni appuntamento, in ordine:
  *   1. match del punto vendita per (client_id, pi); se manca → INSERT in `stores`
  *      (status `in_progress`, geocodifica dell'indirizzo) + `store_clients`.
  *   2. se il pin era `free` → `in_progress` + riga in `store_status_logs`
@@ -15,12 +15,30 @@
  *   3. UPSERT in `store_visit_outcomes` su (store_id, user_id): un secondo invio
  *      per lo stesso punto vendita AGGIORNA l'appuntamento, non lo duplica.
  *
+ * Batch (fino a MAX_BATCH appuntamenti per chiamata). Il vincolo è il tempo:
+ * Vercel taglia la funzione a `maxDuration` e Nominatim accetta ~1 richiesta/s,
+ * quindi 100 lead NUOVI non si geocodificano in una chiamata. Strategia:
+ *   - i punti vendita esistenti si leggono in blocco (`.in('pi', …)`);
+ *   - la geocodifica è sequenziale, con pacing, entro `geocodeDeadline`: oltre,
+ *     il pin viene comunque creato (esito incluso) ma SENZA coordinate e con
+ *     `outcome_data.geocode = 'pending'`;
+ *   - le scritture su DB vanno in parallelo per P.IVA (`concurrency`);
+ *   - `backfillPendingGeocodes` completa i pending: viene chiamata in coda a ogni
+ *     ricezione, dall'endpoint dedicato e dal cron giornaliero.
+ *
  * AiCall ha `editing_policy = 'shared'`: l'esito dell'utente tecnico non blocca
  * il pin per gli agenti, che salvano la PROPRIA riga esito senza toccare questa.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { formatRome, romeIsoDate, type AppointmentPayload } from './payload';
-import { geocodeAddress, formatCoordinates, type GeocodeResult } from './geocode';
+import {
+  geocodeAddress,
+  formatCoordinates,
+  GEOCODE_TIMEOUT,
+  type GeocodeInput,
+  type GeocodeOutcome,
+  type GeocodeResult,
+} from './geocode';
 
 export const ESITO = 'ok_appuntamento_preso';
 
@@ -44,15 +62,22 @@ export interface RegisterOptions {
   /** Override (env `CALLCENTER_USER_ID`); se assente l'utente è risolto/creato per email. */
   userId?: string | null;
   /** Iniettabile nei test. */
-  geocode?: (input: { indirizzo: string; cap: string | null; comune: string; provincia: string | null }) => Promise<GeocodeResult | null>;
+  geocode?: (input: GeocodeInput, deadline?: number) => Promise<GeocodeOutcome>;
+  /** Epoch ms oltre cui non si avviano nuove geocodifiche (→ `pending`). */
+  geocodeDeadline?: number;
+  /** Gruppi (P.IVA) scritti in parallelo. */
+  concurrency?: number;
 }
+
+/** Come è stato posizionato il pin per questo appuntamento. */
+export type GeocodedTag = 'street' | 'comune' | 'none' | 'existing' | 'pending';
 
 export interface RegisterResult {
   ok: true;
   store_id: number;
   store_created: boolean;
   status_changed: boolean;
-  geocoded: 'street' | 'comune' | 'none' | 'existing';
+  geocoded: GeocodedTag;
   esito: typeof ESITO;
   outcome: 'created' | 'updated';
   id_esterno: string | null;
@@ -64,8 +89,23 @@ export interface DryRunResult {
   dry_run: true;
   store: { id: number; name: string | null; address: string | null; status: string | null; has_coordinates: boolean } | null;
   would_create_store: boolean;
-  geocode: { lat: number; lng: number; precision: string; display_name: string | null } | 'not_needed' | null;
+  geocode: { lat: number; lng: number; precision: string; display_name: string | null } | 'not_needed' | 'timeout' | null;
   note_preview: string;
+  id_esterno: string | null;
+  warnings: string[];
+}
+
+export interface ItemFailure {
+  ok: false;
+  error: 'internal_error';
+  message: string;
+  id_esterno: string | null;
+}
+
+export type ItemResult = RegisterResult | DryRunResult | ItemFailure;
+
+export interface ParsedItem {
+  value: AppointmentPayload;
   warnings: string[];
 }
 
@@ -158,108 +198,129 @@ interface ExistingStore {
   regione: string | null;
 }
 
-async function findStore(supabase: SupabaseClient, clientId: number, piva: string): Promise<ExistingStore | null> {
-  const { data, error } = await supabase
-    .from('stores')
-    .select('id, name, address, status, coordinates, owner_name, phone, email, cap, comune, provincia, regione')
-    .eq('client_id', clientId)
-    .eq('pi', piva)
-    .order('id', { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw new Error(`stores select: ${error.message}`);
-  return (data as ExistingStore | null) ?? null;
+const STORE_COLS = 'id, name, address, status, coordinates, owner_name, phone, email, cap, comune, provincia, regione';
+
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
 }
 
-export async function registerAppointment(
-  supabase: SupabaseClient,
-  opts: RegisterOptions,
-  p: AppointmentPayload,
-  initialWarnings: string[] = []
-): Promise<RegisterResult | DryRunResult> {
-  const warnings = [...initialWarnings];
-  const geocode = opts.geocode ?? geocodeAddress;
+/** Punti vendita del cliente per P.IVA, in blocco. A pari P.IVA vince l'id più basso. */
+async function findStores(supabase: SupabaseClient, clientId: number, pivas: string[]): Promise<Map<string, ExistingStore>> {
+  const map = new Map<string, ExistingStore & { pi: string }>();
+  for (const part of chunk(pivas, 100)) {
+    const { data, error } = await supabase
+      .from('stores')
+      .select(`${STORE_COLS}, pi`)
+      .eq('client_id', clientId)
+      .in('pi', part)
+      .order('id', { ascending: true });
+    if (error) throw new Error(`stores select: ${error.message}`);
+    for (const row of (data ?? []) as (ExistingStore & { pi: string })[]) {
+      if (!map.has(row.pi)) map.set(row.pi, row);
+    }
+  }
+  return map;
+}
 
-  const existing = await findStore(supabase, opts.clientId, p.partitaIva);
+function geocodeInputOf(p: AppointmentPayload): GeocodeInput {
+  return { indirizzo: p.indirizzo, cap: p.cap, comune: p.comune, provincia: p.provincia };
+}
 
-  // Geocodifica solo quando serve piazzare un pin: store nuovo, oppure store già
-  // presente ma senza coordinate (lead importato senza indirizzo).
-  let geo: GeocodeResult | null = null;
-  const needsGeocode = !existing || !existing.coordinates;
-  if (needsGeocode) {
-    geo = await geocode({ indirizzo: p.indirizzo, cap: p.cap, comune: p.comune, provincia: p.provincia });
-    if (!geo) warnings.push('indirizzo non geocodificato: il punto vendita non comparirà in mappa finché non avrà coordinate');
-    else if (geo.precision === 'comune') warnings.push('indirizzo geocodificato solo a livello di comune (pin al centro del paese)');
+interface Ctx {
+  supabase: SupabaseClient;
+  clientId: number;
+  userId: string;
+}
+
+/**
+ * Scrive un singolo appuntamento. `existing` è lo stato corrente del punto
+ * vendita (null se va creato); `geo` il risultato della fase di geocodifica
+ * (`undefined` = non serviva, il pin ha già coordinate).
+ * Restituisce anche lo stato aggiornato dello store, così un eventuale secondo
+ * appuntamento per la stessa P.IVA nello stesso batch lo vede già creato.
+ */
+async function processOne(
+  ctx: Ctx,
+  item: ParsedItem,
+  existing: ExistingStore | null,
+  geo: GeocodeOutcome | undefined
+): Promise<{ result: RegisterResult; store: ExistingStore }> {
+  const { supabase, clientId, userId } = ctx;
+  const p = item.value;
+  const warnings = [...item.warnings];
+
+  const found: GeocodeResult | null = geo && geo !== GEOCODE_TIMEOUT ? geo : null;
+  let geocoded: GeocodedTag;
+  if (geo === undefined) geocoded = 'existing';
+  else if (geo === GEOCODE_TIMEOUT) {
+    geocoded = 'pending';
+    warnings.push('indirizzo non ancora geocodificato (tempo esaurito): il pin comparirà in mappa al prossimo passaggio automatico');
+  } else if (geo === null) {
+    geocoded = 'none';
+    warnings.push('indirizzo non geocodificato: il punto vendita non comparirà in mappa finché non avrà coordinate');
+  } else {
+    geocoded = geo.precision;
+    if (geo.precision === 'comune') warnings.push('indirizzo geocodificato solo a livello di comune (pin al centro del paese)');
   }
 
   const addressChanged = existing != null && fold(existing.address) !== fold(composeAddress(p));
   const note = composeNote(p, { includeAddress: addressChanged });
-
-  if (p.dryRun) {
-    return {
-      ok: true,
-      dry_run: true,
-      store: existing
-        ? { id: existing.id, name: existing.name, address: existing.address, status: existing.status, has_coordinates: !!existing.coordinates }
-        : null,
-      would_create_store: !existing,
-      geocode: geo
-        ? { lat: geo.lat, lng: geo.lng, precision: geo.precision, display_name: geo.displayName }
-        : needsGeocode
-          ? null
-          : 'not_needed',
-      note_preview: note,
-      warnings,
-    };
-  }
-
-  const userId = await resolveTechnicalUserId(supabase, opts);
-
-  let storeId: number;
-  let storeCreated = false;
-  let statusChanged = false;
   const logNotes = `Appuntamento preso dal call center (${formatRome(p.dataAppuntamento, p.dataAppuntamentoHasTime)})`;
 
+  let store: ExistingStore;
+  let storeCreated = false;
+  let statusChanged = false;
+
   if (!existing) {
-    const { data: inserted, error: insErr } = await supabase
-      .from('stores')
-      .insert({
-        name: p.ragioneSociale,
-        owner_name: p.titolare,
-        pi: p.partitaIva,
-        address: composeAddress(p),
-        coordinates: geo ? formatCoordinates(geo.lat, geo.lng) : null,
-        phone: p.telefono,
-        email: p.email,
-        cap: p.cap,
-        comune: p.comune,
-        provincia: p.provincia,
-        regione: p.regione,
-        category: 'altro',
-        status: 'in_progress',
-        client_id: opts.clientId,
-        created_by: userId,
-        data_setup: romeIsoDate(p.dataCreazioneEsito),
-      })
-      .select('id')
-      .single();
+    const row = {
+      name: p.ragioneSociale,
+      owner_name: p.titolare,
+      pi: p.partitaIva,
+      address: composeAddress(p),
+      coordinates: found ? formatCoordinates(found.lat, found.lng) : null,
+      phone: p.telefono,
+      email: p.email,
+      cap: p.cap,
+      comune: p.comune,
+      provincia: p.provincia,
+      regione: p.regione,
+      category: 'altro',
+      status: 'in_progress',
+      client_id: clientId,
+      created_by: userId,
+      data_setup: romeIsoDate(p.dataCreazioneEsito),
+    };
+    const { data: inserted, error: insErr } = await supabase.from('stores').insert(row).select('id').single();
     if (insErr || !inserted) throw new Error(`stores insert: ${insErr?.message ?? 'nessuna riga'}`);
-    storeId = inserted.id as number;
+    store = {
+      id: inserted.id as number,
+      name: row.name,
+      address: row.address,
+      status: row.status,
+      coordinates: row.coordinates,
+      owner_name: row.owner_name,
+      phone: row.phone,
+      email: row.email,
+      cap: row.cap,
+      comune: row.comune,
+      provincia: row.provincia,
+      regione: row.regione,
+    };
     storeCreated = true;
     statusChanged = true;
 
     const { error: scErr } = await supabase
       .from('store_clients')
-      .upsert({ store_id: storeId, client_id: opts.clientId, is_primary: true, created_by: userId }, { onConflict: 'store_id,client_id' });
+      .upsert({ store_id: store.id, client_id: clientId, is_primary: true, created_by: userId }, { onConflict: 'store_id,client_id' });
     if (scErr) throw new Error(`store_clients upsert: ${scErr.message}`);
   } else {
-    storeId = existing.id;
-
     // Completa SOLO i campi vuoti: i dati già presenti (importati dal partner via
     // CSV o corretti a mano) non vengono sovrascritti. Il pin non si sposta se ha
     // già coordinate: l'indirizzo dell'appuntamento, se diverso, finisce nella
     // nota dell'esito.
-    const patch: Record<string, unknown> = {};
+    const patch: Partial<ExistingStore> = {};
     if (!existing.owner_name && p.titolare) patch.owner_name = p.titolare;
     if (!existing.phone && p.telefono) patch.phone = p.telefono;
     if (!existing.email && p.email) patch.email = p.email;
@@ -269,29 +330,30 @@ export async function registerAppointment(
     if (!existing.regione && p.regione) patch.regione = p.regione;
     if (!existing.coordinates) {
       if (!existing.address) patch.address = composeAddress(p);
-      if (geo) patch.coordinates = formatCoordinates(geo.lat, geo.lng);
+      if (found) patch.coordinates = formatCoordinates(found.lat, found.lng);
     }
     if ((existing.status ?? 'free') === 'free') {
       patch.status = 'in_progress';
       statusChanged = true;
     }
     if (Object.keys(patch).length > 0) {
-      const { error: updErr } = await supabase.from('stores').update(patch).eq('id', storeId);
+      const { error: updErr } = await supabase.from('stores').update(patch).eq('id', existing.id);
       if (updErr) throw new Error(`stores update: ${updErr.message}`);
     }
+    store = { ...existing, ...patch };
   }
 
   if (statusChanged) {
     const { error: logErr } = await supabase
       .from('store_status_logs')
-      .insert({ store_id: storeId, prev: 'free', new: 'in_progress', modifier: userId, notes: logNotes });
+      .insert({ store_id: store.id, prev: 'free', new: 'in_progress', modifier: userId, notes: logNotes });
     if (logErr) throw new Error(`store_status_logs insert: ${logErr.message}`);
   }
 
   const { data: prevOutcome, error: prevErr } = await supabase
     .from('store_visit_outcomes')
     .select('id')
-    .eq('store_id', storeId)
+    .eq('store_id', store.id)
     .eq('user_id', userId)
     .maybeSingle();
   if (prevErr) throw new Error(`store_visit_outcomes select: ${prevErr.message}`);
@@ -304,12 +366,15 @@ export async function registerAppointment(
     note_operatore: p.noteOperatore,
     origine: 'callcenter',
     id_esterno: p.idEsterno,
+    // Stato della geocodifica di QUESTO invio + input per il backfill dei pending.
+    geocode: geocoded,
+    geocode_input: geocodeInputOf(p),
   };
   const { error: outErr } = await supabase.from('store_visit_outcomes').upsert(
     {
-      store_id: storeId,
+      store_id: store.id,
       user_id: userId,
-      client_id: opts.clientId,
+      client_id: clientId,
       outcome_data: outcomeData,
       created_at: p.dataCreazioneEsito.toISOString(),
     },
@@ -318,14 +383,227 @@ export async function registerAppointment(
   if (outErr) throw new Error(`store_visit_outcomes upsert: ${outErr.message}`);
 
   return {
-    ok: true,
-    store_id: storeId,
-    store_created: storeCreated,
-    status_changed: statusChanged,
-    geocoded: geo ? geo.precision : existing?.coordinates ? 'existing' : 'none',
-    esito: ESITO,
-    outcome: prevOutcome ? 'updated' : 'created',
-    id_esterno: p.idEsterno,
-    warnings,
+    store,
+    result: {
+      ok: true,
+      store_id: store.id,
+      store_created: storeCreated,
+      status_changed: statusChanged,
+      geocoded,
+      esito: ESITO,
+      outcome: prevOutcome ? 'updated' : 'created',
+      id_esterno: p.idEsterno,
+      warnings,
+    },
   };
+}
+
+/**
+ * Registra un batch di appuntamenti. Restituisce un risultato per elemento,
+ * nello stesso ordine dell'input; un errore su un elemento non ferma gli altri.
+ */
+export async function registerAppointments(
+  supabase: SupabaseClient,
+  opts: RegisterOptions,
+  items: ParsedItem[]
+): Promise<ItemResult[]> {
+  const geocode = opts.geocode ?? geocodeAddress;
+  const results: ItemResult[] = new Array(items.length);
+  if (items.length === 0) return results;
+  const dryRun = items.every((it) => it.value.dryRun);
+
+  // 1. Punti vendita esistenti, in blocco.
+  const pivas = Array.from(new Set(items.map((it) => it.value.partitaIva)));
+  const existingByPiva = await findStores(supabase, opts.clientId, pivas);
+
+  // 2. Geocodifica: una per P.IVA, solo dove serve, sequenziale, entro la deadline.
+  const geoByPiva = new Map<string, GeocodeOutcome>();
+  let outOfTime = false;
+  for (const it of items) {
+    const piva = it.value.partitaIva;
+    if (geoByPiva.has(piva)) continue;
+    const ex = existingByPiva.get(piva);
+    if (ex?.coordinates) continue;
+    if (outOfTime) {
+      geoByPiva.set(piva, GEOCODE_TIMEOUT);
+      continue;
+    }
+    const g = await geocode(geocodeInputOf(it.value), opts.geocodeDeadline);
+    if (g === GEOCODE_TIMEOUT) outOfTime = true;
+    geoByPiva.set(piva, g);
+  }
+
+  // 3. Dry run: nessuna scrittura, nemmeno l'utente tecnico.
+  if (dryRun) {
+    items.forEach((it, i) => {
+      const p = it.value;
+      const existing = existingByPiva.get(p.partitaIva) ?? null;
+      const geo = geoByPiva.get(p.partitaIva);
+      const addressChanged = existing != null && fold(existing.address) !== fold(composeAddress(p));
+      results[i] = {
+        ok: true,
+        dry_run: true,
+        store: existing
+          ? { id: existing.id, name: existing.name, address: existing.address, status: existing.status, has_coordinates: !!existing.coordinates }
+          : null,
+        would_create_store: !existing,
+        geocode:
+          geo === undefined
+            ? 'not_needed'
+            : geo === GEOCODE_TIMEOUT
+              ? 'timeout'
+              : geo
+                ? { lat: geo.lat, lng: geo.lng, precision: geo.precision, display_name: geo.displayName }
+                : null,
+        note_preview: composeNote(p, { includeAddress: addressChanged }),
+        id_esterno: p.idEsterno,
+        warnings: it.warnings,
+      };
+    });
+    return results;
+  }
+
+  const ctx: Ctx = { supabase, clientId: opts.clientId, userId: await resolveTechnicalUserId(supabase, opts) };
+
+  // 4. Scritture: gruppi per P.IVA in parallelo; dentro un gruppo in ordine di
+  //    arrivo, così il secondo appuntamento per la stessa azienda aggiorna il
+  //    pin appena creato invece di duplicarlo.
+  const groups = new Map<string, number[]>();
+  items.forEach((it, i) => {
+    const key = it.value.partitaIva;
+    const g = groups.get(key);
+    if (g) g.push(i);
+    else groups.set(key, [i]);
+  });
+  const queue = Array.from(groups.values());
+  const concurrency = Math.max(1, opts.concurrency ?? 6);
+
+  const worker = async () => {
+    for (;;) {
+      const indices = queue.shift();
+      if (!indices) return;
+      for (const i of indices) {
+        const it = items[i];
+        const piva = it.value.partitaIva;
+        try {
+          const existing = existingByPiva.get(piva) ?? null;
+          // Dopo il primo elemento del gruppo il pin esiste (e ha già coordinate
+          // se le abbiamo trovate): niente seconda geocodifica.
+          const geo = existing?.coordinates ? undefined : geoByPiva.get(piva);
+          const { result, store } = await processOne(ctx, it, existing, geo);
+          existingByPiva.set(piva, store);
+          results[i] = result;
+        } catch (e) {
+          const message = e instanceof Error ? e.message : String(e);
+          console.error('[callcenter-webhook] errore elemento', i, message);
+          results[i] = { ok: false, error: 'internal_error', message: 'Errore interno su questo elemento, riprovare più tardi', id_esterno: it.value.idEsterno };
+        }
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, worker));
+
+  return results;
+}
+
+/** Singolo appuntamento: stessa pipeline del batch, ma un errore diventa eccezione (→ HTTP 500). */
+export async function registerAppointment(
+  supabase: SupabaseClient,
+  opts: RegisterOptions,
+  p: AppointmentPayload,
+  initialWarnings: string[] = []
+): Promise<RegisterResult | DryRunResult> {
+  const [r] = await registerAppointments(supabase, opts, [{ value: p, warnings: initialWarnings }]);
+  if (!r.ok) throw new Error(r.message);
+  return r;
+}
+
+export interface BackfillSummary {
+  checked: number;
+  geocoded: number;
+  failed: number;
+  already_positioned: number;
+  timed_out: boolean;
+  /** true se restano altri pending oltre quelli esaminati: richiamare. */
+  has_more: boolean;
+}
+
+/**
+ * Completa la geocodifica dei pin creati dal webhook senza coordinate per
+ * mancanza di tempo (`outcome_data.geocode = 'pending'`). Sequenziale, con
+ * pacing Nominatim, entro `deadline`. Un indirizzo che Nominatim non trova
+ * viene marcato `'failed'` e non ritentato.
+ */
+export async function backfillPendingGeocodes(
+  supabase: SupabaseClient,
+  opts: RegisterOptions,
+  params: { limit: number; deadline: number }
+): Promise<BackfillSummary> {
+  const geocode = opts.geocode ?? geocodeAddress;
+  const summary: BackfillSummary = { checked: 0, geocoded: 0, failed: 0, already_positioned: 0, timed_out: false, has_more: false };
+  if (Date.now() >= params.deadline || params.limit <= 0) return summary;
+
+  const userId = await resolveTechnicalUserId(supabase, opts);
+  const { data, error } = await supabase
+    .from('store_visit_outcomes')
+    .select('id, store_id, outcome_data, stores!inner(id, coordinates)')
+    .eq('user_id', userId)
+    .eq('outcome_data->>geocode', 'pending')
+    .order('created_at', { ascending: true })
+    .limit(params.limit + 1);
+  if (error) throw new Error(`pending select: ${error.message}`);
+
+  type Row = { id: number; store_id: number; outcome_data: Record<string, unknown>; stores: { id: number; coordinates: string | null } | { id: number; coordinates: string | null }[] | null };
+  const all = (data ?? []) as Row[];
+  const rows = all.slice(0, params.limit);
+  summary.has_more = all.length > rows.length;
+
+  const setGeocode = async (row: Row, tag: GeocodedTag | 'failed') => {
+    const { error: upErr } = await supabase
+      .from('store_visit_outcomes')
+      .update({ outcome_data: { ...row.outcome_data, geocode: tag } })
+      .eq('id', row.id);
+    if (upErr) throw new Error(`outcome update: ${upErr.message}`);
+  };
+
+  for (const row of rows) {
+    if (Date.now() >= params.deadline) {
+      summary.timed_out = true;
+      break;
+    }
+    summary.checked++;
+    const store = Array.isArray(row.stores) ? row.stores[0] : row.stores;
+    if (store?.coordinates) {
+      // Nel frattempo qualcuno ha posizionato il pin a mano.
+      await setGeocode(row, 'existing');
+      summary.already_positioned++;
+      continue;
+    }
+    const input = row.outcome_data.geocode_input as GeocodeInput | undefined;
+    if (!input?.indirizzo || !input?.comune) {
+      await setGeocode(row, 'failed');
+      summary.failed++;
+      continue;
+    }
+    const g = await geocode(input, params.deadline);
+    if (g === GEOCODE_TIMEOUT) {
+      summary.timed_out = true;
+      summary.checked--;
+      break;
+    }
+    if (!g) {
+      await setGeocode(row, 'failed');
+      summary.failed++;
+      continue;
+    }
+    const { error: stErr } = await supabase
+      .from('stores')
+      .update({ coordinates: formatCoordinates(g.lat, g.lng) })
+      .eq('id', row.store_id);
+    if (stErr) throw new Error(`stores update: ${stErr.message}`);
+    await setGeocode(row, g.precision);
+    summary.geocoded++;
+  }
+  if (summary.timed_out && summary.checked < rows.length) summary.has_more = true;
+  return summary;
 }
