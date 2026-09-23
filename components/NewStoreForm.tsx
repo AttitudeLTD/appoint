@@ -115,10 +115,7 @@ export function NewStoreForm({ open: externalOpen, onOpenChange: externalOnOpenC
       return new Promise((resolve, reject) => {
         geocoder.geocode(
           { address },
-          (
-            results: google.maps.GeocoderResult[] | null,
-            status: google.maps.GeocoderStatus
-          ) => {
+          (results, status) => {
             if (status === 'OK' && results && results[0]) {
               const location = results[0].geometry.location;
               resolve([location.lat(), location.lng()]);

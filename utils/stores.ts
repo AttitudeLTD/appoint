@@ -12,13 +12,14 @@ export type FetchUserStoresOptions = {
 };
 
 type UserRole = 'agent' | 'am' | 'supervisor';
+type ServerSupabase = Awaited<ReturnType<typeof createClient>>;
 
 /** Restituisce ruolo e agenti per il filtro dashboard (per AM/supervisor). */
 export async function getDashboardContext(currentUserId: string): Promise<{
   role: UserRole | null;
   agents: { id: string; name: string; surname: string }[];
 }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: me } = await supabase.from('users').select('role').eq('id', currentUserId).single();
   const role = (me?.role as UserRole) ?? null;
   const agents = role === 'am' || role === 'supervisor' ? await getAgentsForFilter(currentUserId) : [];
@@ -27,7 +28,7 @@ export async function getDashboardContext(currentUserId: string): Promise<{
 
 /** Restituisce gli agenti che l'utente può selezionare nel filtro: supervisor=tutti, AM=solo della sua area, agent=nessuno */
 export async function getAgentsForFilter(currentUserId: string): Promise<{ id: string; name: string; surname: string }[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: me } = await supabase.from('users').select('role').eq('id', currentUserId).single();
   const role = me?.role as UserRole | null;
   if (role !== 'am' && role !== 'supervisor') return [];
@@ -66,7 +67,7 @@ export async function getAgentsForFilter(currentUserId: string): Promise<{ id: s
 }
 
 /** Restituisce gli id degli agenti che l'utente può vedere (per aggregato senza filtro) */
-async function getVisibleAgentIds(supabase: ReturnType<typeof createClient>, currentUserId: string): Promise<string[]> {
+async function getVisibleAgentIds(supabase: ServerSupabase, currentUserId: string): Promise<string[]> {
   const { data: me } = await supabase.from('users').select('role').eq('id', currentUserId).single();
   const role = me?.role as UserRole | null;
   if (role === 'agent') return [currentUserId];
@@ -87,7 +88,7 @@ async function getVisibleAgentIds(supabase: ReturnType<typeof createClient>, cur
 }
 
 export async function fetchUserStores(userId: string, options?: FetchUserStoresOptions) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { dateFrom, dateTo, clientId, agentIds } = options ?? {};
   const isHistoryMode = dateFrom != null || dateTo != null;
 

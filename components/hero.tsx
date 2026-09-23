@@ -11,7 +11,7 @@ import SignInButton from './signin-button';
 const signInWithAzure = async () => {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'azure',
     options: {

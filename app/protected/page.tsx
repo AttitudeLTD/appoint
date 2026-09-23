@@ -1,14 +1,9 @@
-import dynamic from 'next/dynamic';
-
+import { ProtectedMap } from '@/components/protected-map';
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 
-const DynamicMap = dynamic(() => import('@/components/map'), {
-  ssr: false,
-});
-
 export default async function ProtectedPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data: { user },
@@ -18,5 +13,5 @@ export default async function ProtectedPage() {
     return redirect('/');
   }
 
-  return <DynamicMap user={user} />;
+  return <ProtectedMap user={user} />;
 }
