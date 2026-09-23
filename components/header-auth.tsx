@@ -7,7 +7,7 @@ import { LogOut } from 'lucide-react';
 import { Avatar } from './ui/avatar';
 
 export default async function AuthButton() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data: { user },
