@@ -35,6 +35,11 @@ export interface AppointmentPayload {
    */
   agenteId: string;
   agenteNome: string;
+  /**
+   * Stato dell'appuntamento nel CRM Sidial (colonna `stato` del tracciato).
+   * Lo conserviamo così com'è: non è lo status del pin Appoint.
+   */
+  stato: string;
   /** true → valida e geocodifica ma non scrive nulla. */
   dryRun: boolean;
 }
@@ -301,11 +306,11 @@ export function parseAppointmentPayload(input: unknown): ParseResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  const ragioneSociale = str(pick(body, 'ragione_sociale', 'ragioneSociale', 'azienda', 'nome_azienda'));
+  const ragioneSociale = str(pick(body, 'ragione_sociale', 'ragioneSociale', 'ragione sociale', 'Ragione sociale', 'azienda', 'nome_azienda'));
   if (!ragioneSociale) errors.push('ragione_sociale: obbligatoria');
   else if (ragioneSociale.length > 200) errors.push('ragione_sociale: massimo 200 caratteri');
 
-  const pivaRaw = pick(body, 'partita_iva', 'partitaIva', 'piva', 'p_iva', 'vat');
+  const pivaRaw = pick(body, 'partita_iva', 'partitaIva', 'piva', 'p_iva', 'p.iva', 'P.iva', 'P.IVA', 'vat');
   const partitaIva = normalizePartitaIva(pivaRaw);
   if (pivaRaw == null || str(pivaRaw) == null) errors.push('partita_iva: obbligatoria');
   else if (!partitaIva) errors.push('partita_iva: deve essere composta da 11 cifre (es. "01234567890")');
@@ -344,7 +349,7 @@ export function parseAppointmentPayload(input: unknown): ParseResult {
   const email = emailRaw && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw) ? emailRaw.toLowerCase() : null;
   if (emailRaw && !email) warnings.push(`email: "${emailRaw}" non valida, ignorata`);
 
-  const creazioneRaw = pick(body, 'data_creazione_esito', 'dataCreazioneEsito', 'data_esito', 'created_at');
+  const creazioneRaw = pick(body, 'data_creazione_esito', 'dataCreazioneEsito', 'data_creazione', 'Data Creazione', 'data_esito', 'created_at');
   let dataCreazioneEsito: Date;
   if (creazioneRaw == null || str(creazioneRaw) == null) {
     dataCreazioneEsito = new Date();
@@ -362,7 +367,7 @@ export function parseAppointmentPayload(input: unknown): ParseResult {
     }
   }
 
-  const appRaw = pick(body, 'data_appuntamento', 'dataAppuntamento', 'appuntamento');
+  const appRaw = pick(body, 'data_appuntamento', 'dataAppuntamento', 'Data Appuntamento', 'appuntamento');
   let dataAppuntamento = new Date(0);
   let dataAppuntamentoHasTime = false;
   if (appRaw == null || str(appRaw) == null) {
@@ -378,7 +383,7 @@ export function parseAppointmentPayload(input: unknown): ParseResult {
     }
   }
 
-  let noteOperatore = str(pick(body, 'note_operatore', 'noteOperatore', 'note', 'notes'));
+  let noteOperatore = str(pick(body, 'note_operatore', 'noteOperatore', 'noteoperatore', 'note', 'notes'));
   if (noteOperatore && noteOperatore.length > 2000) {
     noteOperatore = noteOperatore.slice(0, 2000);
     warnings.push('note_operatore: troncate a 2000 caratteri');
@@ -402,6 +407,10 @@ export function parseAppointmentPayload(input: unknown): ParseResult {
   else if (agenteId.length > 80) errors.push('agente_id: massimo 80 caratteri');
   if (!agenteNome) errors.push('agente_nome: obbligatorio (nome e cognome dell\'agente assegnato)');
   else if (agenteNome.length > 200) errors.push('agente_nome: massimo 200 caratteri');
+
+  const stato = str(pick(body, 'stato', 'Stato', 'status', 'stato_appuntamento'));
+  if (!stato) errors.push('stato: obbligatorio (stato dell\'appuntamento nel vostro CRM, colonna "stato" del tracciato)');
+  else if (stato.length > 120) errors.push('stato: massimo 120 caratteri');
 
   const idEsterno = str(pick(body, 'id_esterno', 'idEsterno', 'external_id', 'id_appuntamento', 'id'));
   if (!idEsterno) warnings.push('id_esterno: assente (consigliato per tracciare gli invii)');
@@ -432,6 +441,7 @@ export function parseAppointmentPayload(input: unknown): ParseResult {
       noteOperatore,
       agenteId: agenteId!,
       agenteNome: agenteNome!,
+      stato: stato!,
       dryRun,
     },
   };

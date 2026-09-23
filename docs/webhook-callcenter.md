@@ -1,6 +1,8 @@
 # Webhook appuntamenti — integrazione CRM call center → Appoint
 
 Specifica per il partner che sviluppa il CRM del call center (progetto **AiCall**).
+Il documento da allegare alla mail Sidial, con il mapping del tracciato, è
+[`Sidial-Appoint-webhook-AiCall.md`](./Sidial-Appoint-webhook-AiCall.md).
 
 Ogni volta che un appuntamento viene **assegnato a un agente** sulla piattaforma
 Sidial, il CRM invia una richiesta HTTPS POST al nostro endpoint. Appoint
@@ -44,6 +46,7 @@ Authorization: Bearer <TOKEN>
 | `email`                | string   |  no   | Email del titolare, se disponibile.                                                                                                  |
 | `agente_id`            | string   |  sì   | Id dell'agente **nel CRM Sidial** (non l'id Appoint). Accettato anche come numero. È il dato da cui in seguito collegheremo l'utente Appoint. |
 | `agente_nome`          | string   |  sì   | Nome e cognome dell'agente assegnato, come compare su Sidial (max 200 caratteri).                                                    |
+| `stato`                | string   |  sì   | Stato dell'appuntamento **nel CRM Sidial** (colonna `stato` del tracciato). Non è lo status del pin Appoint.                         |
 | `data_creazione_esito` | datetime |  no   | Quando l'appuntamento è stato assegnato all'agente. Se assente usiamo l'istante di ricezione.                                        |
 | `data_appuntamento`    | datetime |  sì   | Data e ora dell'appuntamento fissato.                                                                                                |
 | `note_operatore`       | string   |  no   | Note libere dell'operatore per l'agente (max 2000 caratteri).                                                                        |
@@ -80,6 +83,7 @@ Sono accettati anche:
   "telefono": "3331234567",
   "agente_id": "42",
   "agente_nome": "Luca Boschetti",
+  "stato": "Assegnato",
   "data_creazione_esito": "2026-09-10T10:32:00+02:00",
   "data_appuntamento": "2026-09-15T10:30:00+02:00",
   "note_operatore": "Chiedere di Mario, ingresso dal retro. Interessato a Platino."
@@ -214,7 +218,7 @@ Sul pin del punto vendita, sezione "Storico esiti":
 ```
 Agente: Call Center AiCall
 Esito:  OK - Appuntamento preso
-Note:   Appuntamento: 15/09/2026 ore 10:30 — Assegnato a: Luca Boschetti (42) — Titolare: Mario Rossi — Note operatore: Chiedere di Mario, ingresso dal retro. Interessato a Platino.
+Note:   Appuntamento: 15/09/2026 ore 10:30 — Assegnato a: Luca Boschetti (42) — Stato: Assegnato — Titolare: Mario Rossi — Note operatore: Chiedere di Mario, ingresso dal retro. Interessato a Platino.
 ```
 
 Se l'indirizzo dell'appuntamento è diverso da quello già registrato sul punto
