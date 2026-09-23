@@ -2,12 +2,13 @@
 
 Specifica per il partner che sviluppa il CRM del call center (progetto **AiCall**).
 
-Ogni volta che un operatore **chiude un appuntamento**, il CRM invia una richiesta
-HTTPS POST al nostro endpoint. Appoint registra sul punto vendita l'esito
-**"OK - Appuntamento preso"**, con data/ora dell'appuntamento e note
-dell'operatore, così l'agente sul territorio lo vede subito in mappa. Se la
-Partita IVA non è ancora presente in Appoint, il punto vendita viene creato e
-posizionato in mappa geocodificando l'indirizzo.
+Ogni volta che un appuntamento viene **assegnato a un agente** sulla piattaforma
+Sidial, il CRM invia una richiesta HTTPS POST al nostro endpoint. Appoint
+registra sul punto vendita l'esito **"OK - Appuntamento preso"**, con data/ora
+dell'appuntamento, l'agente assegnato (id e nome Sidial) e le note
+dell'operatore, così il pin risulta già esitato in mappa. Se la Partita IVA non
+è ancora presente in Appoint, il punto vendita viene creato e posizionato
+geocodificando l'indirizzo.
 
 ---
 
@@ -41,7 +42,9 @@ Authorization: Bearer <TOKEN>
 | `titolare`             | string   |  no   | Nome del titolare / referente da incontrare.                                                                                         |
 | `telefono`             | string   |  no   | Telefono del titolare.                                                                                                               |
 | `email`                | string   |  no   | Email del titolare, se disponibile.                                                                                                  |
-| `data_creazione_esito` | datetime |  no   | Quando l'operatore ha chiuso l'appuntamento. Se assente usiamo l'istante di ricezione.                                              |
+| `agente_id`            | string   |  sì   | Id dell'agente **nel CRM Sidial** (non l'id Appoint). Accettato anche come numero. È il dato da cui in seguito collegheremo l'utente Appoint. |
+| `agente_nome`          | string   |  sì   | Nome e cognome dell'agente assegnato, come compare su Sidial (max 200 caratteri).                                                    |
+| `data_creazione_esito` | datetime |  no   | Quando l'appuntamento è stato assegnato all'agente. Se assente usiamo l'istante di ricezione.                                        |
 | `data_appuntamento`    | datetime |  sì   | Data e ora dell'appuntamento fissato.                                                                                                |
 | `note_operatore`       | string   |  no   | Note libere dell'operatore per l'agente (max 2000 caratteri).                                                                        |
 | `dry_run`              | boolean  |  no   | `true` → la richiesta viene validata e l'indirizzo geocodificato, **ma non viene scritto nulla**. Utile per i test di integrazione. |
@@ -49,6 +52,9 @@ Authorization: Bearer <TOKEN>
 \* Se `indirizzo` arriva "tutto in una riga" (es. `"Via Roma 10, 20121 Milano (MI)"`)
 e `comune` manca, proviamo a separare i pezzi noi; è però preferibile mandare i
 campi separati.
+
+`agente_id` e `agente_nome` si possono mandare anche come oggetto:
+`{ "agente": { "id": "42", "nome": "Luca Boschetti" } }`.
 
 ### Formato date/ore
 
@@ -72,6 +78,8 @@ Sono accettati anche:
   "provincia": "MI",
   "titolare": "Mario Rossi",
   "telefono": "3331234567",
+  "agente_id": "42",
+  "agente_nome": "Luca Boschetti",
   "data_creazione_esito": "2026-09-10T10:32:00+02:00",
   "data_appuntamento": "2026-09-15T10:30:00+02:00",
   "note_operatore": "Chiedere di Mario, ingresso dal retro. Interessato a Platino."
@@ -87,13 +95,13 @@ curl -X POST https://<dominio-appoint>/api/webhooks/callcenter \
 
 ## 3. Batch: più appuntamenti in una chiamata
 
-Per inviare più appuntamenti insieme (es. tutti quelli chiusi nella giornata)
+Per inviare più appuntamenti insieme (es. tutti quelli assegnati nella giornata)
 il body è un **array** degli stessi oggetti del §2:
 
 ```json
 [
-  { "id_esterno": "CRM-2026-000123", "ragione_sociale": "ROSSI SRL", "partita_iva": "01234567890", "...": "..." },
-  { "id_esterno": "CRM-2026-000124", "ragione_sociale": "BIANCHI SNC", "partita_iva": "09876543210", "...": "..." }
+  { "id_esterno": "CRM-2026-000123", "ragione_sociale": "ROSSI SRL", "partita_iva": "01234567890", "agente_id": "42", "agente_nome": "Luca Boschetti", "...": "..." },
+  { "id_esterno": "CRM-2026-000124", "ragione_sociale": "BIANCHI SNC", "partita_iva": "09876543210", "agente_id": "17", "agente_nome": "Anna Verdi", "...": "..." }
 ]
 ```
 
@@ -206,7 +214,7 @@ Sul pin del punto vendita, sezione "Storico esiti":
 ```
 Agente: Call Center AiCall
 Esito:  OK - Appuntamento preso
-Note:   Appuntamento: 15/09/2026 ore 10:30 — Titolare: Mario Rossi — Note operatore: Chiedere di Mario, ingresso dal retro. Interessato a Platino.
+Note:   Appuntamento: 15/09/2026 ore 10:30 — Assegnato a: Luca Boschetti (42) — Titolare: Mario Rossi — Note operatore: Chiedere di Mario, ingresso dal retro. Interessato a Platino.
 ```
 
 Se l'indirizzo dell'appuntamento è diverso da quello già registrato sul punto

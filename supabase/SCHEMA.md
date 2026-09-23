@@ -265,6 +265,8 @@ Gli agenti continuano a vedere le etichette italiane nella tendina; `amex_status
 
 _Agg. 2026-09-10_ — gli appuntamenti presi dal **call center** arrivano via webhook (`POST /api/webhooks/callcenter`, vedi [changelog](#2026-09-10--webhook-appuntamenti-dal-crm-del-call-center)) e vengono registrati come esito `ok_appuntamento_preso` dell'utente tecnico **Call Center AiCall** (`users.email = callcenter.aicall@appoint.invalid`, `role = 'agent'`, non può fare login). Se la P.IVA non esiste il webhook crea anche il punto vendita.
 
+_Agg. 2026-09-23_ — il trigger della POST è l'**assegnazione dell'appuntamento a un agente Sidial**. Il payload include `agente_id` e `agente_nome` (id e nominativo nel CRM del partner): li salviamo in `outcome_data` e nella nota dell'esito. Il collegamento con `public.users` di Appoint è un passo successivo.
+
 > ℹ️ I **nuovi** utenti (signup successivo al seed) sono `restricted` senza grant: per far vedere loro PROGETTO AICALL va ri-eseguito lo step 3 del seed o concesso il grant in onboarding.
 
 ---
@@ -721,9 +723,10 @@ Vedi [`./migrations/README.md`](./migrations/README.md) per la convenzione di na
 
 **Requisito.** Un call center fissa appuntamenti per gli agenti AiCall. Invece di
 farli caricare a mano (o di leggere periodicamente un endpoint del partner), il
-CRM del call center fa una **POST HTTPS verso Appoint** ogni volta che chiude un
-appuntamento, autenticata con un token che diamo noi. Il pin risulta così già
-esitato "OK - Appuntamento preso" senza alcuna azione dell'agente.
+CRM del call center fa una **POST HTTPS verso Appoint** ogni volta che
+**assegna un appuntamento a un agente** (su Sidial), autenticata con un token
+che diamo noi. Il pin risulta così già esitato "OK - Appuntamento preso" senza
+alcuna azione dell'agente.
 
 **Endpoint.** `POST /api/webhooks/callcenter` (`app/api/webhooks/callcenter/route.ts`),
 Node runtime, escluso dal matcher del middleware (nessuna sessione utente). Spec
@@ -753,12 +756,15 @@ Logica in `utils/callcenter/`:
    (`nonFreeIds` in `components/map.tsx`).
 3. `store_visit_outcomes`: UPSERT su `(store_id, user_id)` con
    `outcome_data = { esito: 'ok_appuntamento_preso', note, data_appuntamento,
-   indirizzo_appuntamento, note_operatore, origine: 'callcenter', id_esterno }`
-   e `created_at` = data creazione esito del CRM. Il campo `note` è l'unico che
-   la scheda mostra oltre all'esito, quindi contiene tutto: `Appuntamento:
-   15/09/2026 ore 10:30 — Titolare: … — Note operatore: …`. Un secondo invio
-   per la stessa P.IVA **aggiorna** l'appuntamento (spostamenti) invece di
-   duplicarlo.
+   indirizzo_appuntamento, note_operatore, origine: 'callcenter', id_esterno,
+   agente_id, agente_nome }`
+   e `created_at` = data creazione esito del CRM. `agente_id` / `agente_nome`
+   sono l'id e il nominativo **nel CRM Sidial**, non ancora un utente Appoint
+   (il mapping arriverà dopo). Il campo `note` è l'unico che la scheda mostra
+   oltre all'esito, quindi contiene tutto: `Appuntamento: 15/09/2026 ore 10:30
+   — Assegnato a: Luca Boschetti (42) — Titolare: … — Note operatore: …`. Un
+   secondo invio per la stessa P.IVA **aggiorna** l'appuntamento (spostamenti
+   o riassegnazioni) invece di duplicarlo.
 
 **Utente tecnico "Call Center AiCall".** `store_visit_outcomes.user_id`,
 `stores.created_by` e `store_status_logs.modifier` richiedono una riga in

@@ -177,6 +177,7 @@ const fold = (s: string | null | undefined) =>
  */
 export function composeNote(p: AppointmentPayload, opts: { includeAddress: boolean }): string {
   const parts = [`Appuntamento: ${formatRome(p.dataAppuntamento, p.dataAppuntamentoHasTime)}`];
+  parts.push(`Assegnato a: ${p.agenteNome} (${p.agenteId})`);
   if (opts.includeAddress) parts.push(`Indirizzo appuntamento: ${composeAddress(p)}`);
   if (p.titolare) parts.push(`Titolare: ${p.titolare}`);
   if (p.noteOperatore) parts.push(`Note operatore: ${p.noteOperatore}`);
@@ -366,6 +367,9 @@ async function processOne(
     note_operatore: p.noteOperatore,
     origine: 'callcenter',
     id_esterno: p.idEsterno,
+    // Id e nome dell'agente nel CRM Sidial: non sono ancora un utente Appoint.
+    agente_id: p.agenteId,
+    agente_nome: p.agenteNome,
     // Stato della geocodifica di QUESTO invio + input per il backfill dei pending.
     geocode: geocoded,
     geocode_input: geocodeInputOf(p),

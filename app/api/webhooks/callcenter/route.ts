@@ -7,9 +7,11 @@
  *   Body: un appuntamento (oggetto) oppure un batch (array, o
  *         `{ "appuntamenti": [...] }`), fino a MAX_BATCH elementi.
  *
- * Il partner chiama questo endpoint ogni volta che chiude un appuntamento (o a
- * fine giornata con tutti quelli del giorno); il lavoro vero (match/creazione del
- * pin, esito "OK - Appuntamento preso", status) sta in `utils/callcenter/register.ts`.
+ * Il partner chiama questo endpoint ogni volta che **assegna un appuntamento a
+ * un agente** su Sidial (o a fine giornata con tutti quelli assegnati); il
+ * lavoro vero (match/creazione del pin, esito "OK - Appuntamento preso", status)
+ * sta in `utils/callcenter/register.ts`. `agente_id` e `agente_nome` sono quelli
+ * del CRM del partner: il mapping sugli utenti Appoint è un passo successivo.
  * Qui solo: config, autenticazione a token, parsing/validazione del body,
  * mappatura errori → HTTP, budget di tempo.
  *

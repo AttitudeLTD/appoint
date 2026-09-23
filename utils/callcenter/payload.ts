@@ -28,6 +28,13 @@ export interface AppointmentPayload {
   /** false se il partner ha mandato solo la data (senza orario). */
   dataAppuntamentoHasTime: boolean;
   noteOperatore: string | null;
+  /**
+   * Agente a cui Sidial ha assegnato l'appuntamento. Id e nome sono quelli del
+   * CRM del partner, non ancora mappati su `public.users`: il collegamento con
+   * gli utenti Appoint è un passo successivo.
+   */
+  agenteId: string;
+  agenteNome: string;
   /** true → valida e geocodifica ma non scrive nulla. */
   dryRun: boolean;
 }
@@ -377,6 +384,25 @@ export function parseAppointmentPayload(input: unknown): ParseResult {
     warnings.push('note_operatore: troncate a 2000 caratteri');
   }
 
+  // Agente assegnato su Sidial: campi piatti, oppure oggetto `agente: { id, nome }`.
+  const agenteObj = pick(body, 'agente', 'agent', 'agente_assegnato', 'assigned_agent');
+  const agenteNested =
+    agenteObj != null && typeof agenteObj === 'object' && !Array.isArray(agenteObj)
+      ? (agenteObj as Record<string, unknown>)
+      : null;
+  const agenteId = str(
+    pick(body, 'agente_id', 'agenteId', 'id_agente', 'agent_id', 'assigned_agent_id') ??
+      (agenteNested ? pick(agenteNested, 'id', 'agente_id', 'id_agente') : undefined)
+  );
+  const agenteNome = str(
+    pick(body, 'agente_nome', 'agenteNome', 'nome_agente', 'agent_name', 'assigned_agent_name') ??
+      (agenteNested ? pick(agenteNested, 'nome', 'name', 'agente_nome', 'nominativo') : undefined)
+  );
+  if (!agenteId) errors.push('agente_id: obbligatorio (id dell\'agente assegnato nel vostro CRM)');
+  else if (agenteId.length > 80) errors.push('agente_id: massimo 80 caratteri');
+  if (!agenteNome) errors.push('agente_nome: obbligatorio (nome e cognome dell\'agente assegnato)');
+  else if (agenteNome.length > 200) errors.push('agente_nome: massimo 200 caratteri');
+
   const idEsterno = str(pick(body, 'id_esterno', 'idEsterno', 'external_id', 'id_appuntamento', 'id'));
   if (!idEsterno) warnings.push('id_esterno: assente (consigliato per tracciare gli invii)');
 
@@ -404,6 +430,8 @@ export function parseAppointmentPayload(input: unknown): ParseResult {
       dataAppuntamento,
       dataAppuntamentoHasTime,
       noteOperatore,
+      agenteId: agenteId!,
+      agenteNome: agenteNome!,
       dryRun,
     },
   };
